@@ -8,12 +8,12 @@ keywords = ["quantitative", "statistics", "finance", "options", "timeseries", "p
 categories = ["science"]
 homepage = "https://github.com/carlobortolan/microquant"
 repository = "https://github.com/carlobortolan/microquant"
-edition = "2024"
+edition = "2021"
 
 include = ["CHANGELOG.md", "LICENSE.md", "src/", "tests/"]
 
 # When changing MSRV: Also update the README
-rust-version = "1.85.0"
+rust-version = "1.65.0"
 
 [dependencies]
 statrs = "0.18.0"
