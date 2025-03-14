@@ -1,61 +1,76 @@
-name: CI
+name: Tests
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
   pull_request:
-    branches:
-      - master
+    branches: [ master ]
+
+env:
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-Dwarnings"
 
 jobs:
-  build:
+  clippy:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust stable with clippy
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Run cargo clippy (default features)
+        run: cargo clippy --all-targets
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust stable with rustfmt
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Run rustfmt --check
+        run: cargo fmt -- --check
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+      - uses: Swatinem/rust-cache@v2
+      - name: Use predefined lockfile
+        run: mv -v Cargo.lock.MSRV Cargo.lock
+      - name: Build (lib only)
+        run: cargo hack check --rust-version --locked
+
+  test:
+    needs: [clippy, fmt, msrv]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+          os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - name: Test default features
+        run: cargo test
 
-      - name: Create cargo registry directory
-        run: mkdir -p ~/.cargo/registry
-
-      - name: Create cargo index directory
-        run: mkdir -p ~/.cargo/git
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-index-
-
-      - name: Build
-        run: cargo build --verbose
-        working-directory: ./microquant
-
-      - name: Run tests
-        run: cargo test --verbose
-        working-directory: ./microquant
-
-      - name: Check formatting
-        run: cargo fmt -- --check
-        working-directory: ./microquant
-
-      - name: Run Clippy
-        run: cargo clippy -- -D warnings
-        working-directory: ./microquant
+  features:
+    needs: [clippy, fmt]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+      - uses: Swatinem/rust-cache@v2
+      - name: Check all possible feature sets
+        run: cargo hack check --feature-powerset --no-dev-deps
