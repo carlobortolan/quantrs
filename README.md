@@ -26,10 +26,11 @@ Please check out the documentation [here][docs-url].
 ### Core Features
 
 - [ ] Options pricing
-  - [x] Black-Scholes
-  - [x] Binomial tree
-  - [ ] Monte Carlo simulation
-  - [ ] Greeks
+  - [ ] Black-Scholes (work in progress)
+  - [ ] Binomial tree (work in progress)
+  - [ ] Monte Carlo simulation (work in progress)
+  - [ ] Greeks (work in progress)
+  - [ ] Implied volatility (work in progress)
 
 ### Planned Features
 
