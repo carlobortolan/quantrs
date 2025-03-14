@@ -1,13 +1,13 @@
 [package]
-name = "microquant"
+name = "quantrs"
 version = "0.1.0"
 authors = ["Carlo Bortolan"]
 description = " A tiny Rust library for quantitative finance"
 license = "MIT"
 keywords = ["quantitative", "statistics", "finance", "options", "timeseries", "portfolio", "quant"]
 categories = ["science"]
-homepage = "https://github.com/carlobortolan/microquant"
-repository = "https://github.com/carlobortolan/microquant"
+homepage = "https://github.com/carlobortolan/quantrs"
+repository = "https://github.com/carlobortolan/quantrs"
 edition = "2021"
 
 include = ["CHANGELOG.md", "LICENSE.md", "src/", "tests/"]

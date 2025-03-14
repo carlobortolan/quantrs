@@ -21,7 +21,6 @@ jobs:
           components: clippy
       - name: Run cargo clippy (default features)
         run: cargo clippy --all-targets
-        working-directory: ./microquant
 
   fmt:
     runs-on: ubuntu-latest
@@ -33,7 +32,6 @@ jobs:
           components: rustfmt
       - name: Run rustfmt --check
         run: cargo fmt -- --check
-        working-directory: ./microquant
 
   msrv:
     runs-on: ubuntu-latest
@@ -44,10 +42,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Use predefined lockfile
         run: mv -v Cargo.lock.MSRV Cargo.lock
-        working-directory: ./microquant
       - name: Build (lib only)
         run: cargo hack check --rust-version --locked
-        working-directory: ./microquant
 
   test:
     needs: [clippy, fmt, msrv]
@@ -62,7 +58,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Test default features
         run: cargo test
-        working-directory: ./microquant
 
   features:
     needs: [clippy, fmt]
@@ -76,4 +71,3 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Check all possible feature sets
         run: cargo hack check --feature-powerset --no-dev-deps
-        working-directory: ./microquant
