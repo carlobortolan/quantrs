@@ -1,5 +1,5 @@
 
-# MicroQuant  [![CI](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml/badge.svg)](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml)
+# MicroQuant  [![CI](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml/badge.svg)](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml)  [![codecov](https://codecov.io/gh/carlobortolan/MicroQuant/graph/badge.svg?token=NJ4HW3OQFY)](https://codecov.io/gh/carlobortolan/MicroQuant)
 
 MicroQuant is a tiny quantitative finance library for Rust. It is designed to be simple and easy to use, with a focus on performance and correctness. It is still in the early stages of development, so expect bugs and breaking changes.
 
@@ -53,7 +53,11 @@ Add this to your `Cargo.toml`:
 microquant = "0.1"
 ```
 
-## CONTRIBUTING
+## Minimum supported Rust version (MSRV)
+
+This crate requires a Rust version of 1.65.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+
+## Contributing
 
 If you find any bugs or have suggestions for improvement, please open a new issue or submit a pull request.
 
