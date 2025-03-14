@@ -1,3 +1,34 @@
+//! Module for calculating the Greeks of an option.
+//!
+//! The Greeks are calculated using the formulas provided by the `Greeks` trait.
+//!
+//! ## References
+//! - [Wikipedia - Option Greeks](https://en.wikipedia.org/wiki/Greeks_(finance))
+//! - [Investopedia - Option Greeks](https://www.investopedia.com/terms/g/greeks.asp)
+//! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
+//!
+//!
+//! # Example
+//!
+//! ```
+//! use quantrs::options::{BlackScholesOption, OptionGreeks, OptionType};
+//!
+//! let bs_option = BlackScholesOption {
+//!    spot: 100.0,
+//!   strike: 100.0,
+//!   time_to_maturity: 1.0,
+//!  risk_free_rate: 0.05,
+//! volatility: 0.2,
+//! ..Default::default()
+//! };
+//!
+//! let greeks = OptionGreeks::calculate(&bs_option, OptionType::Call);
+//! println!("Delta: {}", greeks.delta);
+//! println!("Gamma: {}", greeks.gamma);
+//! println!("Theta: {}", greeks.theta);
+//! println!("Vega: {}", greeks.vega);
+//! println!("Rho: {}", greeks.rho);
+//! ```
 use super::{Greeks, OptionType};
 
 /// A struct representing the Greeks of an option.

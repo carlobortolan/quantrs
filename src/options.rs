@@ -1,4 +1,15 @@
-//! Options pricing models.
+//! Module for various option pricing models.
+//!
+//! ## Supported models
+//!
+//! - [Black-Scholes Option Pricing Model](black_scholes/struct.BlackScholesOption.html)
+//! - [Binomial Option Pricing Model](binomial_tree/struct.BinomialTreeOption.html)
+//! - [Monte Carlo Option Pricing Model](monte_carlo/struct.MonteCarloOption.html)
+//!
+//! ## Greek calculations
+//!
+//! This module also provides implementations of the Greeks for each option pricing model.
+//! See the [Greeks](options/trait.Greeks.html) trait for more information.
 
 pub mod binomial_tree;
 pub mod black_scholes;
@@ -9,8 +20,7 @@ pub use binomial_tree::BinomialTreeOption;
 pub use black_scholes::BlackScholesOption;
 pub use greeks::OptionGreeks;
 pub use monte_carlo::MonteCarloOption;
-
-/// A supertrait that combines OptionPricing and Greeks.
+/// Supertrait that combines OptionPricing and Greeks.
 pub trait Option: OptionPricing + Greeks {
     /// Get the style of the option.
     ///
@@ -46,7 +56,7 @@ pub trait OptionPricing {
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64;
 }
 
-/// A trait for calculating the Greeks of an option.
+/// Trait for calculating the Greeks of an option.
 pub trait Greeks {
     // First order Greeks
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
