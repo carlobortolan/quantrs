@@ -2,10 +2,10 @@
 name = "quantrs"
 version = "0.1.0"
 authors = ["Carlo Bortolan"]
-description = " A tiny Rust library for quantitative finance"
+# description = " A tiny Rust library for quantitative finance"
 license = "MIT"
 # keywords = ["quantitative", "statistics", "finance", "options", "timeseries"]
-categories = ["science"]
+# categories = ["science"]
 homepage = "https://github.com/carlobortolan/quantrs"
 repository = "https://github.com/carlobortolan/quantrs"
 edition = "2021"
