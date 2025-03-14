@@ -26,12 +26,12 @@ Please check out the documentation [here][docs-url].
 ### Core Features
 
 - [ ] Options pricing
-  - [ ] Black-Scholes
-  - [ ] Binomial tree
+  - [x] Black-Scholes
+  - [x] Binomial tree
   - [ ] Monte Carlo simulation
-  - [ ] Greeks 
+  - [ ] Greeks
 
-### Optional Features
+### Planned Features
 
 - [ ] Data retrieval
   - [ ] Yahoo Finance
@@ -61,7 +61,6 @@ Please check out the documentation [here][docs-url].
   - [ ] Minimum variance
   - [ ] Maximum diversification
 
-
 ## Usage
 
 Add this to your `Cargo.toml`:
@@ -70,6 +69,25 @@ Add this to your `Cargo.toml`:
 [dependencies]
 quantrs = "0.1"
 ```
+
+Now you can use the library in your code:
+
+```rust
+use quantrs::options::*;
+
+fn main() {
+    let option = BlackScholesOption {
+        spot: 100.0,
+        strike: 100.0,
+        time_to_maturity: 1.0,
+        risk_free_rate: 0.05,
+        volatility: 0.2,
+    };
+    println!("Option price: {}", option.price(OptionType::Call));
+}
+```
+
+See the [documentation][docs-url] and the [examples](examples) for more information.
 
 ## Minimum supported Rust version (MSRV)
 
