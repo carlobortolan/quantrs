@@ -43,9 +43,14 @@ mod black_scholes_tests {
             risk_free_rate: 0.05,
             volatility: 0.2,
         };
+
         let market_price = 10.0;
         let iv = bs_option.implied_volatility(market_price, OptionType::Call);
         assert_abs_diff_eq!(iv, 0.2, epsilon = 0.0001);
+
+        let market_price = 1200.0;
+        let iv = bs_option.implied_volatility(market_price, OptionType::Call);
+        assert_abs_diff_eq!(iv, 3171.5007, epsilon = 0.0001);
     }
 
     #[test]
