@@ -1,8 +1,8 @@
-// Run:  cargo run --release --example black_scholes
-
+use approx::assert_abs_diff_eq;
 use quantrs::options::{BinomialTreeOption, BlackScholesOption, OptionPricing, OptionType};
 
-fn main() {
+#[test]
+fn test_black_scholes_call_price() {
     let bs_option = BlackScholesOption {
         spot: 100.0,
         strike: 100.0,
@@ -10,10 +10,12 @@ fn main() {
         risk_free_rate: 0.05,
         volatility: 0.2,
     };
+    let price = bs_option.price(OptionType::Call);
+    assert_abs_diff_eq!(price, 10.4506, epsilon = 0.0001);
+}
 
-    let call_price = bs_option.price(OptionType::Call);
-    println!("Black-Scholes Call Price: {}", call_price);
-
+#[test]
+fn test_binomial_tree_call_price() {
     let bt_option = BinomialTreeOption {
         spot: 100.0,
         strike: 100.0,
@@ -22,7 +24,6 @@ fn main() {
         volatility: 0.2,
         steps: 100,
     };
-
-    let bt_call_price = bt_option.price(OptionType::Call);
-    println!("Binomial Tree Call Price: {}", bt_call_price);
+    let price = bt_option.price(OptionType::Call);
+    assert!(price > 0.0); // Add a proper assertion based on expected value
 }

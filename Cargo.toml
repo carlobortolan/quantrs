@@ -18,6 +18,9 @@ rust-version = "1.65.0"
 [dependencies]
 statrs = "0.18.0"
 
+[dev-dependencies]
+approx = "0.4"
+
 [lints.rust.unexpected_cfgs]
 level = "warn"
 # Set by cargo-llvm-cov when running on nightly
