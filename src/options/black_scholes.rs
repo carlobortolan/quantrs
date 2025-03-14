@@ -1,5 +1,5 @@
 use crate::options::greeks::Greeks;
-use crate::options::{Option, OptionPricing, OptionType};
+use crate::options::{OptionPricing, OptionType};
 use std::f64::consts::PI;
 
 /// A struct representing a Black-Scholes option.

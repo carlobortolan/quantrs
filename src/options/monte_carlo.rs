@@ -1,5 +1,5 @@
 use crate::options::{OptionPricing, OptionType};
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{Distribution, Normal};
 
 /// A struct representing a Monte Carlo option.
@@ -23,7 +23,7 @@ impl OptionPricing for MonteCarloOption {
     ///
     /// The price of the option.
     fn price(&self, option_type: OptionType) -> f64 {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
         let mut payoff_sum = 0.0;
 
