@@ -18,50 +18,6 @@ pub struct BlackScholesOption {
     pub volatility: f64,
 }
 
-impl OptionPricing for BlackScholesOption {
-    /// Calculate the option price using the Black-Scholes formula.
-    ///
-    /// # Arguments
-    ///
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The price of the option.
-    fn price(&self, option_type: OptionType) -> f64 {
-        match option_type {
-            OptionType::Call => self.call_price(),
-            OptionType::Put => self.put_price(),
-        }
-    }
-
-    /// Calculate the implied volatility for a given market price.
-    ///    
-    /// # Arguments
-    ///
-    /// * `market_price` - The market price of the option.
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The implied volatility.
-    fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
-        let mut sigma = 0.2; // Initial guess
-        let tolerance = 1e-5;
-        let max_iterations = 100;
-        for _ in 0..max_iterations {
-            let price = self.price_with_volatility(option_type, sigma);
-            let vega = self.vega(option_type);
-            let diff = market_price - price;
-            if diff.abs() < tolerance {
-                return sigma;
-            }
-            sigma += diff / vega;
-        }
-        sigma
-    }
-}
-
 impl BlackScholesOption {
     /// Calculate the price of a call option using the Black-Scholes formula.
     ///
@@ -96,19 +52,41 @@ impl BlackScholesOption {
     }
 }
 
+impl OptionPricing for BlackScholesOption {
+    fn price(&self, option_type: OptionType) -> f64 {
+        match option_type {
+            OptionType::Call => self.call_price(),
+            OptionType::Put => self.put_price(),
+        }
+    }
+
+    fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
+        let mut sigma = 0.2; // Initial guess
+        let tolerance = 1e-5;
+        let max_iterations = 100;
+        for _ in 0..max_iterations {
+            let price = self.price_with_volatility(option_type, sigma);
+            let vega = self.vega(option_type);
+            let diff = market_price - price;
+            if diff.abs() < tolerance {
+                return sigma;
+            }
+            sigma += diff / vega;
+        }
+        sigma
+    }
+}
+
 impl Greeks for BlackScholesOption {
     fn delta(&self, option_type: OptionType) -> f64 {
-        // Implement the Black-Scholes formula for delta
         0.5 // TODO: Placeholder value
     }
 
     fn gamma(&self, option_type: OptionType) -> f64 {
-        // Implement the Black-Scholes formula for gamma
         0.1 // TODO: Placeholder value
     }
 
     fn theta(&self, option_type: OptionType) -> f64 {
-        // Implement the Black-Scholes formula for theta
         -0.01 // TODO: Placeholder value
     }
 

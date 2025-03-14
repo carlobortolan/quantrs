@@ -20,29 +20,10 @@ pub struct BinomialTreeOption {
 }
 
 impl OptionPricing for BinomialTreeOption {
-    /// Calculate the option price using the binomial tree model.
-    ///
-    /// # Arguments
-    ///
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The price of the option.
     fn price(&self, option_type: OptionType) -> f64 {
         10.0 // TODO: Placeholder value
     }
 
-    /// Calculate the implied volatility for a given market price.
-    ///
-    /// # Arguments
-    ///
-    /// * `market_price` - The market price of the option.
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///     
-    /// The implied volatility.
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
         0.2 // TODO: Placeholder value
     }

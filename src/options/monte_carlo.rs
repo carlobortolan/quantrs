@@ -15,15 +15,6 @@ pub struct MonteCarloOption {
 }
 
 impl OptionPricing for MonteCarloOption {
-    /// Calculate the option price using the Monte Carlo simulation.
-    ///
-    /// # Arguments
-    ///
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The price of the option.
     fn price(&self, option_type: OptionType) -> f64 {
         let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
@@ -45,16 +36,6 @@ impl OptionPricing for MonteCarloOption {
         discount_factor * payoff_sum / self.simulations as f64
     }
 
-    /// Calculate the implied volatility for a given market price.
-    ///    
-    /// # Arguments
-    ///
-    /// * `market_price` - The market price of the option.
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The implied volatility.
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
         0.2 // TODO: Placeholder value
     }
