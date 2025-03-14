@@ -1,3 +1,4 @@
+use crate::options::greeks::Greeks;
 use crate::options::{OptionPricing, OptionType};
 
 /// A struct representing a binomial tree option.
@@ -27,8 +28,42 @@ impl OptionPricing for BinomialTreeOption {
     ///
     /// The price of the option.
     fn price(&self, option_type: OptionType) -> f64 {
-        // Implement the binomial tree pricing model
-        // ...
-        10.0 // Placeholder value
+        10.0 // TODO: Placeholder value
+    }
+
+    /// Calculate the implied volatility for a given market price.
+    ///
+    /// # Arguments
+    ///
+    /// * `market_price` - The market price of the option.
+    /// * `option_type` - The type of option (Call or Put).
+    ///
+    /// # Returns
+    ///     
+    /// The implied volatility.
+    fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
+        0.2 // TODO: Placeholder value
+    }
+}
+
+impl Greeks for BinomialTreeOption {
+    fn delta(&self, option_type: OptionType) -> f64 {
+        0.5 // TODO: Placeholder value
+    }
+
+    fn gamma(&self, option_type: OptionType) -> f64 {
+        0.1 // TODO: Placeholder value
+    }
+
+    fn theta(&self, option_type: OptionType) -> f64 {
+        -0.01 // TODO: Placeholder value
+    }
+
+    fn vega(&self, option_type: OptionType) -> f64 {
+        0.2 // TODO: Placeholder value
+    }
+
+    fn rho(&self, option_type: OptionType) -> f64 {
+        0.05 // TODO: Placeholder value
     }
 }

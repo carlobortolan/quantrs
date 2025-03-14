@@ -42,4 +42,18 @@ impl OptionPricing for MonteCarloOption {
         let discount_factor = (-self.risk_free_rate * self.time_to_maturity).exp();
         discount_factor * payoff_sum / self.simulations as f64
     }
+
+    /// Calculate the implied volatility for a given market price.
+    ///    
+    /// # Arguments
+    ///
+    /// * `market_price` - The market price of the option.
+    /// * `option_type` - The type of option (Call or Put).
+    ///
+    /// # Returns
+    ///
+    /// The implied volatility.
+    fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
+        0.2 // TODO: Placeholder value
+    }
 }

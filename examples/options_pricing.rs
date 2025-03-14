@@ -1,7 +1,7 @@
 // Run:  cargo run --release --example options_pricing
 
 use quantrs::options::{
-    BinomialTreeOption, BlackScholesOption, MonteCarloOption, OptionGreeks, OptionPricing,
+    BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption, OptionGreeks, OptionPricing,
     OptionType,
 };
 
@@ -26,6 +26,10 @@ fn example_black_scholes() {
 
     let put_price = bs_option.price(OptionType::Put);
     println!("Black-Scholes Put Price: {}", put_price);
+
+    let market_price = 10.0; // Example market price
+    let implied_volatility = bs_option.implied_volatility(market_price, OptionType::Call);
+    println!("Implied Volatility: {}", implied_volatility);
 }
 
 fn example_binomial_tree() {
@@ -43,6 +47,10 @@ fn example_binomial_tree() {
 
     let bt_put_price = bt_option.price(OptionType::Put);
     println!("Binomial Tree Put Price: {}", bt_put_price);
+
+    let market_price = 10.0; // Example market price
+    let implied_volatility = bt_option.implied_volatility(market_price, OptionType::Call);
+    println!("Implied Volatility: {}", implied_volatility);
 }
 
 fn example_greeks() {
@@ -62,6 +70,13 @@ fn example_greeks() {
     println!("Theta: {}", greeks.theta);
     println!("Vega: {}", greeks.vega);
     println!("Rho: {}", greeks.rho);
+
+    // Greeks via function calls
+    println!("Delta: {}", bt_option.delta(OptionType::Call));
+    println!("Gamma: {}", bt_option.gamma(OptionType::Call));
+    println!("Theta: {}", bt_option.theta(OptionType::Call));
+    println!("Vega: {}", bt_option.vega(OptionType::Call));
+    println!("Rho: {}", bt_option.rho(OptionType::Call));
 }
 
 fn example_monte_carlo() {
