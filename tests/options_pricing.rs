@@ -205,6 +205,28 @@ mod monte_carlo_tests {
         let iv = mc_option.implied_volatility(market_price, OptionType::Call);
         assert_abs_diff_eq!(iv, 0.2, epsilon = 0.0001);
     }
+
+    #[test]
+    fn test_monte_carlo_greeks() {
+        let mc_option = MonteCarloOption {
+            spot: 100.0,
+            strike: 100.0,
+            risk_free_rate: 0.05,
+            volatility: 0.2,
+            simulations: 10000,
+            ..Default::default()
+        };
+        let delta = mc_option.delta(OptionType::Call);
+        assert_abs_diff_eq!(delta, 0.5, epsilon = 0.0001);
+        let gamma = mc_option.gamma(OptionType::Call);
+        assert_abs_diff_eq!(gamma, 0.1, epsilon = 0.0001);
+        let theta = mc_option.theta(OptionType::Call);
+        assert_abs_diff_eq!(theta, -0.01, epsilon = 0.0001);
+        let vega = mc_option.vega(OptionType::Call);
+        assert_abs_diff_eq!(vega, 0.2, epsilon = 0.0001);
+        let rho = mc_option.rho(OptionType::Call);
+        assert_abs_diff_eq!(rho, 0.05, epsilon = 0.0001);
+    }
 }
 
 // Greeks Tests
