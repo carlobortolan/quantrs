@@ -40,11 +40,10 @@ jobs:
           cargo llvm-cov --no-report nextest
           cargo llvm-cov --no-report --doc
           cargo llvm-cov report --doctests --lcov --output-path lcov.info
-        working-directory: ./microquant
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v5
         with:
-          files: ./microquant/lcov.info
+          files: ./quantrs/lcov.info
           token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: false
