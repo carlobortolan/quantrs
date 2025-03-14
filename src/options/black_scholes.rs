@@ -151,6 +151,10 @@ impl OptionPricing for BlackScholesOption {
         }
         sigma
     }
+
+    fn strike(&self) -> f64 {
+        self.strike
+    }
 }
 
 impl Greeks for BlackScholesOption {

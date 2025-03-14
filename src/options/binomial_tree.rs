@@ -106,6 +106,10 @@ impl OptionPricing for BinomialTreeOption {
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
         0.2 // TODO: Placeholder value
     }
+
+    fn strike(&self) -> f64 {
+        self.strike
+    }
 }
 
 impl Greeks for BinomialTreeOption {

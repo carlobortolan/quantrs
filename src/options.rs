@@ -54,6 +54,30 @@ pub trait OptionPricing {
     ///
     /// The implied volatility.
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64;
+
+    /// Calculate the payoff of the option at maturity.
+    ///
+    /// # Arguments
+    ///
+    /// * `underlying_price` - The price of the underlying asset at maturity.
+    /// * `option_type` - The type of option (Call or Put).
+    ///
+    /// # Returns
+    ///
+    /// The payoff of the option.
+    fn payoff(&self, underlying_price: f64, option_type: OptionType) -> f64 {
+        match option_type {
+            OptionType::Call => (underlying_price - self.strike()).max(0.0),
+            OptionType::Put => (self.strike() - underlying_price).max(0.0),
+        }
+    }
+
+    /// Get the strike price of the option.
+    ///
+    /// # Returns
+    ///
+    /// The strike price of the option.
+    fn strike(&self) -> f64;
 }
 
 /// Trait for calculating the Greeks of an option.

@@ -65,7 +65,7 @@ use rand::rng;
 use rand_distr::{Distribution, Normal};
 
 /// A struct representing a Monte Carlo option.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct MonteCarloOption {
     pub style: OptionStyle,
     pub spot: f64,
@@ -85,12 +85,10 @@ impl OptionPricing for MonteCarloOption {
         for _ in 0..self.simulations {
             let z = normal.sample(&mut rng);
             let st = self.spot
-                * (self.risk_free_rate - 0.5 * self.volatility.powi(2)).exp()
-                * (self.volatility * (self.time_to_maturity).sqrt() * z).exp();
-            let payoff = match option_type {
-                OptionType::Call => (st - self.strike).max(0.0),
-                OptionType::Put => (self.strike - st).max(0.0),
-            };
+                * ((self.risk_free_rate - 0.5 * self.volatility.powi(2)) * self.time_to_maturity)
+                    .exp()
+                * (self.volatility * self.time_to_maturity.sqrt() * z).exp();
+            let payoff = self.payoff(st, option_type);
             payoff_sum += payoff;
         }
 
@@ -99,29 +97,101 @@ impl OptionPricing for MonteCarloOption {
     }
 
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
-        0.2 // TODO: Placeholder value
+        let mut sigma = 0.2; // Initial guess
+        let tolerance = 1e-5;
+        let max_iterations = 100;
+        for _ in 0..max_iterations {
+            let price = self.price(option_type);
+            let vega = self.vega(option_type);
+            let diff = market_price - price;
+            if diff.abs() < tolerance {
+                return sigma;
+            }
+            sigma += diff / vega;
+        }
+        sigma
+    }
+
+    fn strike(&self) -> f64 {
+        self.strike
     }
 }
 
 impl Greeks for MonteCarloOption {
     fn delta(&self, option_type: OptionType) -> f64 {
-        0.5 // TODO: Placeholder value
+        // Implement the delta calculation using finite differences
+        let epsilon = 1e-4;
+        let original_spot = self.spot;
+        let mut option_up = self.clone();
+        option_up.spot = original_spot + epsilon;
+        let price_up = option_up.price(option_type);
+
+        let mut option_down = self.clone();
+        option_down.spot = original_spot - epsilon;
+        let price_down = option_down.price(option_type);
+
+        (price_up - price_down) / (2.0 * epsilon)
     }
 
     fn gamma(&self, option_type: OptionType) -> f64 {
-        0.1 // TODO: Placeholder value
+        // Implement the gamma calculation using finite differences
+        let epsilon = 1e-4;
+        let original_spot = self.spot;
+        let mut option_up = self.clone();
+        option_up.spot = original_spot + epsilon;
+        let price_up = option_up.price(option_type);
+
+        let mut option_down = self.clone();
+        option_down.spot = original_spot - epsilon;
+        let price_down = option_down.price(option_type);
+
+        let price = self.price(option_type);
+        (price_up - 2.0 * price + price_down) / (epsilon * epsilon)
     }
 
     fn theta(&self, option_type: OptionType) -> f64 {
-        -0.01 // TODO: Placeholder value
+        // Implement the theta calculation using finite differences
+        let epsilon = 1e-4;
+        let original_time_to_maturity = self.time_to_maturity;
+        let mut option_up = self.clone();
+        option_up.time_to_maturity = original_time_to_maturity + epsilon;
+        let price_up = option_up.price(option_type);
+
+        let mut option_down = self.clone();
+        option_down.time_to_maturity = original_time_to_maturity - epsilon;
+        let price_down = option_down.price(option_type);
+
+        (price_down - price_up) / (2.0 * epsilon)
     }
 
     fn vega(&self, option_type: OptionType) -> f64 {
-        0.2 // TODO: Placeholder value
+        // Implement the vega calculation using finite differences
+        let epsilon = 1e-4;
+        let original_volatility = self.volatility;
+        let mut option_up = self.clone();
+        option_up.volatility = original_volatility + epsilon;
+        let price_up = option_up.price(option_type);
+
+        let mut option_down = self.clone();
+        option_down.volatility = original_volatility - epsilon;
+        let price_down = option_down.price(option_type);
+
+        (price_up - price_down) / (2.0 * epsilon)
     }
 
     fn rho(&self, option_type: OptionType) -> f64 {
-        0.05 // TODO: Placeholder value
+        // Implement the rho calculation using finite differences
+        let epsilon = 1e-4;
+        let original_risk_free_rate = self.risk_free_rate;
+        let mut option_up = self.clone();
+        option_up.risk_free_rate = original_risk_free_rate + epsilon;
+        let price_up = option_up.price(option_type);
+
+        let mut option_down = self.clone();
+        option_down.risk_free_rate = original_risk_free_rate - epsilon;
+        let price_down = option_down.price(option_type);
+
+        (price_up - price_down) / (2.0 * epsilon)
     }
 }
 
