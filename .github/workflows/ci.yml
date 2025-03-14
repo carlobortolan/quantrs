@@ -13,49 +13,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Create cargo registry directory
-      run: mkdir -p ~/.cargo/registry
+      - name: Create cargo registry directory
+        run: mkdir -p ~/.cargo/registry
 
-    - name: Create cargo index directory
-      run: mkdir -p ~/.cargo/git
+      - name: Create cargo index directory
+        run: mkdir -p ~/.cargo/git
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-registry-
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
 
-    - name: Cache cargo index
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-index-
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
 
-    - name: Build
-      run: cargo build --verbose
-      working-directory: ./microquant
+      - name: Build
+        run: cargo build --verbose
+        working-directory: ./microquant
 
-    - name: Run tests
-      run: cargo test --verbose
-      working-directory: ./microquant
+      - name: Run tests
+        run: cargo test --verbose
+        working-directory: ./microquant
 
-    - name: Check formatting
-      run: cargo fmt -- --check
-      working-directory: ./microquant
+      - name: Check formatting
+        run: cargo fmt -- --check
+        working-directory: ./microquant
 
-    - name: Run Clippy
-      run: cargo clippy -- -D warnings
-      working-directory: ./microquant
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+        working-directory: ./microquant
