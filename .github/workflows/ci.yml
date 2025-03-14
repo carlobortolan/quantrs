@@ -40,12 +40,16 @@ jobs:
 
     - name: Build
       run: cargo build --verbose
+      working-directory: ./microquant
 
     - name: Run tests
       run: cargo test --verbose
+      working-directory: ./microquant
 
     - name: Check formatting
       run: cargo fmt -- --check
+      working-directory: ./microquant
 
     - name: Run Clippy
       run: cargo clippy -- -D warnings
+      working-directory: ./microquant
