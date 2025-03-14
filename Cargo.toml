@@ -1,6 +1,6 @@
 [package]
 name = "quantrs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Carlo Bortolan"]
 description = " A tiny Rust library for quantitative finance"
 license = "MIT"
@@ -16,7 +16,12 @@ include = ["CHANGELOG.md", "LICENSE.md", "src/", "tests/"]
 rust-version = "1.65.0"
 
 [dependencies]
+rand = "0.9.0"
+rand_distr = "0.5.1"
 statrs = "0.18.0"
+
+[dev-dependencies]
+approx = "0.4"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
