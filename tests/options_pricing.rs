@@ -187,7 +187,6 @@ mod monte_carlo_tests {
             ..Default::default()
         };
         let price = mc_option.price(OptionType::Put);
-        println!("Price: {}", price);
         assert!(price > 0.0); // TODO: Add a proper assertion based on expected value
     }
 
