@@ -35,7 +35,7 @@ mod black_scholes_tests {
     }
 
     #[test]
-    fn test_black_scholes_price_iv() {
+    fn test_black_scholes_iv() {
         let bs_option = BlackScholesOption {
             spot: 100.0,
             strike: 100.0,
@@ -44,8 +44,8 @@ mod black_scholes_tests {
             volatility: 0.2,
         };
         let market_price = 10.0;
-        let price = bs_option.implied_volatility(market_price, OptionType::Call);
-        assert_abs_diff_eq!(price, 0.2, epsilon = 0.0001);
+        let iv = bs_option.implied_volatility(market_price, OptionType::Call);
+        assert_abs_diff_eq!(iv, 0.2, epsilon = 0.0001);
     }
 
     #[test]
@@ -113,8 +113,8 @@ mod binomial_tree_tests {
             steps: 100,
         };
         let market_price = 10.0;
-        let implied_volatility = bt_option.implied_volatility(market_price, OptionType::Call);
-        assert_abs_diff_eq!(implied_volatility, 0.2, epsilon = 0.0001);
+        let iv = bt_option.implied_volatility(market_price, OptionType::Call);
+        assert_abs_diff_eq!(iv, 0.2, epsilon = 0.0001);
     }
 
     #[test]
@@ -183,8 +183,8 @@ mod monte_carlo_tests {
             simulations: 100000,
         };
         let market_price = 10.0;
-        let implied_volatility = mc_option.implied_volatility(market_price, OptionType::Call);
-        assert_abs_diff_eq!(implied_volatility, 0.2, epsilon = 0.0001);
+        let iv = mc_option.implied_volatility(market_price, OptionType::Call);
+        assert_abs_diff_eq!(iv, 0.2, epsilon = 0.0001);
     }
 }
 
