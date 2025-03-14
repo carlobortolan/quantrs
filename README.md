@@ -1,7 +1,7 @@
 
-# MicroQuant  [![CI](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml/badge.svg)](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml)  [![codecov](https://codecov.io/gh/carlobortolan/MicroQuant/graph/badge.svg?token=NJ4HW3OQFY)](https://codecov.io/gh/carlobortolan/MicroQuant)
+# quantrs  [![CI](https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml/badge.svg)](https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml)  [![codecov](https://codecov.io/gh/carlobortolan/quantrs/graph/badge.svg?token=NJ4HW3OQFY)](https://codecov.io/gh/carlobortolan/quantrs)
 
-MicroQuant is a tiny quantitative finance library for Rust. It is designed to be simple and easy to use, with a focus on performance and correctness. It is still in the early stages of development, so expect bugs and breaking changes.
+Quantrs is a tiny quantitative finance library for Rust. It is designed to be simple and easy to use, with a focus on performance and correctness. It is still in the early stages of development, so expect bugs and breaking changes.
 
 ## Features
 
@@ -50,7 +50,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-microquant = "0.1"
+quantrs = "0.1"
 ```
 
 ## Minimum supported Rust version (MSRV)
