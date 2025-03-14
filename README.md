@@ -7,7 +7,7 @@
 [![codecov-quantrs][codecov-badge]][codecov-url]
 ![Crates.io MSRV][crates-msrv-badge]
 
-[actions-test-badge]: https://github.com/carlobortolan/quantrs/actions/workflows/test.yml/badge.svg
+[actions-test-badge]: https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml/badge.svg
 [crates-badge]: https://img.shields.io/crates/v/quantrs.svg
 [crates-url]: https://crates.io/crates/quantrs
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
