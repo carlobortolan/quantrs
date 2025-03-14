@@ -1,4 +1,4 @@
-[![CI](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml)
+[![CI](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml/badge.svg)](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml)
 
 # MicroQuant
 
