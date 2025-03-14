@@ -2,15 +2,16 @@ name: Coverage
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
+
 jobs:
   coverage:
     strategy: # allows pinning additional nightly
       fail-fast: false # allows continue past failure of one toolchain if multiple
       matrix:
-        toolchain: [ nightly ]
+        toolchain: [nightly]
 
     # 360 mins is gh actions default
     timeout-minutes: ${{ matrix.toolchain == 'nightly' && 10 || 360 }}
@@ -39,10 +40,11 @@ jobs:
           cargo llvm-cov --no-report nextest
           cargo llvm-cov --no-report --doc
           cargo llvm-cov report --doctests --lcov --output-path lcov.info
+        working-directory: ./microquant
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v5
         with:
-          files: lcov.info
+          files: ./microquant/lcov.info
           token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: false

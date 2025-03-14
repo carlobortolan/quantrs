@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   CARGO_INCREMENTAL: 0
@@ -19,9 +19,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-
       - name: Run cargo clippy (default features)
         run: cargo clippy --all-targets
+        working-directory: ./microquant
 
   fmt:
     runs-on: ubuntu-latest
@@ -31,9 +31,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-
       - name: Run rustfmt --check
         run: cargo fmt -- --check
+        working-directory: ./microquant
 
   msrv:
     runs-on: ubuntu-latest
@@ -44,23 +44,25 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Use predefined lockfile
         run: mv -v Cargo.lock.MSRV Cargo.lock
+        working-directory: ./microquant
       - name: Build (lib only)
         run: cargo hack check --rust-version --locked
+        working-directory: ./microquant
 
   test:
     needs: [clippy, fmt, msrv]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-
       - name: Test default features
         run: cargo test
+        working-directory: ./microquant
 
   features:
     needs: [clippy, fmt]
@@ -74,3 +76,4 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Check all possible feature sets
         run: cargo hack check --feature-powerset --no-dev-deps
+        working-directory: ./microquant
