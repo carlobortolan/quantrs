@@ -2,7 +2,7 @@
 
 use quantrs::options::{
     BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption, OptionGreeks, OptionPricing,
-    OptionType,
+    OptionStyle, OptionType,
 };
 
 fn main() {
@@ -19,6 +19,7 @@ fn example_black_scholes() {
         time_to_maturity: 1.0,
         risk_free_rate: 0.05,
         volatility: 0.2,
+        ..Default::default()
     };
 
     let call_price = bs_option.price(OptionType::Call);
@@ -40,6 +41,7 @@ fn example_binomial_tree() {
         risk_free_rate: 0.05,
         volatility: 0.2,
         steps: 100,
+        style: OptionStyle::American,
     };
 
     let bt_call_price = bt_option.price(OptionType::Call);
@@ -61,6 +63,7 @@ fn example_greeks() {
         risk_free_rate: 0.05,
         volatility: 0.2,
         steps: 100,
+        ..Default::default()
     };
 
     let greeks = OptionGreeks::calculate(&bt_option, OptionType::Call);
@@ -83,10 +86,9 @@ fn example_monte_carlo() {
     let mc_option = MonteCarloOption {
         spot: 100.0,
         strike: 100.0,
-        time_to_maturity: 1.0,
         risk_free_rate: 0.05,
         volatility: 0.2,
-        simulations: 10000,
+        ..Default::default()
     };
 
     let mc_call_price = mc_option.price(OptionType::Call);

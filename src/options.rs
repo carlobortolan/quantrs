@@ -12,12 +12,29 @@ pub use greeks::OptionGreeks;
 pub use monte_carlo::MonteCarloOption;
 
 /// Enum representing the type of option.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum OptionType {
     /// Call option
     Call,
     /// Put option
     Put,
+}
+
+/// Enum representing the style of the option.
+#[derive(Clone, Copy, Debug)]
+pub enum OptionStyle {
+    American,
+    European,
+    Bermudan,
+    Asian,
+    Barrier,
+    Lookback,
+}
+
+impl Default for OptionStyle {
+    fn default() -> Self {
+        OptionStyle::European
+    }
 }
 
 /// Trait for option pricing models.
@@ -47,6 +64,8 @@ pub trait OptionPricing {
 }
 
 /// A supertrait that combines OptionPricing and Greeks.
-pub trait Option: OptionPricing + Greeks {}
 
-impl<T: OptionPricing + Greeks> Option for T {}
+pub trait Option: OptionPricing + Greeks {
+    /// Get the style of the option.
+    fn style(&self) -> &OptionStyle;
+}

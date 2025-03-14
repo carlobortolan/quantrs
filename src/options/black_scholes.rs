@@ -1,9 +1,11 @@
-use crate::options::greeks::Greeks;
-use crate::options::{OptionPricing, OptionType};
+use super::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
 use std::f64::consts::PI;
 
 /// A struct representing a Black-Scholes option.
+#[derive(Debug, Default)]
 pub struct BlackScholesOption {
+    /// Style of the option (American, European, etc.).
+    pub style: OptionStyle,
     /// Current price of the underlying asset.
     pub spot: f64,
     /// Strike price of the option.
@@ -111,7 +113,7 @@ impl Greeks for BlackScholesOption {
     }
 
     fn vega(&self, option_type: OptionType) -> f64 {
-        let d1 = (self.spot / self.strike).ln()
+        let d1: f64 = (self.spot / self.strike).ln()
             + (self.risk_free_rate + 0.5 * self.volatility.powi(2)) * self.time_to_maturity;
         let d1 = d1 / (self.volatility * self.time_to_maturity.sqrt());
         self.spot
@@ -122,5 +124,11 @@ impl Greeks for BlackScholesOption {
 
     fn rho(&self, option_type: OptionType) -> f64 {
         0.05 // TODO: Placeholder value
+    }
+}
+
+impl Option for BlackScholesOption {
+    fn style(&self) -> &OptionStyle {
+        &self.style
     }
 }

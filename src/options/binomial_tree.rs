@@ -1,8 +1,10 @@
-use crate::options::greeks::Greeks;
-use crate::options::{OptionPricing, OptionType};
+use super::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
 
 /// A struct representing a binomial tree option.
+#[derive(Debug, Default)]
 pub struct BinomialTreeOption {
+    /// Base data for the option.
+    pub style: OptionStyle,
     /// Current price of the underlying asset.
     pub spot: f64,
     /// Strike price of the option.
@@ -65,5 +67,11 @@ impl Greeks for BinomialTreeOption {
 
     fn rho(&self, option_type: OptionType) -> f64 {
         0.05 // TODO: Placeholder value
+    }
+}
+
+impl Option for BinomialTreeOption {
+    fn style(&self) -> &OptionStyle {
+        &self.style
     }
 }

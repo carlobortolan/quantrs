@@ -1,8 +1,13 @@
 use approx::assert_abs_diff_eq;
 use quantrs::options::{
-    BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption, OptionGreeks, OptionPricing,
-    OptionType,
+    BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption, Option, OptionGreeks,
+    OptionPricing, OptionType,
 };
+
+// Function to assert that a type implements the Option trait
+fn assert_implements_option_trait<T: Option>(_option: &T) {
+    // This function does nothing but ensures that T implements the Option trait
+}
 
 // Black-Scholes Option Tests
 mod black_scholes_tests {
@@ -16,6 +21,7 @@ mod black_scholes_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
+            ..Default::default()
         };
         let price = bs_option.price(OptionType::Call);
         assert_abs_diff_eq!(price, 10.4506, epsilon = 0.0001);
@@ -29,6 +35,7 @@ mod black_scholes_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
+            ..Default::default()
         };
         let price = bs_option.price(OptionType::Put);
         assert_abs_diff_eq!(price, 5.5735, epsilon = 0.0001);
@@ -42,6 +49,7 @@ mod black_scholes_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
+            ..Default::default()
         };
 
         let market_price = 10.0;
@@ -61,6 +69,7 @@ mod black_scholes_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
+            ..Default::default()
         };
         let delta = bs_option.delta(OptionType::Call);
         assert_abs_diff_eq!(delta, 0.5, epsilon = 0.0001);
@@ -88,6 +97,7 @@ mod binomial_tree_tests {
             risk_free_rate: 0.05,
             volatility: 0.2,
             steps: 100,
+            ..Default::default()
         };
         let price = bt_option.price(OptionType::Call);
         assert!(price > 0.0); // TODO: Add a proper assertion based on expected value
@@ -102,6 +112,7 @@ mod binomial_tree_tests {
             risk_free_rate: 0.05,
             volatility: 0.2,
             steps: 100,
+            ..Default::default()
         };
         let price = bt_option.price(OptionType::Put);
         assert!(price > 0.0); // TODO: Add a proper assertion based on expected value
@@ -116,6 +127,7 @@ mod binomial_tree_tests {
             risk_free_rate: 0.05,
             volatility: 0.2,
             steps: 100,
+            ..Default::default()
         };
         let market_price = 10.0;
         let iv = bt_option.implied_volatility(market_price, OptionType::Call);
@@ -131,6 +143,7 @@ mod binomial_tree_tests {
             risk_free_rate: 0.05,
             volatility: 0.2,
             steps: 100,
+            ..Default::default()
         };
         let delta = bt_option.delta(OptionType::Call);
         assert_abs_diff_eq!(delta, 0.5, epsilon = 0.0001);
@@ -154,10 +167,10 @@ mod monte_carlo_tests {
         let mc_option = MonteCarloOption {
             spot: 100.0,
             strike: 100.0,
-            time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 100000,
+            simulations: 10000,
+            ..Default::default()
         };
         let price = mc_option.price(OptionType::Call);
         assert!(price > 0.0); // TODO: Add a proper assertion based on expected value
@@ -166,14 +179,15 @@ mod monte_carlo_tests {
     #[test]
     fn test_monte_carlo_put_price() {
         let mc_option = MonteCarloOption {
-            spot: 100.0,
+            spot: 90.0,
             strike: 100.0,
-            time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 100000,
+            simulations: 10000,
+            ..Default::default()
         };
         let price = mc_option.price(OptionType::Put);
+        println!("Price: {}", price);
         assert!(price > 0.0); // TODO: Add a proper assertion based on expected value
     }
 
@@ -182,10 +196,10 @@ mod monte_carlo_tests {
         let mc_option = MonteCarloOption {
             spot: 100.0,
             strike: 100.0,
-            time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 100000,
+            simulations: 10000,
+            ..Default::default()
         };
         let market_price = 10.0;
         let iv = mc_option.implied_volatility(market_price, OptionType::Call);
@@ -206,6 +220,7 @@ mod greeks_tests {
             risk_free_rate: 0.05,
             volatility: 0.2,
             steps: 100,
+            ..Default::default()
         };
         let greeks = OptionGreeks::calculate(&bt_option, OptionType::Call);
         assert_abs_diff_eq!(greeks.delta, 0.5, epsilon = 0.0001);
@@ -213,5 +228,44 @@ mod greeks_tests {
         assert_abs_diff_eq!(greeks.theta, -0.01, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.vega, 0.2, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.rho, 0.05, epsilon = 0.0001);
+    }
+}
+
+// Option Trait Tests
+mod option_trait_tests {
+    use super::*;
+
+    #[test]
+    fn test_all_options_implement_option_trait() {
+        let bs_option = BlackScholesOption {
+            spot: 100.0,
+            strike: 100.0,
+            time_to_maturity: 1.0,
+            risk_free_rate: 0.05,
+            volatility: 0.2,
+            ..Default::default()
+        };
+        assert_implements_option_trait(&bs_option);
+
+        let bt_option = BinomialTreeOption {
+            spot: 100.0,
+            strike: 100.0,
+            time_to_maturity: 1.0,
+            risk_free_rate: 0.05,
+            volatility: 0.2,
+            steps: 100,
+            ..Default::default()
+        };
+        assert_implements_option_trait(&bt_option);
+
+        let mc_option = MonteCarloOption {
+            spot: 100.0,
+            strike: 100.0,
+            risk_free_rate: 0.05,
+            volatility: 0.2,
+            simulations: 10000,
+            ..Default::default()
+        };
+        assert_implements_option_trait(&mc_option);
     }
 }

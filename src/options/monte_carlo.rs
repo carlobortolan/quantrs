@@ -1,9 +1,11 @@
-use crate::options::{OptionPricing, OptionType};
+use super::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
 use rand::rng;
 use rand_distr::{Distribution, Normal};
 
 /// A struct representing a Monte Carlo option.
+#[derive(Debug, Default)]
 pub struct MonteCarloOption {
+    pub style: OptionStyle,
     pub spot: f64,
     pub strike: f64,
     pub time_to_maturity: f64,
@@ -55,5 +57,33 @@ impl OptionPricing for MonteCarloOption {
     /// The implied volatility.
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
         0.2 // TODO: Placeholder value
+    }
+}
+
+impl Greeks for MonteCarloOption {
+    fn delta(&self, option_type: OptionType) -> f64 {
+        0.5 // TODO: Placeholder value
+    }
+
+    fn gamma(&self, option_type: OptionType) -> f64 {
+        0.1 // TODO: Placeholder value
+    }
+
+    fn theta(&self, option_type: OptionType) -> f64 {
+        -0.01 // TODO: Placeholder value
+    }
+
+    fn vega(&self, option_type: OptionType) -> f64 {
+        0.2 // TODO: Placeholder value
+    }
+
+    fn rho(&self, option_type: OptionType) -> f64 {
+        0.05 // TODO: Placeholder value
+    }
+}
+
+impl Option for MonteCarloOption {
+    fn style(&self) -> &OptionStyle {
+        &self.style
     }
 }
