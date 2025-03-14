@@ -1,6 +1,5 @@
-[![CI](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml/badge.svg)](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml)
 
-# MicroQuant
+# MicroQuant  [![CI](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml/badge.svg)](https://github.com/carlobortolan/MicroQuant/actions/workflows/ci.yml)
 
 MicroQuant is a tiny quantitative finance library for Rust. It is designed to be simple and easy to use, with a focus on performance and correctness. It is still in the early stages of development, so expect bugs and breaking changes.
 
