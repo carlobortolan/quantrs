@@ -1,6 +1,6 @@
 [package]
 name = "quantrs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Carlo Bortolan"]
 description = " A tiny Rust library for quantitative finance"
 license = "MIT"
