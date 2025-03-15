@@ -86,9 +86,11 @@ fn example_monte_carlo() {
     let mc_option = MonteCarloOption {
         spot: 100.0,
         strike: 100.0,
+        time_to_maturity: 1.0,
         risk_free_rate: 0.05,
         volatility: 0.2,
-        ..Default::default()
+        simulations: 10_000,
+    ..Default::default()
     };
 
     let mc_call_price = mc_option.price(OptionType::Call);
@@ -96,4 +98,8 @@ fn example_monte_carlo() {
 
     let mc_put_price = mc_option.price(OptionType::Put);
     println!("Monte Carlo Put Price: {}", mc_put_price);
+
+    let market_price = mc_call_price; // Example market price
+    let implied_volatility = mc_option.implied_volatility(market_price, OptionType::Call);
+    println!("Implied Volatility: {}", implied_volatility);
 }

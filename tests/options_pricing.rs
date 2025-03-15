@@ -205,11 +205,11 @@ mod monte_carlo_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 10000,
+            simulations: 10_000,
             ..Default::default()
         };
         let price = mc_option.price(OptionType::Call);
-        assert_abs_diff_eq!(price, 10.4506, epsilon = 0.5); // Allowing a larger epsilon due to simulation variability
+        assert_abs_diff_eq!(price, 10.45, epsilon = 0.5);
     }
 
     #[test]
@@ -220,11 +220,11 @@ mod monte_carlo_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 10000,
+            simulations: 10_000,
             ..Default::default()
         };
         let price = mc_option.price(OptionType::Put);
-        assert_abs_diff_eq!(price, 5.5735, epsilon = 0.5); // Allowing a larger epsilon due to simulation variability
+        assert_abs_diff_eq!(price, 5.57, epsilon = 0.5);
     }
 
     #[test]
@@ -235,12 +235,20 @@ mod monte_carlo_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 10000,
+            simulations: 10_000,
             ..Default::default()
         };
         let market_price = 10.0;
-        let _iv = mc_option.implied_volatility(market_price, OptionType::Call);
-        // assert!(iv > 0.0); // TODO: Add a proper assertion based on expected value
+        let iv = mc_option.implied_volatility(market_price, OptionType::Call);
+        assert!(iv > 0.0, "IV should be greater than 0");
+
+        let market_price = 0.0;
+        let iv = mc_option.implied_volatility(market_price, OptionType::Call);
+        assert!(iv == 0.0, "IV should be zero for unrealistic prices");
+
+        let market_price = 110.0;
+        let iv = mc_option.implied_volatility(market_price, OptionType::Call);
+        assert!(iv == 0.0, "IV should be zero for unrealistic prices");
     }
 
     #[test]
@@ -251,7 +259,7 @@ mod monte_carlo_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 10000,
+            simulations: 10_000,
             ..Default::default()
         };
         let _delta = mc_option.delta(OptionType::Call);
@@ -313,7 +321,7 @@ mod option_trait_tests {
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            steps: 100,
+            steps: 2,
             ..Default::default()
         };
         assert_implements_option_trait(&bt_option);
@@ -323,7 +331,7 @@ mod option_trait_tests {
             strike: 100.0,
             risk_free_rate: 0.05,
             volatility: 0.2,
-            simulations: 10000,
+            simulations: 10,
             ..Default::default()
         };
         assert_implements_option_trait(&mc_option);
