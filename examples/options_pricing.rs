@@ -90,7 +90,7 @@ fn example_monte_carlo() {
         risk_free_rate: 0.05,
         volatility: 0.2,
         simulations: 10_000,
-    ..Default::default()
+        ..Default::default()
     };
 
     let mc_call_price = mc_option.price(OptionType::Call);
