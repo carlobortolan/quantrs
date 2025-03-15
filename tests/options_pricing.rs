@@ -21,35 +21,116 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_european_itm() {
         let bs_option = BlackScholesOption {
+            spot: 120.0,
+            strike: 100.0,
+            time_to_maturity: 2.0,
+            risk_free_rate: 0.03,
+            volatility: 0.27,
+            ..Default::default()
+        };
+        let price = bs_option.price(OptionType::Call);
+        assert_abs_diff_eq!(price, 32.2287, epsilon = 0.0001);
+
+        let price = bs_option.price(OptionType::Put);
+        assert_abs_diff_eq!(price, 6.4052, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_european_otm() {
+        let bs_option = BlackScholesOption {
             spot: 50.0,
             strike: 65.0,
             time_to_maturity: 0.43,
             risk_free_rate: 0.1,
             volatility: 0.31,
-            style: OptionStyle::European,
+            ..Default::default()
         };
         let price = bs_option.price(OptionType::Call);
-        assert_abs_diff_eq!(price, 0.7962, epsilon = 0.0001);
+        assert_abs_diff_eq!(price, 0.8083, epsilon = 0.0001);
 
         let price = bs_option.price(OptionType::Put);
-        assert_abs_diff_eq!(price, 13.0604, epsilon = 0.0001);
+        assert_abs_diff_eq!(price, 13.0725, epsilon = 0.0001);
     }
 
     #[test]
-    fn test_black_scholes_european_otm() {
+    fn test_black_scholes_european_div_itm() {
         let bs_option = BlackScholesOption {
             spot: 120.0,
             strike: 100.0,
             time_to_maturity: 2.0,
             risk_free_rate: 0.03,
             volatility: 0.27,
-            style: OptionStyle::European,
+            dividend_yield: 0.01,
+            ..Default::default()
         };
         let price = bs_option.price(OptionType::Call);
-        assert_abs_diff_eq!(price, 31.9741, epsilon = 0.0001);
+        assert_abs_diff_eq!(price, 30.3564, epsilon = 0.0001);
 
         let price = bs_option.price(OptionType::Put);
-        assert_abs_diff_eq!(price, 6.1506, epsilon = 0.0001);
+        assert_abs_diff_eq!(price, 6.9091, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_european_div_otm() {
+        let bs_option = BlackScholesOption {
+            spot: 50.0,
+            strike: 65.0,
+            time_to_maturity: 0.43,
+            risk_free_rate: 0.1,
+            volatility: 0.31,
+            dividend_yield: 0.05,
+            ..Default::default()
+        };
+        let price = bs_option.price(OptionType::Call);
+        assert_abs_diff_eq!(price, 0.6470, epsilon = 0.0001);
+
+        let price = bs_option.price(OptionType::Put);
+        assert_abs_diff_eq!(price, 13.9748, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_edge() {
+        let bs_option = BlackScholesOption {
+            spot: 120.0,
+            strike: 100.0,
+            risk_free_rate: 0.03,
+            volatility: 0.27,
+            ..Default::default()
+        };
+        let price = bs_option.price(OptionType::Call);
+        assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
+
+        let bs_option = BlackScholesOption {
+            spot: 100.0,
+            strike: 120.0,
+            risk_free_rate: 0.03,
+            volatility: 0.27,
+            ..Default::default()
+        };
+        let price = bs_option.price(OptionType::Put);
+        assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
+
+        let bs_option = BlackScholesOption {
+            spot: 100.0,
+            strike: 100.0,
+            risk_free_rate: 0.03,
+            volatility: 0.27,
+            ..Default::default()
+        };
+        let price = bs_option.price(OptionType::Call);
+        assert!(price.is_nan());
+
+        let price = bs_option.price(OptionType::Put);
+        assert!(price.is_nan());
+
+        let bs_option = BlackScholesOption {
+            ..Default::default()
+        };
+        let price = bs_option.price(OptionType::Call);
+        assert!(price.is_nan());
+
+        let price = bs_option.price(OptionType::Put);
+        assert!(price.is_nan());
     }
 
     #[test]
@@ -65,11 +146,11 @@ mod black_scholes_tests {
 
         let market_price = 10.0;
         let iv = bs_option.implied_volatility(market_price, OptionType::Call);
-        assert_abs_diff_eq!(iv, 0.2, epsilon = 0.0001);
+        assert_abs_diff_eq!(iv, 0.1880, epsilon = 0.0001);
 
         let market_price = 1200.0;
         let iv = bs_option.implied_volatility(market_price, OptionType::Call);
-        assert_abs_diff_eq!(iv, 3171.5007, epsilon = 0.0001);
+        assert_abs_diff_eq!(iv, 2934.0409, epsilon = 0.0001);
     }
 
     #[test]
@@ -83,15 +164,15 @@ mod black_scholes_tests {
             ..Default::default()
         };
         let delta = bs_option.delta(OptionType::Call);
-        assert_abs_diff_eq!(delta, 0.5, epsilon = 0.0001);
+        assert_abs_diff_eq!(delta, 0.6368, epsilon = 0.0001);
         let gamma = bs_option.gamma(OptionType::Call);
-        assert_abs_diff_eq!(gamma, 0.1, epsilon = 0.0001);
+        assert_abs_diff_eq!(gamma, 0.0188, epsilon = 0.0001);
         let theta = bs_option.theta(OptionType::Call);
-        assert_abs_diff_eq!(theta, -0.01, epsilon = 0.0001);
+        assert_abs_diff_eq!(theta, -0.0100, epsilon = 0.0001);
         let vega = bs_option.vega(OptionType::Call);
-        assert_abs_diff_eq!(vega, 37.524, epsilon = 0.0001);
+        assert_abs_diff_eq!(vega, 37.5240, epsilon = 0.0001);
         let rho = bs_option.rho(OptionType::Call);
-        assert_abs_diff_eq!(rho, 0.05, epsilon = 0.0001);
+        assert_abs_diff_eq!(rho, 53.2324, epsilon = 0.0001);
     }
 }
 
@@ -115,7 +196,7 @@ mod binomial_tree_tests {
     }
 
     #[test]
-    fn test_binomial_tree_european_ootm() {
+    fn test_binomial_tree_european_otm() {
         let bt_eu = BinomialTreeOption {
             spot: 50.0,
             strike: 60.0,
@@ -145,7 +226,7 @@ mod binomial_tree_tests {
     }
 
     #[test]
-    fn test_binomial_tree_american_ootm() {
+    fn test_binomial_tree_american_otm() {
         let bt_eu = BinomialTreeOption {
             spot: 50.0,
             strike: 60.0,

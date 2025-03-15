@@ -89,11 +89,11 @@ pub struct BinomialTreeOption {
     pub spot: f64,
     /// Strike price of the option (aka exercise price).
     pub strike: f64,
-    /// Time to maturity (in years).
+    /// Time horizon (in years).
     pub time_to_maturity: f64,
     /// Risk-free interest rate (e.g., 0.05 for 5%).
     pub risk_free_rate: f64,
-    /// Volatility of the underlying asset.
+    /// Volatility of the underlying asset (e.g., 0.2 for 20%).
     pub volatility: f64,
     /// Number of steps in the binomial tree.
     pub steps: usize,
