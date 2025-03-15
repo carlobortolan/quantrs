@@ -11,9 +11,9 @@
 //! # Example
 //!
 //! ```
-//! use quantrs::options::{BlackScholesOption, OptionGreeks, OptionType, Instrument, OptionStyle};
+//! use quantrs::options::{BlackScholesModel, OptionGreeks, OptionType, Instrument, OptionStyle};
 //!
-//! let bs_option = BlackScholesOption::new(
+//! let bs_option = BlackScholesModel::new(
 //!     Instrument::new(100.0),
 //!     100.0,
 //!     1.0,
@@ -29,7 +29,7 @@
 //! println!("Vega: {}", greeks.vega);
 //! println!("Rho: {}", greeks.rho);
 //! ```
-use super::{Greeks, OptionType};
+use super::{Greeks, Option};
 
 /// A struct representing the Greeks of an option.
 pub struct OptionGreeks {
@@ -74,22 +74,22 @@ impl OptionGreeks {
     /// Returns
     ///
     /// The calculated Greeks.
-    pub fn calculate<T: Greeks>(option: &T, option_type: OptionType) -> Self {
+    pub fn calculate<T: Greeks, S: Option>(model: &T, option: S) -> Self {
         OptionGreeks {
-            delta: option.delta(option_type),
-            gamma: option.gamma(option_type),
-            theta: option.theta(option_type),
-            vega: option.vega(option_type),
-            rho: option.rho(option_type),
-            lambda: option.lambda(option_type),
-            vanna: option.vanna(option_type),
-            charm: option.charm(option_type),
-            vomma: option.vomma(option_type),
-            veta: option.veta(option_type),
-            speed: option.speed(option_type),
-            zomma: option.zomma(option_type),
-            color: option.color(option_type),
-            ultima: option.ultima(option_type),
+            delta: model.delta(option.clone()),
+            gamma: model.gamma(option.clone()),
+            theta: model.theta(option.clone()),
+            vega: model.vega(option.clone()),
+            rho: model.rho(option.clone()),
+            lambda: model.lambda(option.clone()),
+            vanna: model.vanna(option.clone()),
+            charm: model.charm(option.clone()),
+            vomma: model.vomma(option.clone()),
+            veta: model.veta(option.clone()),
+            speed: model.speed(option.clone()),
+            zomma: model.zomma(option.clone()),
+            color: model.color(option.clone()),
+            ultima: model.ultima(option.clone()),
         }
     }
 }

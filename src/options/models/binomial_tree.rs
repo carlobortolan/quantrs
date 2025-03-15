@@ -63,10 +63,10 @@
 //! ## Example
 //!
 //! ```
-//! use quantrs::options::{BinomialTreeOption, OptionType, OptionPricing, Instrument, OptionStyle};
+//! use quantrs::options::{BinomialTreeModel, OptionType, OptionPricing, Instrument, OptionStyle};
 //!
 //! let instrument = Instrument::new(100.0);
-//! let bt_option = BinomialTreeOption::new(
+//! let bt_option = BinomialTreeModel::new(
 //!     instrument,
 //!     100.0,
 //!     1.0,
@@ -79,17 +79,11 @@
 //! let price = bt_option.price(OptionType::Call);
 //! println!("Option price: {}", price);
 //! ```
-use super::{Greeks, Instrument, Option, OptionPricing, OptionStyle, OptionType};
+use crate::options::{Greeks, Option, OptionPricing, OptionStyle};
 
 /// Binomial tree option pricing model.
 #[derive(Debug, Default)]
-pub struct BinomialTreeOption {
-    /// Base data for the option.
-    pub style: OptionStyle,
-    /// The underlying instrument.
-    pub instrument: Instrument,
-    /// Strike price of the option (aka exercise price).
-    pub strike: f64,
+pub struct BinomialTreeModel {
     /// Time horizon (in years).
     pub time_to_maturity: f64,
     /// Risk-free interest rate (e.g., 0.05 for 5%).
@@ -100,32 +94,20 @@ pub struct BinomialTreeOption {
     pub steps: usize,
 }
 
-impl BinomialTreeOption {
-    /// Create a new `BinomialTreeOption`.
-    pub fn new(
-        instrument: Instrument,
-        strike: f64,
-        time_to_maturity: f64,
-        risk_free_rate: f64,
-        volatility: f64,
-        steps: usize,
-        style: OptionStyle,
-    ) -> Self {
+impl BinomialTreeModel {
+    /// Create a new `BinomialTreeModel`.
+    pub fn new(time_to_maturity: f64, risk_free_rate: f64, volatility: f64, steps: usize) -> Self {
         Self {
-            instrument,
-            strike,
             time_to_maturity,
             risk_free_rate,
             volatility,
             steps,
-            style,
-            ..Default::default()
         }
     }
 }
 
-impl OptionPricing for BinomialTreeOption {
-    fn price(&self, option_type: OptionType) -> f64 {
+impl OptionPricing for BinomialTreeModel {
+    fn price<T: Option>(&self, option: T) -> f64 {
         // Multiplicative up-/downward movements of an asset in a single step of the binomial tree
         let dt = self.time_to_maturity / self.steps as f64;
         let u = (self.volatility * dt.sqrt()).exp();
@@ -140,9 +122,8 @@ impl OptionPricing for BinomialTreeOption {
         // Initialize option values at maturity
         let mut option_values: Vec<f64> = (0..=self.steps)
             .map(|i| {
-                self.payoff(
-                    self.instrument.spot * u.powi(i as i32) * d.powi((self.steps - i) as i32),
-                    option_type,
+                option.payoff(
+                    option.instrument().spot * u.powi(i as i32) * d.powi((self.steps - i) as i32),
                 )
             })
             .collect();
@@ -153,10 +134,9 @@ impl OptionPricing for BinomialTreeOption {
                 let expected_value =
                     discount_factor * (p * option_values[i + 1] + (1.0 - p) * option_values[i]);
 
-                if self.style == OptionStyle::American {
-                    let early_exercise = self.payoff(
-                        self.instrument.spot * u.powi(i as i32) * d.powi((step - i) as i32),
-                        option_type,
+                if option.style() == &OptionStyle::American {
+                    let early_exercise = option.payoff(
+                        option.instrument().spot * u.powi(i as i32) * d.powi((step - i) as i32),
                     );
                     option_values[i] = expected_value.max(early_exercise);
                 } else {
@@ -165,50 +145,36 @@ impl OptionPricing for BinomialTreeOption {
             }
         }
 
-        if self.style == OptionStyle::American {
-            option_values[0].max(self.strike - self.instrument.spot) // TODO: Change to max(0.0, self.payoff(self.spot, option_type))
+        if option.style() == &OptionStyle::American {
+            option_values[0].max(option.strike() - option.instrument().spot) // TODO: Change to max(0.0, self.payoff(self.spot, option_type))
         } else {
             option_values[0] // Return the root node value
         }
     }
 
-    fn implied_volatility(&self, _market_price: f64, _option_type: OptionType) -> f64 {
+    fn implied_volatility<T: Option>(&self, _option: T, _market_price: f64) -> f64 {
         0.2 // TODO: Placeholder value
-    }
-
-    fn strike(&self) -> f64 {
-        self.strike
     }
 }
 
-impl Greeks for BinomialTreeOption {
-    fn delta(&self, option_type: OptionType) -> f64 {
+impl Greeks for BinomialTreeModel {
+    fn delta<T: Option>(&self, option: T) -> f64 {
         0.5 // TODO: Placeholder value
     }
 
-    fn gamma(&self, option_type: OptionType) -> f64 {
+    fn gamma<T: Option>(&self, option: T) -> f64 {
         0.1 // TODO: Placeholder value
     }
 
-    fn theta(&self, option_type: OptionType) -> f64 {
+    fn theta<T: Option>(&self, option: T) -> f64 {
         -0.01 // TODO: Placeholder value
     }
 
-    fn vega(&self, option_type: OptionType) -> f64 {
+    fn vega<T: Option>(&self, option: T) -> f64 {
         0.2 // TODO: Placeholder value
     }
 
-    fn rho(&self, option_type: OptionType) -> f64 {
+    fn rho<T: Option>(&self, option: T) -> f64 {
         0.05 // TODO: Placeholder value
-    }
-}
-
-impl Option for BinomialTreeOption {
-    fn style(&self) -> &OptionStyle {
-        &self.style
-    }
-
-    fn instrument(&self) -> &Instrument {
-        &self.instrument
     }
 }

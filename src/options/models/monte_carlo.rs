@@ -1,44 +1,34 @@
-use super::{Greeks, Instrument, Option, OptionPricing, OptionStyle, OptionType};
+use crate::options::{Greeks, Option, OptionPricing, OptionType};
 use rand_distr::{Distribution, Normal};
 
 /// A struct representing a Monte Carlo option.
 #[derive(Debug, Default, Clone)]
-pub struct MonteCarloOption {
-    pub style: OptionStyle,
-    pub instrument: Instrument,
-    pub strike: f64,
+pub struct MonteCarloModel {
     pub time_to_maturity: f64,
     pub risk_free_rate: f64,
     pub volatility: f64,
     pub simulations: usize,
 }
 
-impl MonteCarloOption {
-    /// Create a new `MonteCarloOption`.
+impl MonteCarloModel {
+    /// Create a new `MonteCarloModel`.
     pub fn new(
-        instrument: Instrument,
-        strike: f64,
         time_to_maturity: f64,
         risk_free_rate: f64,
         volatility: f64,
         simulations: usize,
-        style: OptionStyle,
     ) -> Self {
         Self {
-            instrument,
-            strike,
             time_to_maturity,
             risk_free_rate,
             volatility,
             simulations,
-            style: OptionStyle::European,
-            ..Default::default()
         }
     }
 }
 
-impl OptionPricing for MonteCarloOption {
-    fn price(&self, option_type: OptionType) -> f64 {
+impl OptionPricing for MonteCarloModel {
+    fn price<T: Option>(&self, option: T) -> f64 {
         let mut rng = rand::rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
         let dt_sqrt = self.time_to_maturity.sqrt();
@@ -48,10 +38,10 @@ impl OptionPricing for MonteCarloOption {
         let sum_payoff: f64 = (0..self.simulations)
             .map(|_| {
                 let z = normal.sample(&mut rng);
-                let st = self.instrument.spot * (drift + self.volatility * dt_sqrt * z).exp();
-                match option_type {
-                    OptionType::Call => (st - self.strike).max(0.0),
-                    OptionType::Put => (self.strike - st).max(0.0),
+                let st = option.instrument().spot * (drift + self.volatility * dt_sqrt * z).exp();
+                match option.option_type() {
+                    OptionType::Call => (st - option.strike()).max(0.0),
+                    OptionType::Put => (option.strike() - st).max(0.0),
                 }
             })
             .sum();
@@ -59,9 +49,9 @@ impl OptionPricing for MonteCarloOption {
         discount_factor * (sum_payoff / self.simulations as f64)
     }
 
-    fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
+    fn implied_volatility<T: Option>(&self, option: T, market_price: f64) -> f64 {
         // Return 0.0 for unrealistic market prices
-        if market_price <= 0.0 || market_price > self.instrument.spot {
+        if market_price <= 0.0 || market_price > option.instrument().spot {
             return 0.0;
         }
 
@@ -71,8 +61,8 @@ impl OptionPricing for MonteCarloOption {
         let mut prev_sigma = sigma;
 
         for _ in 0..max_iterations {
-            let price = self.price(option_type);
-            let vega = self.vega(option_type);
+            let price = self.price(option.clone());
+            let vega = self.vega(option.clone());
             let diff = market_price - price;
 
             if diff.abs() < tolerance {
@@ -91,96 +81,82 @@ impl OptionPricing for MonteCarloOption {
 
         sigma
     }
-
-    fn strike(&self) -> f64 {
-        self.strike
-    }
 }
 
-impl Greeks for MonteCarloOption {
-    fn delta(&self, option_type: OptionType) -> f64 {
+impl Greeks for MonteCarloModel {
+    fn delta<T: Option + Clone>(&self, option: T) -> f64 {
         let epsilon = 1e-4;
         let price_up = {
-            let mut opt = self.clone();
-            opt.instrument.spot += epsilon;
-            opt.price(option_type)
+            let mut model = self.clone();
+            model.time_to_maturity += epsilon;
+            model.price(option.clone())
         };
         let price_down = {
-            let mut opt = self.clone();
-            opt.instrument.spot -= epsilon;
-            opt.price(option_type)
+            let mut model = self.clone();
+            model.time_to_maturity -= epsilon;
+            model.price(option.clone())
         };
         (price_up - price_down) / (2.0 * epsilon)
     }
 
-    fn gamma(&self, option_type: OptionType) -> f64 {
+    fn gamma<T: Option + Clone>(&self, option: T) -> f64 {
         let epsilon = 1e-4;
         let price_up = {
-            let mut opt = self.clone();
-            opt.instrument.spot += epsilon;
-            opt.price(option_type)
+            let mut model = self.clone();
+            model.time_to_maturity += epsilon;
+            model.price(option.clone())
         };
         let price_down = {
-            let mut opt = self.clone();
-            opt.instrument.spot -= epsilon;
-            opt.price(option_type)
+            let mut model = self.clone();
+            model.time_to_maturity -= epsilon;
+            model.price(option.clone())
         };
-        let price = self.price(option_type);
+        let price = self.price(option.clone());
         (price_up - 2.0 * price + price_down) / (epsilon * epsilon)
     }
 
-    fn theta(&self, option_type: OptionType) -> f64 {
+    fn theta<T: Option + Clone>(&self, option: T) -> f64 {
         let epsilon = 1e-4;
         let price_up = {
-            let mut opt = self.clone();
-            opt.time_to_maturity += epsilon;
-            opt.price(option_type)
+            let mut model = self.clone();
+            model.time_to_maturity += epsilon;
+            model.price(option.clone())
         };
         let price_down = {
-            let mut opt = self.clone();
-            opt.time_to_maturity -= epsilon;
-            opt.price(option_type)
+            let mut model = self.clone();
+            model.time_to_maturity -= epsilon;
+            model.price(option.clone())
         };
         (price_down - price_up) / (2.0 * epsilon)
     }
 
-    fn vega(&self, option_type: OptionType) -> f64 {
+    fn vega<T: Option + Clone>(&self, option: T) -> f64 {
         let epsilon = 1e-4;
         let price_up = {
             let mut opt = self.clone();
             opt.volatility += epsilon;
-            opt.price(option_type)
+            self.price(option.clone())
         };
         let price_down = {
             let mut opt = self.clone();
             opt.volatility -= epsilon;
-            opt.price(option_type)
+            self.price(option.clone())
         };
         (price_up - price_down) / (2.0 * epsilon)
     }
 
-    fn rho(&self, option_type: OptionType) -> f64 {
+    fn rho<T: Option + Clone>(&self, option: T) -> f64 {
         let epsilon = 1e-4;
         let price_up = {
             let mut opt = self.clone();
             opt.risk_free_rate += epsilon;
-            opt.price(option_type)
+            self.price(option.clone())
         };
         let price_down = {
             let mut opt = self.clone();
             opt.risk_free_rate -= epsilon;
-            opt.price(option_type)
+            self.price(option.clone())
         };
         (price_up - price_down) / (2.0 * epsilon)
-    }
-}
-
-impl Option for MonteCarloOption {
-    fn style(&self) -> &OptionStyle {
-        &self.style
-    }
-
-    fn instrument(&self) -> &Instrument {
-        &self.instrument
     }
 }

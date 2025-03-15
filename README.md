@@ -77,7 +77,7 @@ Now you can use the library in your code:
 use quantrs::options::*;
 
 fn main() {
-    let option = BlackScholesOption {
+    let option = BlackScholesModel {
         spot: 100.0,
         strike: 100.0,
         time_to_maturity: 1.0,

@@ -39,7 +39,10 @@ impl Instrument {
             continuous_dividend_yield: 0.0,
             discrete_dividend_yield: 0.0,
             dividend_times: Vec::new(),
-            ..Default::default()
         }
+    }
+
+    pub fn spot(&self) -> f64 {
+        self.spot
     }
 }
