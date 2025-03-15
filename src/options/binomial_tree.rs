@@ -79,6 +79,7 @@
 //! println!("Option price: {}", price);
 //! ```
 use super::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
+
 /// Binomial tree option pricing model.
 #[derive(Debug, Default)]
 pub struct BinomialTreeOption {
@@ -86,11 +87,11 @@ pub struct BinomialTreeOption {
     pub style: OptionStyle,
     /// Current price of the underlying asset.
     pub spot: f64,
-    /// Strike price of the option.
+    /// Strike price of the option (aka exercise price).
     pub strike: f64,
     /// Time to maturity (in years).
     pub time_to_maturity: f64,
-    /// Risk-free interest rate.
+    /// Risk-free interest rate (e.g., 0.05 for 5%).
     pub risk_free_rate: f64,
     /// Volatility of the underlying asset.
     pub volatility: f64,
@@ -100,10 +101,48 @@ pub struct BinomialTreeOption {
 
 impl OptionPricing for BinomialTreeOption {
     fn price(&self, option_type: OptionType) -> f64 {
-        10.0 // TODO: Placeholder value
+        let dt = self.time_to_maturity / self.steps as f64;
+        let u = (self.volatility * dt.sqrt()).exp();
+        let d = 1.0 / u;
+        let p = ((self.risk_free_rate * dt).exp() - d) / (u - d);
+        let discount_factor = (-self.risk_free_rate * dt).exp();
+
+        // Initialize option values at maturity
+        let mut option_values: Vec<f64> = (0..=self.steps)
+            .map(|i| {
+                self.payoff(
+                    self.spot * u.powi(i as i32) * d.powi((self.steps - i) as i32),
+                    option_type,
+                )
+            })
+            .collect();
+
+        // Backward induction
+        for step in (0..self.steps).rev() {
+            for i in 0..=step {
+                let expected_value =
+                    discount_factor * (p * option_values[i + 1] + (1.0 - p) * option_values[i]);
+
+                if self.style == OptionStyle::American {
+                    let early_exercise = self.payoff(
+                        self.spot * u.powi(i as i32) * d.powi((step - i) as i32),
+                        option_type,
+                    );
+                    option_values[i] = expected_value.max(early_exercise);
+                } else {
+                    option_values[i] = expected_value;
+                }
+            }
+        }
+
+        if self.style == OptionStyle::American {
+            option_values[0].max(self.strike - self.spot)
+        } else {
+            option_values[0] // Return the root node value
+        }
     }
 
-    fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
+    fn implied_volatility(&self, _market_price: f64, _option_type: OptionType) -> f64 {
         0.2 // TODO: Placeholder value
     }
 

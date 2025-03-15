@@ -65,10 +65,10 @@ pub trait OptionPricing {
     /// # Returns
     ///
     /// The payoff of the option.
-    fn payoff(&self, underlying_price: f64, option_type: OptionType) -> f64 {
+    fn payoff(&self, spot: f64, option_type: OptionType) -> f64 {
         match option_type {
-            OptionType::Call => (underlying_price - self.strike()).max(0.0),
-            OptionType::Put => (self.strike() - underlying_price).max(0.0),
+            OptionType::Call => (spot - self.strike()).max(0.0),
+            OptionType::Put => (self.strike() - spot).max(0.0),
         }
     }
 
@@ -143,7 +143,7 @@ pub enum OptionType {
 }
 
 /// Enum representing the style of the option.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum OptionStyle {
     /// American option (can be exercised at any time)
     American,
