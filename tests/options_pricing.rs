@@ -7,10 +7,11 @@ use quantrs::options::{
 // Function to assert that a type implements the Option trait
 fn assert_implements_option_trait<T: Option>(option: &T) {
     // This function does nothing but ensures that T implements the Option trait and required methods
-    T::price(&option, OptionType::Call);
-    T::price(&option, OptionType::Put);
-    T::implied_volatility(&option, 10.0, OptionType::Call);
-    T::style(&option);
+    T::price(option, OptionType::Call);
+    T::price(option, OptionType::Put);
+    T::implied_volatility(option, 10.0, OptionType::Call);
+    T::strike(option);
+    T::style(option);
 }
 
 // Black-Scholes Option Tests
