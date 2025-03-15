@@ -60,20 +60,16 @@
 //! ## Example
 //!
 //! ```
-//! use quantrs::options::{BlackScholesModel, OptionType, OptionPricing, Instrument, OptionStyle};
+//! use quantrs::options::{BlackScholesModel, OptionType, OptionPricing, Instrument, OptionStyle, EuropeanOption};
 //!
-//! let bs_option = BlackScholesModel::new(
-//!   Instrument::new(100.0),
-//!   100.0,
-//!   1.0,
-//!   0.05,
-//!   0.2,
-//!   OptionStyle::European,
-//! );
+//! let instrument = Instrument::new(100.0);
+//! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+//! let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 //!
-//! let price = bs_option.price(OptionType::Call);
+//! let price = model.price(option);
 //! println!("Option price: {}", price);
 //! ```
+
 use crate::options::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 

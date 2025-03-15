@@ -1,7 +1,7 @@
 use approx::assert_abs_diff_eq;
 use quantrs::options::{
     BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks, Instrument, MonteCarloModel,
-    Option, OptionGreeks, OptionPricing, OptionStyle, OptionType,
+    Option, OptionGreeks, OptionPricing, OptionType,
 };
 
 // Function to assert that a type implements the Option trait

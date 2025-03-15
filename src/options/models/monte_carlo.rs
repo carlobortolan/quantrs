@@ -1,12 +1,89 @@
+//! Module for Monte Carlo option pricing model.
+//!
+//! The Monte Carlo option pricing model is a numerical method used to calculate the theoretical price of options by simulating the random paths of the underlying asset's price.
+//! This method is particularly useful for pricing complex derivatives and options with multiple sources of uncertainty or path-dependent features.
+//!
+//! The Monte Carlo model makes several assumptions, including:
+//! - The underlying asset follows a stochastic process, typically modeled as a geometric Brownian motion.
+//! - The risk-free interest rate is constant.
+//! - The volatility of the underlying asset is constant.
+//!
+//! The Monte Carlo model is widely used by options traders and financial engineers to determine the fair price of an option based on various factors,
+//! including the current price of the underlying asset, the strike price of the option, the time to expiration, the risk-free interest rate,
+//! and the volatility of the underlying asset.
+//!
+//! ## Formula
+//!
+//! The price of an option using the Monte Carlo model is calculated by simulating the random paths of the underlying asset's price and averaging the discounted payoffs.
+//!
+//! The simulated price of the underlying asset at maturity is calculated as follows:
+//!
+//! ```text
+//! ST = S * exp((r - 0.5 * σ^2) * T + σ * sqrt(T) * Z)
+//! ```
+//!
+//! where:
+//! - `ST` is the simulated price of the underlying asset at maturity.
+//! - `S` is the current price of the underlying asset.
+//! - `r` is the risk-free interest rate.
+//! - `T` is the time to maturity.
+//! - `σ` is the volatility of the underlying asset.
+//! - `Z` is a random variable from the standard normal distribution.
+//!
+//! The payoff of the option is calculated as:
+//!
+//! ```text
+//! payoff = max(ST - K, 0) for a call option
+//! payoff = max(K - ST, 0) for a put option
+//! ```
+//!
+//! where:
+//! - `ST` is the simulated price of the underlying asset at maturity.
+//! - `K` is the strike price of the option.
+//! - `max` is the maximum function.
+//!
+//! The option price is then calculated as the discounted average of the simulated payoffs:
+//!
+//! ```text
+//! price = e^(-rT) * (1 / N) * Σ payoff_i
+//! ```
+//!
+//! where:
+//! - `N` is the number of simulations.
+//! - `payoff_i` is the payoff of the option in the i-th simulation.
+//!
+//! ## References
+//!
+//! - [Wikipedia - Monte Carlo methods in finance](https://en.wikipedia.org/wiki/Monte_Carlo_methods_in_finance)
+//! - [Investopedia - Monte Carlo Simulation](https://www.investopedia.com/terms/m/montecarlosimulation.asp)
+//! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
+//!
+//! ## Example
+//!
+//! ```
+//! use quantrs::options::{MonteCarloModel, OptionType, OptionPricing, Instrument, OptionStyle, EuropeanOption};
+//!
+//! let instrument = Instrument::new(100.0);
+//! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+//! let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+//!
+//! let price = model.price(option);
+//! println!("Option price: {}", price);
+//! ```
+
 use crate::options::{Greeks, Option, OptionPricing, OptionType};
 use rand_distr::{Distribution, Normal};
 
 /// A struct representing a Monte Carlo option.
 #[derive(Debug, Default, Clone)]
 pub struct MonteCarloModel {
+    /// Time horizon (in years).
     pub time_to_maturity: f64,
+    /// Risk-free interest rate (e.g., 0.05 for 5%).
     pub risk_free_rate: f64,
+    /// Volatility of the underlying asset (e.g., 0.2 for 20%).
     pub volatility: f64,
+    /// Number of simulations to run.
     pub simulations: usize,
 }
 

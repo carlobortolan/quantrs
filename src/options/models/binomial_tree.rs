@@ -63,22 +63,16 @@
 //! ## Example
 //!
 //! ```
-//! use quantrs::options::{BinomialTreeModel, OptionType, OptionPricing, Instrument, OptionStyle};
+//! use quantrs::options::{OptionPricing, BinomialTreeModel, EuropeanOption, Instrument, OptionType};
 //!
 //! let instrument = Instrument::new(100.0);
-//! let bt_option = BinomialTreeModel::new(
-//!     instrument,
-//!     100.0,
-//!     1.0,
-//!     0.05,
-//!     0.2,
-//!     100,
-//!     OptionStyle::European,
-//! );
+//! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+//! let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 //!
-//! let price = bt_option.price(OptionType::Call);
+//! let price = model.price(option);
 //! println!("Option price: {}", price);
 //! ```
+
 use crate::options::{Greeks, Option, OptionPricing, OptionStyle};
 
 /// Binomial tree option pricing model.

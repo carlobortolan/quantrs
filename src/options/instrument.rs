@@ -6,7 +6,7 @@
 //! - [Wikipedia - Dividend yield](https://en.wikipedia.org/wiki/Dividend_yield)
 //! - [Investopedia - Dividend Yield](https://www.investopedia.com/terms/d/dividendyield.asp)
 //!
-//! # Example
+//! ## Example
 //!
 //! ```
 //! use quantrs::options::Instrument;
@@ -33,6 +33,7 @@ pub struct Instrument {
 }
 
 impl Instrument {
+    /// Create a new `Instrument`.
     pub fn new(spot: f64) -> Self {
         Self {
             spot,
@@ -42,6 +43,7 @@ impl Instrument {
         }
     }
 
+    /// Get the current price of the underlying asset.
     pub fn spot(&self) -> f64 {
         self.spot
     }

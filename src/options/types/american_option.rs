@@ -1,7 +1,31 @@
+//! Module for American option type.
+//!
+//! An American option is a type of options contract that can be exercised at any time before its expiration date.
+//! This flexibility makes American options more valuable than their European counterparts, which can only be exercised at expiration.
+//!
+//! ## Characteristics
+//!
+//! - **Underlying Instrument**: The asset on which the option is based.
+//! - **Strike Price**: The price at which the option can be exercised.
+//! - **Option Type**: Specifies whether the option is a call (right to buy) or a put (right to sell).
+//!
+//! ## Example
+//!
+//! ```
+//! use quantrs::options::{Option, AmericanOption, Instrument, OptionType};
+//!
+//! let instrument = Instrument::new(100.0);
+//! let option = AmericanOption::new(instrument, 100.0, OptionType::Call);
+//!
+//! println!("Option type: {:?}", option.option_type());
+//! println!("Strike price: {}", option.strike());
+//! println!("Option style: {:?}", option.style());
+//! ```
+
 use super::{OptionStyle, OptionType};
 use crate::options::{Instrument, Option};
 
-/// A struct representing a European option.
+/// A struct representing an American option.
 #[derive(Clone, Debug)]
 pub struct AmericanOption {
     /// The underlying instrument.
@@ -13,6 +37,7 @@ pub struct AmericanOption {
 }
 
 impl AmericanOption {
+    /// Create a new `AmericanOption`.
     pub fn new(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
         Self {
             instrument,

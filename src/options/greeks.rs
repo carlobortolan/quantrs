@@ -7,28 +7,22 @@
 //! - [Investopedia - Option Greeks](https://www.investopedia.com/terms/g/greeks.asp)
 //! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
 //!
-//!
-//! # Example
+//! ## Example
 //!
 //! ```
-//! use quantrs::options::{BlackScholesModel, OptionGreeks, OptionType, Instrument, OptionStyle};
+//! use quantrs::options::{EuropeanOption, BlackScholesModel, OptionGreeks, OptionType, Instrument};
 //!
-//! let bs_option = BlackScholesModel::new(
-//!     Instrument::new(100.0),
-//!     100.0,
-//!     1.0,
-//!     0.05,
-//!     0.2,
-//!     OptionStyle::European,
-//! );
+//! let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+//! let model = quantrs::options::BlackScholesModel::new(1.0, 0.05, 0.2);
 //!
-//! let greeks = OptionGreeks::calculate(&bs_option, OptionType::Call);
+//! let greeks = OptionGreeks::calculate(&model, option);
 //! println!("Delta: {}", greeks.delta);
 //! println!("Gamma: {}", greeks.gamma);
 //! println!("Theta: {}", greeks.theta);
 //! println!("Vega: {}", greeks.vega);
 //! println!("Rho: {}", greeks.rho);
 //! ```
+
 use super::{Greeks, Option};
 
 /// A struct representing the Greeks of an option.

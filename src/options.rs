@@ -47,7 +47,7 @@ pub trait Option: Clone {
     /// Get the type of the option.
     ///
     /// # Returns
-    ///     
+    ///
     /// The type of the option.
     fn option_type(&self) -> OptionType;
 
@@ -62,8 +62,7 @@ pub trait Option: Clone {
     ///
     /// # Arguments
     ///
-    /// * `underlying_price` - The price of the underlying asset at maturity.
-    /// * `option_type` - The type of option (Call or Put).
+    /// * `spot` - The price of the underlying asset at maturity.
     ///
     /// # Returns
     ///
@@ -82,7 +81,7 @@ pub trait OptionPricing {
     ///
     /// # Arguments
     ///
-    /// * `option_type` - The type of option (Call or Put).
+    /// * `option` - The option to price.
     ///
     /// # Returns
     ///
@@ -93,8 +92,8 @@ pub trait OptionPricing {
     ///
     /// # Arguments
     ///
+    /// * `option` - The option for which to calculate the implied volatility.
     /// * `market_price` - The market price of the option.
-    /// * `option_type` - The type of option (Call or Put).
     ///
     /// # Returns
     ///
