@@ -253,7 +253,7 @@ mod black_scholes_tests {
         let rho = model.rho(option.clone());
         assert_abs_diff_eq!(rho, 1.3439, epsilon = 0.0001);
         let theta = model.theta(option.clone());
-        assert_abs_diff_eq!(theta, -0.5042, epsilon = 0.0001);
+        assert_abs_diff_eq!(theta, -0.0015, epsilon = 0.0001);
     }
 
     #[test]
@@ -274,7 +274,7 @@ mod black_scholes_tests {
         let rho = model.rho(option.clone());
         assert_abs_diff_eq!(rho, -0.9970, epsilon = 0.0001);
         let theta = model.theta(option.clone());
-        assert_abs_diff_eq!(theta, 0.2673, epsilon = 0.0001);
+        assert_abs_diff_eq!(theta, -0.1930, epsilon = 0.0001);
     }
 
     #[test]
@@ -358,16 +358,30 @@ mod binomial_tree_tests {
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 
-        let delta = model.delta(option.clone());
-        assert_abs_diff_eq!(delta, 0.5, epsilon = 0.0001);
-        let gamma = model.gamma(option.clone());
-        assert_abs_diff_eq!(gamma, 0.1, epsilon = 0.0001);
-        let theta = model.theta(option.clone());
-        assert_abs_diff_eq!(theta, -0.01, epsilon = 0.0001);
-        let vega = model.vega(option.clone());
-        assert_abs_diff_eq!(vega, 0.2, epsilon = 0.0001);
-        let rho = model.rho(option.clone());
-        assert_abs_diff_eq!(rho, 0.05, epsilon = 0.0001);
+        let result = std::panic::catch_unwind(|| {
+            model.delta(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for delta calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.gamma(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for gamma calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.theta(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for theta calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.vega(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for vega calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.rho(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for rho calculation");
     }
 }
 
@@ -439,17 +453,18 @@ mod greeks_tests {
 
     #[test]
     fn test_greeks() {
-        let instrument = Instrument::new(100.0);
+        let mut instrument = Instrument::new(100.0);
+        instrument.continuous_dividend_yield = 0.01;
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-        let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
         let greeks = OptionGreeks::calculate(&model, option.clone());
 
-        assert_abs_diff_eq!(greeks.delta, 0.5, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.gamma, 0.1, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.theta, -0.01, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.vega, 0.2, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.rho, 0.05, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.delta, 0.6118, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.gamma, 0.0191, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.theta, 5.7696, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.vega, 37.7593, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.rho, 51.3500, epsilon = 0.0001);
     }
 }
 

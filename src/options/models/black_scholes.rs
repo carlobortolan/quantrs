@@ -54,8 +54,8 @@
 //! ## References
 //!
 //! - [Wikipedia - Black-Scholes model](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model)
-//! - [Investopedia - Black-Scholes Model](https://www.investopedia.com/terms/b/blackscholes.asp)
-//! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
+//! - [Black-Scholes Calculator](https://www.math.drexel.edu/~pg/fin/VanillaCalculator.html)
+//! - [Black-Scholes Binary Options](https://quantpie.co.uk/bsm_bin_c_formula/bs_bin_c_summary.php)
 //!
 //! ## Example
 //!
@@ -94,12 +94,12 @@ impl BlackScholesModel {
         }
     }
 
-    /// Calculate the price of an European call option using the Black-Scholes formula.
+    /// Calculate d1 and d2 for the Black-Scholes formula.
     ///
     /// # Returns
     ///
-    /// The price of the call option.
-    fn call_price<T: Option>(&self, option: T) -> f64 {
+    /// A tuple containing d1 and d2.
+    fn calculate_d1_d2<T: Option>(&self, option: &T) -> (f64, f64) {
         let sqrt_t = self.time_to_maturity.sqrt();
         let n_dividends = option
             .instrument()
@@ -110,7 +110,7 @@ impl BlackScholesModel {
         let adjusted_spot = option.instrument().spot
             * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
 
-        let d1: f64 = ((adjusted_spot / option.strike()).ln()
+        let d1 = ((adjusted_spot / option.strike()).ln()
             + (self.risk_free_rate - option.instrument().continuous_dividend_yield
                 + 0.5 * self.volatility.powi(2))
                 * self.time_to_maturity)
@@ -118,9 +118,30 @@ impl BlackScholesModel {
 
         let d2 = d1 - self.volatility * sqrt_t;
 
+        (d1, d2)
+    }
+
+    /// Calculate the price of an European call option using the Black-Scholes formula.
+    ///
+    /// # Returns
+    ///
+    /// The price of the call option.
+    fn call_price<T: Option>(&self, option: T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(&option);
+
         let normal = Normal::new(0.0, 1.0).unwrap();
         let nd1 = normal.cdf(d1);
         let nd2 = normal.cdf(d2);
+        let adjusted_spot = option.instrument().spot
+            * (1.0 - option.instrument().discrete_dividend_yield).powf(
+                option
+                    .instrument()
+                    .dividend_times
+                    .iter()
+                    .filter(|&&t| t <= self.time_to_maturity)
+                    .count() as f64,
+            );
+
         adjusted_spot
             * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
             * nd1
@@ -133,27 +154,21 @@ impl BlackScholesModel {
     ///
     /// The price of the put option.
     fn put_price<T: Option>(&self, option: T) -> f64 {
-        let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= self.time_to_maturity)
-            .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
-
-        let d1: f64 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate - option.instrument().continuous_dividend_yield
-                + 0.5 * self.volatility.powi(2))
-                * self.time_to_maturity)
-            / (self.volatility * sqrt_t);
-
-        let d2 = d1 - self.volatility * sqrt_t;
+        let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         let nd1 = normal.cdf(-d1);
         let nd2 = normal.cdf(-d2);
+        let adjusted_spot = option.instrument().spot
+            * (1.0 - option.instrument().discrete_dividend_yield).powf(
+                option
+                    .instrument()
+                    .dividend_times
+                    .iter()
+                    .filter(|&&t| t <= self.time_to_maturity)
+                    .count() as f64,
+            );
+
         option.strike() * (-self.risk_free_rate * self.time_to_maturity).exp() * nd2
             - adjusted_spot
                 * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
@@ -170,22 +185,7 @@ impl BlackScholesModel {
     ///
     /// The price of the binary option.
     fn binary_price<T: Option>(&self, option: T) -> f64 {
-        let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= self.time_to_maturity)
-            .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
-
-        let d2: f64 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate
-                - option.instrument().continuous_dividend_yield
-                - 0.5 * self.volatility.powi(2))
-                * self.time_to_maturity)
-            / (self.volatility * sqrt_t);
+        let (_, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.option_type() {
@@ -219,7 +219,7 @@ impl BlackScholesModel {
         let adjusted_spot = option.instrument().spot
             * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
 
-        let d1: f64 = ((adjusted_spot / option.strike()).ln()
+        let d1 = ((adjusted_spot / option.strike()).ln()
             + (self.risk_free_rate - option.instrument().continuous_dividend_yield
                 + 0.5 * volatility.powi(2))
                 * self.time_to_maturity)
@@ -279,23 +279,7 @@ impl OptionPricing for BlackScholesModel {
 
 impl Greeks for BlackScholesModel {
     fn delta<T: Option>(&self, option: T) -> f64 {
-        let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= self.time_to_maturity)
-            .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
-
-        let d1: f64 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate - option.instrument().continuous_dividend_yield
-                + 0.5 * self.volatility.powi(2))
-                * self.time_to_maturity)
-            / (self.volatility * sqrt_t);
-
-        let d2 = d1 - self.volatility * sqrt_t;
+        let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.style() {
@@ -309,150 +293,200 @@ impl Greeks for BlackScholesModel {
                         * (normal.cdf(d1) - 1.0)
                 }
             },
-            OptionStyle::Binary => match option.option_type() {
-                OptionType::Call => {
-                    (-self.risk_free_rate * self.time_to_maturity).exp() * normal.pdf(d2)
-                        / (self.volatility * sqrt_t)
+            OptionStyle::Binary => {
+                let delta = (-self.risk_free_rate * self.time_to_maturity).exp() * normal.pdf(d2)
+                    / (self.volatility * option.instrument().spot * self.time_to_maturity.sqrt());
+
+                match option.option_type() {
+                    OptionType::Call => delta,
+                    OptionType::Put => -delta,
                 }
-                OptionType::Put => {
-                    (-self.risk_free_rate * self.time_to_maturity).exp() * normal.pdf(d2)
-                        / (self.volatility * sqrt_t)
-                }
-            },
+            }
             _ => panic!("Unsupported option style for delta calculation"),
         }
     }
 
-    // ...existing code for other Greeks...
     fn gamma<T: Option>(&self, option: T) -> f64 {
-        let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= self.time_to_maturity)
-            .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
-
-        let d1: f64 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate - option.instrument().continuous_dividend_yield
-                + 0.5 * self.volatility.powi(2))
-                * self.time_to_maturity)
-            / (self.volatility * sqrt_t);
+        let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
-        normal.pdf(d1) / (adjusted_spot * self.volatility * sqrt_t)
+        let adjusted_spot = option.instrument().spot
+            * (1.0 - option.instrument().discrete_dividend_yield).powf(
+                option
+                    .instrument()
+                    .dividend_times
+                    .iter()
+                    .filter(|&&t| t <= self.time_to_maturity)
+                    .count() as f64,
+            );
+
+        match option.style() {
+            OptionStyle::European => {
+                normal.pdf(d1) / (adjusted_spot * self.volatility * self.time_to_maturity.sqrt())
+            }
+            OptionStyle::Binary => {
+                let gamma =
+                    -(-self.risk_free_rate * self.time_to_maturity).exp() * normal.pdf(d2) * d1
+                        / (self.volatility.powi(2)
+                            * option.instrument().spot.powi(2)
+                            * self.time_to_maturity);
+
+                match option.option_type() {
+                    OptionType::Call => gamma,
+                    OptionType::Put => -gamma,
+                }
+            }
+            _ => panic!("Unsupported option style for gamma calculation"),
+        }
     }
 
     fn theta<T: Option>(&self, option: T) -> f64 {
-        let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= self.time_to_maturity)
-            .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
-
-        let d1: f64 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate - option.instrument().continuous_dividend_yield
-                + 0.5 * self.volatility.powi(2))
-                * self.time_to_maturity)
-            / (self.volatility * sqrt_t);
-
-        let d2 = d1 - self.volatility * sqrt_t;
+        let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         let nd1 = normal.cdf(d1);
         let nd2 = normal.cdf(d2);
         let pdf_d1 = normal.pdf(d1);
+        let adjusted_spot = option.instrument().spot
+            * (1.0 - option.instrument().discrete_dividend_yield).powf(
+                option
+                    .instrument()
+                    .dividend_times
+                    .iter()
+                    .filter(|&&t| t <= self.time_to_maturity)
+                    .count() as f64,
+            );
 
-        match option.option_type() {
-            OptionType::Call => {
-                adjusted_spot * pdf_d1 * self.volatility / (2.0 * sqrt_t)
-                    + self.risk_free_rate
-                        * option.strike()
-                        * (-self.risk_free_rate * self.time_to_maturity).exp()
-                        * nd2
-                    - option.instrument().continuous_dividend_yield
-                        * adjusted_spot
-                        * (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
-                            .exp()
-                        * nd1
-            }
-            OptionType::Put => {
-                adjusted_spot * pdf_d1 * self.volatility / (2.0 * sqrt_t)
-                    - self.risk_free_rate
-                        * option.strike()
-                        * (-self.risk_free_rate * self.time_to_maturity).exp()
-                        * normal.cdf(-d2)
-                    + option.instrument().continuous_dividend_yield
-                        * adjusted_spot
-                        * (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
-                            .exp()
-                        * normal.cdf(-d1)
-            }
+        match option.style() {
+            OptionStyle::European => match option.option_type() {
+                OptionType::Call => {
+                    adjusted_spot * pdf_d1 * self.volatility / (2.0 * self.time_to_maturity.sqrt())
+                        + self.risk_free_rate
+                            * option.strike()
+                            * (-self.risk_free_rate * self.time_to_maturity).exp()
+                            * nd2
+                        - option.instrument().continuous_dividend_yield
+                            * adjusted_spot
+                            * (-option.instrument().continuous_dividend_yield
+                                * self.time_to_maturity)
+                                .exp()
+                            * nd1
+                }
+                OptionType::Put => {
+                    adjusted_spot * pdf_d1 * self.volatility / (2.0 * self.time_to_maturity.sqrt())
+                        - self.risk_free_rate
+                            * option.strike()
+                            * (-self.risk_free_rate * self.time_to_maturity).exp()
+                            * normal.cdf(-d2)
+                        + option.instrument().continuous_dividend_yield
+                            * adjusted_spot
+                            * (-option.instrument().continuous_dividend_yield
+                                * self.time_to_maturity)
+                                .exp()
+                            * normal.cdf(-d1)
+                }
+            },
+            OptionStyle::Binary => match option.option_type() {
+                OptionType::Call => {
+                    (-self.risk_free_rate * self.time_to_maturity).exp()
+                        * (normal.pdf(d2)
+                            / (2.0
+                                * self.time_to_maturity
+                                * self.volatility
+                                * self.time_to_maturity.sqrt())
+                            * ((option.instrument().spot / option.strike()).ln()
+                                - (self.risk_free_rate
+                                    - option.instrument().continuous_dividend_yield
+                                    - self.volatility.powi(2) * 0.5)
+                                    * self.time_to_maturity)
+                            + self.risk_free_rate * nd2)
+                }
+                OptionType::Put => {
+                    -(-self.risk_free_rate * self.time_to_maturity).exp()
+                        * (normal.pdf(d2)
+                            / (2.0
+                                * self.time_to_maturity
+                                * self.volatility
+                                * self.time_to_maturity.sqrt())
+                            * ((option.instrument().spot / option.strike()).ln()
+                                - (self.risk_free_rate
+                                    - option.instrument().continuous_dividend_yield
+                                    - self.volatility.powi(2) * 0.5)
+                                    * self.time_to_maturity)
+                            - self.risk_free_rate * normal.cdf(-d2))
+                }
+            },
+            _ => panic!("Unsupported option style for theta calculation"),
         }
     }
 
     fn vega<T: Option>(&self, option: T) -> f64 {
-        let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= self.time_to_maturity)
-            .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
-
-        let d1: f64 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate - option.instrument().continuous_dividend_yield
-                + 0.5 * self.volatility.powi(2))
-                * self.time_to_maturity)
-            / (self.volatility * sqrt_t);
+        let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
-        adjusted_spot
-            * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
-            * normal.pdf(d1)
-            * sqrt_t
+        let adjusted_spot = option.instrument().spot
+            * (1.0 - option.instrument().discrete_dividend_yield).powf(
+                option
+                    .instrument()
+                    .dividend_times
+                    .iter()
+                    .filter(|&&t| t <= self.time_to_maturity)
+                    .count() as f64,
+            );
+
+        match option.style() {
+            OptionStyle::European => {
+                adjusted_spot
+                    * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
+                    * normal.pdf(d1)
+                    * self.time_to_maturity.sqrt()
+            }
+            OptionStyle::Binary => {
+                let vega =
+                    -(-self.risk_free_rate * self.time_to_maturity).exp() * d1 * normal.pdf(d2)
+                        / self.volatility;
+
+                match option.option_type() {
+                    OptionType::Call => vega,
+                    OptionType::Put => -vega,
+                }
+            }
+            _ => panic!("Unsupported option style for vega calculation"),
+        }
     }
 
     fn rho<T: Option>(&self, option: T) -> f64 {
-        let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= self.time_to_maturity)
-            .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
-
-        let d2: f64 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate
-                - option.instrument().continuous_dividend_yield
-                - 0.5 * self.volatility.powi(2))
-                * self.time_to_maturity)
-            / (self.volatility * sqrt_t);
+        let (_, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
-        match option.option_type() {
-            OptionType::Call => {
-                option.strike()
-                    * self.time_to_maturity
-                    * (-self.risk_free_rate * self.time_to_maturity).exp()
-                    * normal.cdf(d2)
-            }
-            OptionType::Put => {
-                -option.strike()
-                    * self.time_to_maturity
-                    * (-self.risk_free_rate * self.time_to_maturity).exp()
-                    * normal.cdf(-d2)
-            }
+        match option.style() {
+            OptionStyle::European => match option.option_type() {
+                OptionType::Call => {
+                    option.strike()
+                        * self.time_to_maturity
+                        * (-self.risk_free_rate * self.time_to_maturity).exp()
+                        * normal.cdf(d2)
+                }
+                OptionType::Put => {
+                    -option.strike()
+                        * self.time_to_maturity
+                        * (-self.risk_free_rate * self.time_to_maturity).exp()
+                        * normal.cdf(-d2)
+                }
+            },
+            OptionStyle::Binary => match option.option_type() {
+                OptionType::Call => {
+                    (-self.risk_free_rate * self.time_to_maturity).exp()
+                        * (self.time_to_maturity.sqrt() * normal.pdf(d2) / self.volatility
+                            - self.time_to_maturity * normal.cdf(d2))
+                }
+                OptionType::Put => {
+                    -(-self.risk_free_rate * self.time_to_maturity).exp()
+                        * (self.time_to_maturity.sqrt() * normal.pdf(d2) / self.volatility
+                            + self.time_to_maturity * normal.cdf(-d2))
+                }
+            },
+            _ => panic!("Unsupported option style for rho calculation"),
         }
     }
 }
