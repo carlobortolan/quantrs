@@ -1,8 +1,8 @@
 // Run:  cargo run --release --example options_pricing
 
 use quantrs::options::{
-    BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption, OptionGreeks, OptionPricing,
-    OptionStyle, OptionType,
+    black_scholes::Instrument, BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption,
+    OptionGreeks, OptionPricing, OptionStyle, OptionType,
 };
 
 fn main() {
@@ -14,7 +14,10 @@ fn main() {
 
 fn example_black_scholes() {
     let bs_option = BlackScholesOption {
-        spot: 100.0,
+        instrument: Instrument {
+            spot: 100.0,
+            ..Default::default()
+        },
         strike: 100.0,
         time_to_maturity: 1.0,
         risk_free_rate: 0.05,

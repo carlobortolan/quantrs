@@ -16,12 +16,17 @@ fn assert_implements_option_trait<T: Option>(option: &T) {
 
 // Black-Scholes Option Tests
 mod black_scholes_tests {
+    use quantrs::options::black_scholes::Instrument;
+
     use super::*;
 
     #[test]
     fn test_black_scholes_european_itm() {
         let bs_option = BlackScholesOption {
-            spot: 120.0,
+            instrument: Instrument {
+                spot: 120.0,
+                ..Default::default()
+            },
             strike: 100.0,
             time_to_maturity: 2.0,
             risk_free_rate: 0.03,
@@ -38,7 +43,10 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_european_otm() {
         let bs_option = BlackScholesOption {
-            spot: 50.0,
+            instrument: Instrument {
+                spot: 50.0,
+                ..Default::default()
+            },
             strike: 65.0,
             time_to_maturity: 0.43,
             risk_free_rate: 0.1,
@@ -55,12 +63,15 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_european_div_itm() {
         let bs_option = BlackScholesOption {
-            spot: 120.0,
+            instrument: Instrument {
+                spot: 120.0,
+                continuous_dividend_yield: 0.01,
+                ..Default::default()
+            },
             strike: 100.0,
             time_to_maturity: 2.0,
             risk_free_rate: 0.03,
             volatility: 0.27,
-            dividend_yield: 0.01,
             ..Default::default()
         };
         let price = bs_option.price(OptionType::Call);
@@ -73,12 +84,15 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_european_div_otm() {
         let bs_option = BlackScholesOption {
-            spot: 50.0,
+            instrument: Instrument {
+                spot: 50.0,
+                continuous_dividend_yield: 0.05,
+                ..Default::default()
+            },
             strike: 65.0,
             time_to_maturity: 0.43,
             risk_free_rate: 0.1,
             volatility: 0.31,
-            dividend_yield: 0.05,
             ..Default::default()
         };
         let price = bs_option.price(OptionType::Call);
@@ -91,7 +105,11 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_edge() {
         let bs_option = BlackScholesOption {
-            spot: 120.0,
+            instrument: Instrument {
+                spot: 120.0,
+                ..Default::default()
+            },
+
             strike: 100.0,
             risk_free_rate: 0.03,
             volatility: 0.27,
@@ -101,7 +119,10 @@ mod black_scholes_tests {
         assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
 
         let bs_option = BlackScholesOption {
-            spot: 100.0,
+            instrument: Instrument {
+                spot: 100.0,
+                ..Default::default()
+            },
             strike: 120.0,
             risk_free_rate: 0.03,
             volatility: 0.27,
@@ -111,7 +132,10 @@ mod black_scholes_tests {
         assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
 
         let bs_option = BlackScholesOption {
-            spot: 100.0,
+            instrument: Instrument {
+                spot: 100.0,
+                ..Default::default()
+            },
             strike: 100.0,
             risk_free_rate: 0.03,
             volatility: 0.27,
@@ -136,7 +160,10 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_iv() {
         let bs_option = BlackScholesOption {
-            spot: 100.0,
+            instrument: Instrument {
+                spot: 100.0,
+                ..Default::default()
+            },
             strike: 100.0,
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
@@ -156,7 +183,10 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_greeks() {
         let bs_option = BlackScholesOption {
-            spot: 100.0,
+            instrument: Instrument {
+                spot: 100.0,
+                ..Default::default()
+            },
             strike: 100.0,
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,
@@ -388,12 +418,17 @@ mod greeks_tests {
 
 // Option Trait Tests
 mod option_trait_tests {
+    use quantrs::options::black_scholes::Instrument;
+
     use super::*;
 
     #[test]
     fn test_all_options_implement_option_trait() {
         let bs_option = BlackScholesOption {
-            spot: 100.0,
+            instrument: Instrument {
+                spot: 100.0,
+                ..Default::default()
+            },
             strike: 100.0,
             time_to_maturity: 1.0,
             risk_free_rate: 0.05,

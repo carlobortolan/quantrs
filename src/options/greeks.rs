@@ -14,7 +14,7 @@
 //! use quantrs::options::{BlackScholesOption, OptionGreeks, OptionType};
 //!
 //! let bs_option = BlackScholesOption {
-//!    spot: 100.0,
+//!   spot: 100.0,
 //!   strike: 100.0,
 //!   time_to_maturity: 1.0,
 //!  risk_free_rate: 0.05,
