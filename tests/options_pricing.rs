@@ -326,7 +326,11 @@ mod option_trait_tests {
     fn test_trait_implementations() {
         let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
         assert_implements_option_trait(&option);
+        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&option);
         let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&option);
+        let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
         assert_implements_option_trait(&option);
 
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);

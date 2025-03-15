@@ -42,9 +42,4 @@ impl Instrument {
             dividend_times: Vec::new(),
         }
     }
-
-    /// Get the current price of the underlying asset.
-    pub fn spot(&self) -> f64 {
-        self.spot
-    }
 }
