@@ -1,8 +1,13 @@
 coverage:
   status:
-    project: #add everything under here, more options at https://docs.codecov.com/docs/commit-status
+    project:
       default:
-        # basic
+        target: 90%
+        threshold: 0.5%
+        base: auto
+        enabled: yes
+    patch:
+      default:
         target: 90%
         threshold: 10%
         base: auto
