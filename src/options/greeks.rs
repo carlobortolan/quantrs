@@ -1,74 +1,80 @@
-use crate::options::{OptionPricing, OptionType};
-
-/// A trait for calculating the Greeks of an option.
-pub trait Greeks {
-    // First order Greeks
-    fn delta(&self, option_type: OptionType) -> f64;
-    fn gamma(&self, option_type: OptionType) -> f64;
-    fn theta(&self, option_type: OptionType) -> f64;
-    fn vega(&self, option_type: OptionType) -> f64;
-    fn rho(&self, option_type: OptionType) -> f64;
-
-    // Higher order Greeks
-    fn lambda(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn vanna(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn charm(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn vomma(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn veta(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn speed(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn zomma(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn color(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-    fn ultima(&self, option_type: OptionType) -> f64 {
-        0.0 // Placeholder value
-    }
-}
+//! Module for calculating the Greeks of an option.
+//!
+//! The Greeks are calculated using the formulas provided by the `Greeks` trait.
+//!
+//! ## References
+//! - [Wikipedia - Option Greeks](https://en.wikipedia.org/wiki/Greeks_(finance))
+//! - [Investopedia - Option Greeks](https://www.investopedia.com/terms/g/greeks.asp)
+//! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
+//!
+//!
+//! # Example
+//!
+//! ```
+//! use quantrs::options::{BlackScholesOption, OptionGreeks, OptionType};
+//!
+//! let bs_option = BlackScholesOption {
+//!    spot: 100.0,
+//!   strike: 100.0,
+//!   time_to_maturity: 1.0,
+//!  risk_free_rate: 0.05,
+//! volatility: 0.2,
+//! ..Default::default()
+//! };
+//!
+//! let greeks = OptionGreeks::calculate(&bs_option, OptionType::Call);
+//! println!("Delta: {}", greeks.delta);
+//! println!("Gamma: {}", greeks.gamma);
+//! println!("Theta: {}", greeks.theta);
+//! println!("Vega: {}", greeks.vega);
+//! println!("Rho: {}", greeks.rho);
+//! ```
+use super::{Greeks, OptionType};
 
 /// A struct representing the Greeks of an option.
 pub struct OptionGreeks {
+    /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
     pub delta: f64,
+    /// Gamma measures the rate of change of the option delta with respect to changes in the price of the underlying asset.
     pub gamma: f64,
+    /// Theta measures the rate of change of the option price with respect to changes in time to maturity.
     pub theta: f64,
+    /// Vega measures the rate of change of the option price with respect to changes in the volatility of the underlying asset.
     pub vega: f64,
+    /// Rho measures the rate of change of the option price with respect to changes in the risk-free interest rate.
     pub rho: f64,
+    /// Lambda measures the rate of change of the option delta with respect to changes in the risk-free interest rate.
     pub lambda: f64,
+    /// Vanna measures the rate of change of the option delta with respect to changes in the volatility of the underlying asset.
     pub vanna: f64,
+    /// Charm measures the rate of change of the option delta with respect to changes in time to maturity.
     pub charm: f64,
+    /// Vomma measures the rate of change of the option vega with respect to changes in the volatility of the underlying asset.
     pub vomma: f64,
+    /// Veta measures the rate of change of the option vega with respect to changes in time to maturity.
     pub veta: f64,
+    /// Speed measures the rate of change of the option gamma with respect to changes in the price of the underlying asset.
     pub speed: f64,
+    /// Zomma measures the rate of change of the option gamma with respect to changes in the volatility of the underlying asset.
     pub zomma: f64,
+    /// Color measures the rate of change of the option gamma with respect to changes in time to maturity.
     pub color: f64,
+    /// Ultima measures the rate of change of the option vomma with respect to changes in the volatility of the underlying asset.
     pub ultima: f64,
 }
 
 impl OptionGreeks {
     /// Calculate the Greeks for a given option.
     ///
-    /// # Arguments
+    /// Arguments
     ///
     /// * `option` - The option for which to calculate the Greeks.
     /// * `option_type` - The type of option (Call or Put).
     ///
-    /// # Returns
+    /// Returns
     ///
     /// The calculated Greeks.
-    pub fn calculate<T: OptionPricing + Greeks>(option: &T, option_type: OptionType) -> Self {
+    pub fn calculate<T: Greeks>(option: &T, option_type: OptionType) -> Self {
         OptionGreeks {
             delta: option.delta(option_type),
             gamma: option.gamma(option_type),

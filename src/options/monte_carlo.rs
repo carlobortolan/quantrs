@@ -1,9 +1,10 @@
-use crate::options::{OptionPricing, OptionType};
-use rand::rng;
+use super::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
 use rand_distr::{Distribution, Normal};
 
 /// A struct representing a Monte Carlo option.
+#[derive(Debug, Default, Clone)]
 pub struct MonteCarloOption {
+    pub style: OptionStyle,
     pub spot: f64,
     pub strike: f64,
     pub time_to_maturity: f64,
@@ -13,47 +14,145 @@ pub struct MonteCarloOption {
 }
 
 impl OptionPricing for MonteCarloOption {
-    /// Calculate the option price using the Monte Carlo simulation.
-    ///
-    /// # Arguments
-    ///
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The price of the option.
     fn price(&self, option_type: OptionType) -> f64 {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let mut payoff_sum = 0.0;
-
-        for _ in 0..self.simulations {
-            let z = normal.sample(&mut rng);
-            let st = self.spot
-                * (self.risk_free_rate - 0.5 * self.volatility.powi(2)).exp()
-                * (self.volatility * (self.time_to_maturity).sqrt() * z).exp();
-            let payoff = match option_type {
-                OptionType::Call => (st - self.strike).max(0.0),
-                OptionType::Put => (self.strike - st).max(0.0),
-            };
-            payoff_sum += payoff;
-        }
-
+        let dt_sqrt = self.time_to_maturity.sqrt();
+        let drift = (self.risk_free_rate - 0.5 * self.volatility.powi(2)) * self.time_to_maturity;
         let discount_factor = (-self.risk_free_rate * self.time_to_maturity).exp();
-        discount_factor * payoff_sum / self.simulations as f64
+
+        let sum_payoff: f64 = (0..self.simulations)
+            .map(|_| {
+                let z = normal.sample(&mut rng);
+                let st = self.spot * (drift + self.volatility * dt_sqrt * z).exp();
+                match option_type {
+                    OptionType::Call => (st - self.strike).max(0.0),
+                    OptionType::Put => (self.strike - st).max(0.0),
+                }
+            })
+            .sum();
+
+        discount_factor * (sum_payoff / self.simulations as f64)
     }
 
-    /// Calculate the implied volatility for a given market price.
-    ///    
-    /// # Arguments
-    ///
-    /// * `market_price` - The market price of the option.
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The implied volatility.
     fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64 {
-        0.2 // TODO: Placeholder value
+        // Return 0.0 for unrealistic market prices
+        if market_price <= 0.0 || market_price > self.spot {
+            return 0.0;
+        }
+
+        let mut sigma = 0.2; // Initial guess
+        let tolerance = 1e-5;
+        let max_iterations = 100;
+        let mut prev_sigma = sigma;
+
+        for _ in 0..max_iterations {
+            let price = self.price(option_type);
+            let vega = self.vega(option_type);
+            let diff = market_price - price;
+
+            if diff.abs() < tolerance {
+                return sigma;
+            }
+
+            let update = diff / vega;
+            sigma += update.clamp(-0.1, 0.1);
+
+            if (sigma - prev_sigma).abs() < tolerance {
+                return sigma;
+            }
+
+            prev_sigma = sigma;
+        }
+
+        sigma
+    }
+
+    fn strike(&self) -> f64 {
+        self.strike
+    }
+}
+
+impl Greeks for MonteCarloOption {
+    fn delta(&self, option_type: OptionType) -> f64 {
+        let epsilon = 1e-4;
+        let price_up = {
+            let mut opt = self.clone();
+            opt.spot += epsilon;
+            opt.price(option_type)
+        };
+        let price_down = {
+            let mut opt = self.clone();
+            opt.spot -= epsilon;
+            opt.price(option_type)
+        };
+        (price_up - price_down) / (2.0 * epsilon)
+    }
+
+    fn gamma(&self, option_type: OptionType) -> f64 {
+        let epsilon = 1e-4;
+        let price_up = {
+            let mut opt = self.clone();
+            opt.spot += epsilon;
+            opt.price(option_type)
+        };
+        let price_down = {
+            let mut opt = self.clone();
+            opt.spot -= epsilon;
+            opt.price(option_type)
+        };
+        let price = self.price(option_type);
+        (price_up - 2.0 * price + price_down) / (epsilon * epsilon)
+    }
+
+    fn theta(&self, option_type: OptionType) -> f64 {
+        let epsilon = 1e-4;
+        let price_up = {
+            let mut opt = self.clone();
+            opt.time_to_maturity += epsilon;
+            opt.price(option_type)
+        };
+        let price_down = {
+            let mut opt = self.clone();
+            opt.time_to_maturity -= epsilon;
+            opt.price(option_type)
+        };
+        (price_down - price_up) / (2.0 * epsilon)
+    }
+
+    fn vega(&self, option_type: OptionType) -> f64 {
+        let epsilon = 1e-4;
+        let price_up = {
+            let mut opt = self.clone();
+            opt.volatility += epsilon;
+            opt.price(option_type)
+        };
+        let price_down = {
+            let mut opt = self.clone();
+            opt.volatility -= epsilon;
+            opt.price(option_type)
+        };
+        (price_up - price_down) / (2.0 * epsilon)
+    }
+
+    fn rho(&self, option_type: OptionType) -> f64 {
+        let epsilon = 1e-4;
+        let price_up = {
+            let mut opt = self.clone();
+            opt.risk_free_rate += epsilon;
+            opt.price(option_type)
+        };
+        let price_down = {
+            let mut opt = self.clone();
+            opt.risk_free_rate -= epsilon;
+            opt.price(option_type)
+        };
+        (price_up - price_down) / (2.0 * epsilon)
+    }
+}
+
+impl Option for MonteCarloOption {
+    fn style(&self) -> &OptionStyle {
+        &self.style
     }
 }
