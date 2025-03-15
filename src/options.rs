@@ -19,7 +19,7 @@ pub mod types;
 pub use greeks::OptionGreeks;
 pub use instrument::Instrument;
 pub use models::{BinomialTreeModel, BlackScholesModel, MonteCarloModel};
-pub use types::{AmericanOption, EuropeanOption, OptionStyle, OptionType};
+pub use types::{AmericanOption, BinaryOption, EuropeanOption, OptionStyle, OptionType};
 
 /// Supertrait that combines OptionPricing and Greeks.
 pub trait Option: Clone {

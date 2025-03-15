@@ -12,9 +12,11 @@
 //! See the [Greeks](options/trait.Greeks.html) trait for more information.
 
 pub mod american_option;
+pub mod binary_option;
 pub mod european_option;
 
 pub use american_option::AmericanOption;
+pub use binary_option::BinaryOption;
 pub use european_option::EuropeanOption;
 
 /// Enum representing the type of option.
