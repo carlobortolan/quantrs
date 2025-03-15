@@ -75,6 +75,7 @@
 //! println!("Option price: {}", price);
 //! ```
 use super::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
+use statrs::distribution::{ContinuousCDF, Normal};
 use std::f64::consts::PI;
 
 /// A struct representing a Black-Scholes option.
@@ -86,11 +87,11 @@ pub struct BlackScholesOption {
     pub spot: f64,
     /// Strike price of the option.
     pub strike: f64,
-    /// Time to maturity (in years).
+    /// Time horizon (in years).
     pub time_to_maturity: f64,
     /// Risk-free interest rate.
     pub risk_free_rate: f64,
-    /// Volatility of the underlying asset.
+    /// Annualized standard deviation of an asset's continuous returns (aka sigma).
     pub volatility: f64,
 }
 
@@ -101,7 +102,24 @@ impl BlackScholesOption {
     ///
     /// The price of the call option.
     fn call_price(&self) -> f64 {
-        10.4506 // TODO: Placeholder value
+        // let d1: f64 = (self.spot / self.strike).ln() + (self.risk_free_rate + 0.5 * self.volatility.powi(2)) * self.time_to_maturity;
+        // let d1 = d1 / (self.volatility * self.time_to_maturity.sqrt());
+        // let d2 = d1 - self.volatility * self.time_to_maturity.sqrt();
+        // self.spot * (-0.5 * d1.powi(2)).exp() - self.strike * (-0.5 * d2.powi(2)).exp()
+
+        let sqrt_t = self.time_to_maturity.sqrt();
+
+        let d1: f64 = ((self.spot / self.strike).ln()
+            + self.risk_free_rate * self.time_to_maturity)
+            / (self.volatility * sqrt_t);
+
+        let d2 = d1 - self.volatility * sqrt_t;
+
+        // Cumulative probability funciton for a standard normal variable
+        let normal = Normal::new(0.0, 1.0).unwrap();
+        let nd1 = normal.cdf(d1);
+        let nd2 = normal.cdf(d2);
+        self.spot * nd1 - self.strike * (-self.risk_free_rate * self.time_to_maturity).exp() * nd2
     }
 
     /// Calculate the price of a put option using the Black-Scholes formula.
@@ -110,7 +128,9 @@ impl BlackScholesOption {
     ///
     /// The price of the put option.
     fn put_price(&self) -> f64 {
-        5.5735 // TODO: Placeholder value
+        // Use the put-call parity relationship to calculate the put price
+        self.call_price() - self.spot
+            + self.strike * (-self.risk_free_rate * self.time_to_maturity).exp()
     }
 
     /// Calculate the option price using the Black-Scholes formula with a given volatility.

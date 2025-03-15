@@ -19,31 +19,37 @@ mod black_scholes_tests {
     use super::*;
 
     #[test]
-    fn test_black_scholes_call_price() {
+    fn test_black_scholes_european_itm() {
         let bs_option = BlackScholesOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            ..Default::default()
+            spot: 50.0,
+            strike: 65.0,
+            time_to_maturity: 0.43,
+            risk_free_rate: 0.1,
+            volatility: 0.31,
+            style: OptionStyle::European,
         };
         let price = bs_option.price(OptionType::Call);
-        assert_abs_diff_eq!(price, 10.4506, epsilon = 0.0001);
+        assert_abs_diff_eq!(price, 0.7962, epsilon = 0.0001);
+
+        let price = bs_option.price(OptionType::Put);
+        assert_abs_diff_eq!(price, 13.0604, epsilon = 0.0001);
     }
 
     #[test]
-    fn test_black_scholes_put_price() {
+    fn test_black_scholes_european_otm() {
         let bs_option = BlackScholesOption {
-            spot: 100.0,
+            spot: 120.0,
             strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            ..Default::default()
+            time_to_maturity: 2.0,
+            risk_free_rate: 0.03,
+            volatility: 0.27,
+            style: OptionStyle::European,
         };
+        let price = bs_option.price(OptionType::Call);
+        assert_abs_diff_eq!(price, 31.9741, epsilon = 0.0001);
+
         let price = bs_option.price(OptionType::Put);
-        assert_abs_diff_eq!(price, 5.5735, epsilon = 0.0001);
+        assert_abs_diff_eq!(price, 6.1506, epsilon = 0.0001);
     }
 
     #[test]

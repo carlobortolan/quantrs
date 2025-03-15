@@ -101,10 +101,15 @@ pub struct BinomialTreeOption {
 
 impl OptionPricing for BinomialTreeOption {
     fn price(&self, option_type: OptionType) -> f64 {
+        // Multiplicative up-/downward movements of an asset in a single step of the binomial tree
         let dt = self.time_to_maturity / self.steps as f64;
         let u = (self.volatility * dt.sqrt()).exp();
         let d = 1.0 / u;
+
+        // Risk-neutral probability of an upward movement for a call option
         let p = ((self.risk_free_rate * dt).exp() - d) / (u - d);
+
+        // Discount factor for each step
         let discount_factor = (-self.risk_free_rate * dt).exp();
 
         // Initialize option values at maturity
@@ -136,7 +141,7 @@ impl OptionPricing for BinomialTreeOption {
         }
 
         if self.style == OptionStyle::American {
-            option_values[0].max(self.strike - self.spot)
+            option_values[0].max(self.strike - self.spot) // TODO: Change to max(0.0, self.payoff(self.spot, option_type))
         } else {
             option_values[0] // Return the root node value
         }
