@@ -14,12 +14,15 @@
 pub mod binomial_tree;
 pub mod black_scholes;
 pub mod greeks;
+pub mod instrument;
 pub mod monte_carlo;
 
 pub use binomial_tree::BinomialTreeOption;
 pub use black_scholes::BlackScholesOption;
 pub use greeks::OptionGreeks;
+pub use instrument::Instrument;
 pub use monte_carlo::MonteCarloOption;
+
 /// Supertrait that combines OptionPricing and Greeks.
 pub trait Option: OptionPricing + Greeks {
     /// Get the style of the option.
@@ -28,6 +31,13 @@ pub trait Option: OptionPricing + Greeks {
     ///
     /// The style of the option.
     fn style(&self) -> &OptionStyle;
+
+    /// Get the underlying instrument of the option.
+    ///
+    /// # Returns
+    ///
+    /// The underlying instrument of the option.
+    fn instrument(&self) -> &Instrument;
 }
 
 /// Trait for option pricing models.
@@ -165,7 +175,7 @@ pub enum OptionStyle {
 
 impl Default for OptionStyle {
     /// Default option style is European.
-    ///     
+    ///
     /// # Returns
     ///
     /// The default option style.

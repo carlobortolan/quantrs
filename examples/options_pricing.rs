@@ -1,8 +1,8 @@
 // Run:  cargo run --release --example options_pricing
 
 use quantrs::options::{
-    black_scholes::Instrument, BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption,
-    OptionGreeks, OptionPricing, OptionStyle, OptionType,
+    BinomialTreeOption, BlackScholesOption, Greeks, Instrument, MonteCarloOption, OptionGreeks,
+    OptionPricing, OptionStyle, OptionType,
 };
 
 fn main() {
@@ -13,17 +13,9 @@ fn main() {
 }
 
 fn example_black_scholes() {
-    let bs_option = BlackScholesOption {
-        instrument: Instrument {
-            spot: 100.0,
-            ..Default::default()
-        },
-        strike: 100.0,
-        time_to_maturity: 1.0,
-        risk_free_rate: 0.05,
-        volatility: 0.2,
-        ..Default::default()
-    };
+    let instrument = Instrument::new(100.0);
+    let bs_option =
+        BlackScholesOption::new(instrument, 100.0, 1.0, 0.05, 0.2, OptionStyle::European);
 
     let call_price = bs_option.price(OptionType::Call);
     println!("Black-Scholes Call Price: {}", call_price);
@@ -37,15 +29,16 @@ fn example_black_scholes() {
 }
 
 fn example_binomial_tree() {
-    let bt_option = BinomialTreeOption {
-        spot: 100.0,
-        strike: 100.0,
-        time_to_maturity: 1.0,
-        risk_free_rate: 0.05,
-        volatility: 0.2,
-        steps: 100,
-        style: OptionStyle::American,
-    };
+    let instrument = Instrument::new(100.0);
+    let bt_option = BinomialTreeOption::new(
+        instrument,
+        100.0,
+        1.0,
+        0.05,
+        0.2,
+        100,
+        OptionStyle::European,
+    );
 
     let bt_call_price = bt_option.price(OptionType::Call);
     println!("Binomial Tree Call Price: {}", bt_call_price);
@@ -59,17 +52,11 @@ fn example_binomial_tree() {
 }
 
 fn example_greeks() {
-    let bt_option = BinomialTreeOption {
-        spot: 100.0,
-        strike: 100.0,
-        time_to_maturity: 1.0,
-        risk_free_rate: 0.05,
-        volatility: 0.2,
-        steps: 100,
-        ..Default::default()
-    };
+    let instrument = Instrument::new(100.0);
+    let bs_option =
+        BlackScholesOption::new(instrument, 100.0, 1.0, 0.05, 0.2, OptionStyle::European);
 
-    let greeks = OptionGreeks::calculate(&bt_option, OptionType::Call);
+    let greeks = OptionGreeks::calculate(&bs_option, OptionType::Call);
 
     println!("Delta: {}", greeks.delta);
     println!("Gamma: {}", greeks.gamma);
@@ -78,23 +65,24 @@ fn example_greeks() {
     println!("Rho: {}", greeks.rho);
 
     // Greeks via function calls
-    println!("Delta: {}", bt_option.delta(OptionType::Call));
-    println!("Gamma: {}", bt_option.gamma(OptionType::Call));
-    println!("Theta: {}", bt_option.theta(OptionType::Call));
-    println!("Vega: {}", bt_option.vega(OptionType::Call));
-    println!("Rho: {}", bt_option.rho(OptionType::Call));
+    println!("Delta: {}", bs_option.delta(OptionType::Call));
+    println!("Gamma: {}", bs_option.gamma(OptionType::Call));
+    println!("Theta: {}", bs_option.theta(OptionType::Call));
+    println!("Vega: {}", bs_option.vega(OptionType::Call));
+    println!("Rho: {}", bs_option.rho(OptionType::Call));
 }
 
 fn example_monte_carlo() {
-    let mc_option = MonteCarloOption {
-        spot: 100.0,
-        strike: 100.0,
-        time_to_maturity: 1.0,
-        risk_free_rate: 0.05,
-        volatility: 0.2,
-        simulations: 10_000,
-        ..Default::default()
-    };
+    let instrument = Instrument::new(100.0);
+    let mc_option = MonteCarloOption::new(
+        instrument,
+        100.0,
+        1.0,
+        0.05,
+        0.2,
+        10_000,
+        OptionStyle::European,
+    );
 
     let mc_call_price = mc_option.price(OptionType::Call);
     println!("Monte Carlo Call Price: {}", mc_call_price);

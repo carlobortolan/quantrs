@@ -60,36 +60,22 @@
 //! ## Example
 //!
 //! ```
-//! use quantrs::options::{BlackScholesOption, OptionType, OptionPricing};
+//! use quantrs::options::{BlackScholesOption, OptionType, OptionPricing, Instrument, OptionStyle};
 //!
-//! let bs_option = BlackScholesOption {
-//!    spot: 100.0,
-//!    strike: 100.0,
-//!    time_to_maturity: 1.0,
-//!    risk_free_rate: 0.05,
-//!    volatility: 0.2,
-//!    dividend_yield: 0.02,
-//!    ..Default::default()
-//! };
+//! let bs_option = BlackScholesOption::new(
+//!   Instrument::new(100.0),
+//!   100.0,
+//!   1.0,
+//!   0.05,
+//!   0.2,
+//!   OptionStyle::European,
+//! );
 //!
 //! let price = bs_option.price(OptionType::Call);
 //! println!("Option price: {}", price);
 //! ```
-use super::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
+use super::{Greeks, Instrument, Option, OptionPricing, OptionStyle, OptionType};
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
-
-/// A struct representing an instrument with dividend properties.
-#[derive(Debug, Default)]
-pub struct Instrument {
-    /// Current price of the underlying asset.
-    pub spot: f64,
-    /// Continuous dividend yield where the dividend amount is proportional to the level of the underlying asset (e.g., 0.02 for 2%).
-    pub continuous_dividend_yield: f64,
-    /// Discrete proportional dividend yield (e.g., 0.02 for 2%).
-    pub discrete_dividend_yield: f64,
-    /// Times at which discrete dividends are paid.
-    pub dividend_times: Vec<f64>,
-}
 
 /// A struct representing a Black-Scholes option.
 #[derive(Debug, Default)]
@@ -109,6 +95,26 @@ pub struct BlackScholesOption {
 }
 
 impl BlackScholesOption {
+    /// Create a new `BlackScholesOption`.
+    pub fn new(
+        instrument: Instrument,
+        strike: f64,
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        volatility: f64,
+        style: OptionStyle,
+    ) -> Self {
+        Self {
+            instrument,
+            strike,
+            time_to_maturity,
+            risk_free_rate,
+            volatility,
+            style: OptionStyle::European,
+            ..Default::default()
+        }
+    }
+
     /// Calculate the price of an European call option using the Black-Scholes formula.
     ///
     /// # Returns
@@ -414,5 +420,9 @@ impl Greeks for BlackScholesOption {
 impl Option for BlackScholesOption {
     fn style(&self) -> &OptionStyle {
         &self.style
+    }
+
+    fn instrument(&self) -> &Instrument {
+        &self.instrument
     }
 }

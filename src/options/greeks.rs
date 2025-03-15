@@ -11,16 +11,16 @@
 //! # Example
 //!
 //! ```
-//! use quantrs::options::{BlackScholesOption, OptionGreeks, OptionType};
+//! use quantrs::options::{BlackScholesOption, OptionGreeks, OptionType, Instrument, OptionStyle};
 //!
-//! let bs_option = BlackScholesOption {
-//!   spot: 100.0,
-//!   strike: 100.0,
-//!   time_to_maturity: 1.0,
-//!  risk_free_rate: 0.05,
-//! volatility: 0.2,
-//! ..Default::default()
-//! };
+//! let bs_option = BlackScholesOption::new(
+//!     Instrument::new(100.0),
+//!     100.0,
+//!     1.0,
+//!     0.05,
+//!     0.2,
+//!     OptionStyle::European,
+//! );
 //!
 //! let greeks = OptionGreeks::calculate(&bs_option, OptionType::Call);
 //! println!("Delta: {}", greeks.delta);
