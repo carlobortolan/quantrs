@@ -17,7 +17,9 @@
 [codecov-url]: https://codecov.io/gh/carlobortolan/quantrs
 [crates-msrv-badge]: https://img.shields.io/crates/msrv/quantrs
 
-Quantrs is a tiny quantitative finance library for Rust. It is designed to be simple and easy to use, with a focus on performance and correctness. It is still in the early stages of development, so expect bugs and breaking changes.
+Quantrs is a tiny quantitative finance library for Rust.
+It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading quantlib documentation.
+The library is still in the early stages of development, and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
 
@@ -27,25 +29,26 @@ Please check out the documentation [here][docs-url].
 
 For now quantrs only supports options pricing. The following features are available:
 
-|                                 | Black-Scholes   | Black-76 | Binomial / Lattice   | Monte-Carlo | Finite Diff   | Heston |
-| ------------------------------- | --------------- | -------- | -------------------- | ----------- | ------------- | ------ |
-| European                        | ✅              | ⏳       | ✅                   | ⏳          | ⏳            | ⏳     |
-| American                        | ❌              | ❌       | ✅                   | ❌ (L. Sq.) | ⏳            | ❌     |
-| Bermudan                        | ❌              | ❌       | ⏳                   | ❌ (L. Sq.) | ❌ (complex)  | ❌     |
-| \* Basket                       | ⏳ (∀component) | ❌       | ⏳ (approximation)   | ⏳          | ❌            | ❌     |
-| \* Rainbow                      | ⏳ (∀component) | ❌       | ⏳ (approximation)   | ⏳          | ❌            | ❌     |
-| \*\* Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳                   | ⏳          | ⏳            | ⏳     |
-| \*\* Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳                   | ⏳          | ❌ (complex)  | ⏳     |
-| \*\* Asian                      | ❌ (mod. BSM)   | ❌       | ❌ (only arithmetic) | ⏳          | ⏳            | ⏳     |
-| \*\* Lookback (fixed strike)    | ⏳              | ❌       | ❌                   | ⏳          | ⏳            | ⏳     |
-| \*\* Lookback (floating strike) | ⏳              | ❌       | ❌                   | ⏳          | ⏳            | ⏳     |
-| \*\* Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳                   | ⏳          | ❌ (mod. PDE) | ⏳     |
-| \*\* Binary Asset-or-Nothing    | ✅              | ⏳       | ⏳                   | ⏳          | ❌ (mod. PDE) | ⏳     |
-| Greeks (Δ, ν, Θ, ρ, Γ)          | ✅              | ⏳       | ⏳                   | ❌          | ❌            | ❌     |
-| Implied Volatility              | ✅              | ⏳       | ⏳                   | ❌          | ❌            | ❌     |
+|                                 | Black-Scholes   | Black-76 | Lattice      | Monte-Carlo | Finite Diff   | Heston |
+| ------------------------------- | --------------- | -------- | ------------ | ----------- | ------------- | ------ |
+| European                        | ✅              | ⏳       | ✅           | ⏳          | ⏳            | ⏳     |
+| American                        | ❌              | ❌       | ✅           | ❌ (L. Sq.) | ⏳            | ❌     |
+| Bermudan                        | ❌              | ❌       | ⏳           | ❌ (L. Sq.) | ❌ (complex)  | ❌     |
+| \* Basket                       | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳          | ❌            | ❌     |
+| \* Rainbow                      | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳          | ❌            | ❌     |
+| \*\* Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳          | ⏳            | ⏳     |
+| \*\* Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳          | ❌ (complex)  | ⏳     |
+| \*\* Asian                      | ❌ (mod. BSM)   | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
+| \*\* Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
+| \*\* Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
+| \*\* Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ⏳          | ❌ (mod. PDE) | ⏳     |
+| \*\* Binary Asset-or-Nothing    | ✅              | ⏳       | ⏳           | ⏳          | ❌ (mod. PDE) | ⏳     |
+| Greeks (Δ, ν, Θ, ρ, Γ)          | ✅              | ⏳       | ⏳           | ❌          | ❌            | ❌     |
+| Implied Volatility              | ✅              | ⏳       | ⏳           | ❌          | ❌            | ❌     |
 
-> [!information] \
-> \* "Exotic" options with standard excerise style; only differ in their payoff value\
+> [!note]
+>
+> \* "Exotic" options with standard exercise style; only differ in their payoff value\
 > \*\* Non-vanilla path-dependent "exotic" options\
 > ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
 
