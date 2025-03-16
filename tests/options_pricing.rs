@@ -1,7 +1,7 @@
 use approx::assert_abs_diff_eq;
 use quantrs::options::{
-    BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks, Instrument, MonteCarloModel,
-    Option, OptionGreeks, OptionPricing, OptionType,
+    AmericanOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks,
+    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionType,
 };
 
 // Function to assert that a type implements the Option trait
@@ -470,8 +470,6 @@ mod greeks_tests {
 
 // Option Trait Tests
 mod option_trait_tests {
-    use quantrs::options::AmericanOption;
-
     use super::*;
 
     #[test]
@@ -483,6 +481,10 @@ mod option_trait_tests {
         let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
         assert_implements_option_trait(&option);
         let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&option);
+        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&option);
+        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
         assert_implements_option_trait(&option);
 
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
