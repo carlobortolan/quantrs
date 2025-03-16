@@ -1,16 +1,8 @@
-//! Module for various option pricing models.
+//! Module for various types of options.
 //!
-//! ## Supported models
+//! ## References
 //!
-//! - [Black-Scholes Option Pricing Model](black_scholes/struct.BlackScholesModel.html)
-//! - [Binomial Option Pricing Model](binomial_tree/struct.BinomialTreeModel.html)
-//! - [Monte Carlo Option Pricing Model](monte_carlo/struct.MonteCarloModel.html)
-//!
-//! ## Greek calculations
-//!
-//! This module also provides implementations of the Greeks for each option pricing model.
-//! See the [Greeks](options/trait.Greeks.html) trait for more information.
-
+//! - [Wikipedia: Option Style](https://en.wikipedia.org/wiki/Option_style)
 pub mod american_option;
 pub mod binary_option;
 pub mod european_option;

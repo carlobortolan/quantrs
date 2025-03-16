@@ -56,7 +56,6 @@
 //!
 //! - [Wikipedia - Monte Carlo methods in finance](https://en.wikipedia.org/wiki/Monte_Carlo_methods_in_finance)
 //! - [Investopedia - Monte Carlo Simulation](https://www.investopedia.com/terms/m/montecarlosimulation.asp)
-//! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
 //!
 //! ## Example
 //!
@@ -74,7 +73,7 @@
 use crate::options::{Greeks, Option, OptionPricing, OptionType};
 use rand_distr::{Distribution, Normal};
 
-/// A struct representing a Monte Carlo option.
+/// A struct representing a Monte Carlo Simulation model for option pricing.
 #[derive(Debug, Default, Clone)]
 pub struct MonteCarloModel {
     /// Time horizon (in years).

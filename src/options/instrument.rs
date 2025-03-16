@@ -4,7 +4,6 @@
 //!
 //! ## References
 //! - [Wikipedia - Dividend yield](https://en.wikipedia.org/wiki/Dividend_yield)
-//! - [Investopedia - Dividend Yield](https://www.investopedia.com/terms/d/dividendyield.asp)
 //!
 //! ## Example
 //!

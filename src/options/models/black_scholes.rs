@@ -73,7 +73,7 @@
 use crate::options::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
-/// A struct representing a Black-Scholes option.
+/// A struct representing a Black-Scholes model.
 #[derive(Debug, Default)]
 pub struct BlackScholesModel {
     /// Time horizon (in years).

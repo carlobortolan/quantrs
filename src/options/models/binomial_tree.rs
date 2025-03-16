@@ -57,7 +57,6 @@
 //! ## References
 //!
 //! - [Wikipedia - Binomial options pricing model](https://en.wikipedia.org/wiki/Binomial_options_pricing_model)
-//! - [Investopedia - Binomial Option Pricing Model](https://www.investopedia.com/terms/b/binomialoptionpricing.asp)
 //! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
 //!
 //! ## Example
