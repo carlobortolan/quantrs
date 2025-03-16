@@ -70,7 +70,7 @@
 //! println!("Option price: {}", price);
 //! ```
 
-use crate::options::{Greeks, Option, OptionPricing, OptionType};
+use crate::options::{Option, OptionPricing, OptionType};
 use rand_distr::{Distribution, Normal};
 
 /// A struct representing a Monte Carlo Simulation model for option pricing.
@@ -125,114 +125,7 @@ impl OptionPricing for MonteCarloModel {
         discount_factor * (sum_payoff / self.simulations as f64)
     }
 
-    fn implied_volatility<T: Option>(&self, option: T, market_price: f64) -> f64 {
-        // Return 0.0 for unrealistic market prices
-        if market_price <= 0.0 || market_price > option.instrument().spot {
-            return 0.0;
-        }
-
-        let mut sigma = 0.2; // Initial guess
-        let tolerance = 1e-5;
-        let max_iterations = 100;
-        let mut prev_sigma = sigma;
-
-        for _ in 0..max_iterations {
-            let price = self.price(option.clone());
-            let vega = self.vega(option.clone());
-            let diff = market_price - price;
-
-            if diff.abs() < tolerance {
-                return sigma;
-            }
-
-            let update = diff / vega;
-            sigma += update.clamp(-0.1, 0.1);
-
-            if (sigma - prev_sigma).abs() < tolerance {
-                return sigma;
-            }
-
-            prev_sigma = sigma;
-        }
-
-        sigma
-    }
-}
-
-impl Greeks for MonteCarloModel {
-    fn delta<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut model = self.clone();
-            model.time_to_maturity += epsilon;
-            model.price(option.clone())
-        };
-        let price_down = {
-            let mut model = self.clone();
-            model.time_to_maturity -= epsilon;
-            model.price(option.clone())
-        };
-        (price_up - price_down) / (2.0 * epsilon)
-    }
-
-    fn gamma<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut model = self.clone();
-            model.time_to_maturity += epsilon;
-            model.price(option.clone())
-        };
-        let price_down = {
-            let mut model = self.clone();
-            model.time_to_maturity -= epsilon;
-            model.price(option.clone())
-        };
-        let price = self.price(option.clone());
-        (price_up - 2.0 * price + price_down) / (epsilon * epsilon)
-    }
-
-    fn theta<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut model = self.clone();
-            model.time_to_maturity += epsilon;
-            model.price(option.clone())
-        };
-        let price_down = {
-            let mut model = self.clone();
-            model.time_to_maturity -= epsilon;
-            model.price(option.clone())
-        };
-        (price_down - price_up) / (2.0 * epsilon)
-    }
-
-    fn vega<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut opt = self.clone();
-            opt.volatility += epsilon;
-            self.price(option.clone())
-        };
-        let price_down = {
-            let mut opt = self.clone();
-            opt.volatility -= epsilon;
-            self.price(option.clone())
-        };
-        (price_up - price_down) / (2.0 * epsilon)
-    }
-
-    fn rho<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut opt = self.clone();
-            opt.risk_free_rate += epsilon;
-            self.price(option.clone())
-        };
-        let price_down = {
-            let mut opt = self.clone();
-            opt.risk_free_rate -= epsilon;
-            self.price(option.clone())
-        };
-        (price_up - price_down) / (2.0 * epsilon)
+    fn implied_volatility<T: Option>(&self, _option: T, _market_price: f64) -> f64 {
+        panic!("MonteCarloModel does not support implied volatility calculation yet");
     }
 }

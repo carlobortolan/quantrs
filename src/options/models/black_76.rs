@@ -1,6 +1,6 @@
 //! Module for Black76 option pricing model.
 
-use crate::options::{Greeks, Option, OptionPricing};
+use crate::options::{Option, OptionPricing};
 
 /// Black76 option pricing model.
 #[derive(Debug, Default)]
@@ -34,27 +34,5 @@ impl OptionPricing for Black76Model {
 
     fn implied_volatility<T: Option>(&self, _option: T, _market_price: f64) -> f64 {
         panic!("Black76Model does not support implied volatility calculation yet");
-    }
-}
-
-impl Greeks for Black76Model {
-    fn delta<T: Option>(&self, option: T) -> f64 {
-        panic!("Black76Model does not support delta calculation yet");
-    }
-
-    fn gamma<T: Option>(&self, option: T) -> f64 {
-        panic!("Black76Model does not support gamma calculation yet");
-    }
-
-    fn theta<T: Option>(&self, option: T) -> f64 {
-        panic!("Black76Model does not support theta calculation yet");
-    }
-
-    fn vega<T: Option>(&self, option: T) -> f64 {
-        panic!("Black76Model does not support vega calculation yet");
-    }
-
-    fn rho<T: Option>(&self, option: T) -> f64 {
-        panic!("Black76Model does not support rho calculation yet");
     }
 }
