@@ -62,7 +62,6 @@ fn main() {
     let mut instrument = Instrument::new(100.0);
     instrument.continuous_dividend_yield = 0.02;
 
-
     // Create a new Cash-or-Nothing binary call option with a strike price of 85
     let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
 
