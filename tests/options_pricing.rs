@@ -22,7 +22,6 @@ fn assert_implements_model_trait<T: OptionPricing>(model: &T) {
 
     T::price(model, option.clone());
     T::price(model, option.flip());
-    T::implied_volatility(model, option, 10.0);
 }
 
 // Black-Scholes Option Tests
@@ -541,8 +540,10 @@ mod binomial_tree_tests {
         let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 
         let market_price = 10.0;
-        let iv = model.implied_volatility(option.clone(), market_price);
-        assert!(iv > 0.0); // TODO: Add a proper assertion based on expected value
+        let result = std::panic::catch_unwind(|| {
+            model.implied_volatility(option.clone(), market_price);
+        });
+        assert!(result.is_err(), "Expected panic for delta calculation");
     }
 
     #[test]

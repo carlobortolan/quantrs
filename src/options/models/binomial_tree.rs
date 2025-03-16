@@ -146,7 +146,7 @@ impl OptionPricing for BinomialTreeModel {
     }
 
     fn implied_volatility<T: Option>(&self, _option: T, _market_price: f64) -> f64 {
-        0.2 // TODO: Placeholder value
+        panic!("BinomialTreeModel does not support implied volatility calculation yet");
     }
 }
 
