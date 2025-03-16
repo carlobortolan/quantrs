@@ -4,34 +4,28 @@
 //!
 //! ## References
 //! - [Wikipedia - Option Greeks](https://en.wikipedia.org/wiki/Greeks_(finance))
-//! - [Investopedia - Option Greeks](https://www.investopedia.com/terms/g/greeks.asp)
 //! - [Options, Futures, and Other Derivatives (9th Edition)](https://www.pearson.com/store/p/options-futures-and-other-derivatives/P1000000000000013194)
 //!
-//!
-//! # Example
+//! ## Example
 //!
 //! ```
-//! use quantrs::options::{BlackScholesOption, OptionGreeks, OptionType};
+//! use quantrs::options::{EuropeanOption, BlackScholesModel, OptionGreeks, OptionType, Instrument};
 //!
-//! let bs_option = BlackScholesOption {
-//!    spot: 100.0,
-//!   strike: 100.0,
-//!   time_to_maturity: 1.0,
-//!  risk_free_rate: 0.05,
-//! volatility: 0.2,
-//! ..Default::default()
-//! };
+//! let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+//! let model = quantrs::options::BlackScholesModel::new(1.0, 0.05, 0.2);
 //!
-//! let greeks = OptionGreeks::calculate(&bs_option, OptionType::Call);
+//! let greeks = OptionGreeks::calculate(&model, option);
 //! println!("Delta: {}", greeks.delta);
 //! println!("Gamma: {}", greeks.gamma);
 //! println!("Theta: {}", greeks.theta);
 //! println!("Vega: {}", greeks.vega);
 //! println!("Rho: {}", greeks.rho);
 //! ```
-use super::{Greeks, OptionType};
+
+use super::{Greeks, Option};
 
 /// A struct representing the Greeks of an option.
+#[derive(Debug)]
 pub struct OptionGreeks {
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
     pub delta: f64,
@@ -74,22 +68,22 @@ impl OptionGreeks {
     /// Returns
     ///
     /// The calculated Greeks.
-    pub fn calculate<T: Greeks>(option: &T, option_type: OptionType) -> Self {
+    pub fn calculate<T: Greeks, S: Option>(model: &T, option: S) -> Self {
         OptionGreeks {
-            delta: option.delta(option_type),
-            gamma: option.gamma(option_type),
-            theta: option.theta(option_type),
-            vega: option.vega(option_type),
-            rho: option.rho(option_type),
-            lambda: option.lambda(option_type),
-            vanna: option.vanna(option_type),
-            charm: option.charm(option_type),
-            vomma: option.vomma(option_type),
-            veta: option.veta(option_type),
-            speed: option.speed(option_type),
-            zomma: option.zomma(option_type),
-            color: option.color(option_type),
-            ultima: option.ultima(option_type),
+            delta: model.delta(option.clone()),
+            gamma: model.gamma(option.clone()),
+            theta: model.theta(option.clone()),
+            vega: model.vega(option.clone()),
+            rho: model.rho(option.clone()),
+            lambda: model.lambda(option.clone()),
+            vanna: model.vanna(option.clone()),
+            charm: model.charm(option.clone()),
+            vomma: model.vomma(option.clone()),
+            veta: model.veta(option.clone()),
+            speed: model.speed(option.clone()),
+            zomma: model.zomma(option.clone()),
+            color: model.color(option.clone()),
+            ultima: model.ultima(option.clone()),
         }
     }
 }

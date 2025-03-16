@@ -1,33 +1,78 @@
-//! Module for various option pricing models.
+//! Module for calculating the price and Greeks of various types of options.
 //!
 //! ## Supported models
 //!
-//! - [Black-Scholes Option Pricing Model](black_scholes/struct.BlackScholesOption.html)
-//! - [Binomial Option Pricing Model](binomial_tree/struct.BinomialTreeOption.html)
-//! - [Monte Carlo Option Pricing Model](monte_carlo/struct.MonteCarloOption.html)
+//! - [Black-Scholes Option Pricing Model](models/black_scholes/struct.BlackScholesModel.html)
+//! - [Binomial Option Pricing Model](models/binomial_tree/struct.BinomialTreeModel.html)
+//! - [Monte Carlo Option Pricing Model](models/monte_carlo/struct.MonteCarloModel.html)
 //!
 //! ## Greek calculations
 //!
 //! This module also provides implementations of the Greeks for each option pricing model.
-//! See the [Greeks](options/trait.Greeks.html) trait for more information.
+//! See the [Greeks](trait.Greeks.html) trait for more information.
 
-pub mod binomial_tree;
-pub mod black_scholes;
 pub mod greeks;
-pub mod monte_carlo;
+pub mod instrument;
+pub mod models;
+pub mod types;
 
-pub use binomial_tree::BinomialTreeOption;
-pub use black_scholes::BlackScholesOption;
 pub use greeks::OptionGreeks;
-pub use monte_carlo::MonteCarloOption;
+pub use instrument::Instrument;
+pub use models::{BinomialTreeModel, BlackScholesModel, MonteCarloModel};
+pub use types::{AmericanOption, BinaryOption, EuropeanOption, OptionStyle, OptionType};
+
 /// Supertrait that combines OptionPricing and Greeks.
-pub trait Option: OptionPricing + Greeks {
+pub trait Option: Clone {
     /// Get the style of the option.
     ///
     /// # Returns
     ///
     /// The style of the option.
     fn style(&self) -> &OptionStyle;
+
+    /// Get the underlying instrument of the option.
+    ///
+    /// # Returns
+    ///
+    /// The underlying instrument of the option.
+    fn instrument(&self) -> &Instrument;
+
+    /// Get the strike price of the option.
+    ///
+    /// # Returns
+    ///
+    /// The strike price of the option.
+    fn strike(&self) -> f64;
+
+    /// Get the type of the option.
+    ///
+    /// # Returns
+    ///
+    /// The type of the option.
+    fn option_type(&self) -> OptionType;
+
+    /// Flip the option type (Call to Put or Put to Call).
+    ///
+    /// # Returns
+    ///
+    /// The flipped option.
+    fn flip(&self) -> Self;
+
+    /// Calculate the payoff of the option at maturity.
+    ///
+    /// # Arguments
+    ///
+    /// * `spot` - The price of the underlying asset at maturity.
+    ///
+    /// # Returns
+    ///
+    /// The payoff of the option.
+    fn payoff(&self, spot: f64) -> f64 {
+        match self.option_type() {
+            OptionType::Call => (spot - self.strike()).max(0.0),
+            OptionType::Put => (self.strike() - spot).max(0.0),
+        }
+    }
 }
 
 /// Trait for option pricing models.
@@ -36,140 +81,75 @@ pub trait OptionPricing {
     ///
     /// # Arguments
     ///
-    /// * `option_type` - The type of option (Call or Put).
+    /// * `option` - The option to price.
     ///
     /// # Returns
     ///
     /// The price of the option.
-    fn price(&self, option_type: OptionType) -> f64;
+    fn price<T: Option>(&self, option: T) -> f64;
 
     /// Calculate the implied volatility for a given market price.
     ///
     /// # Arguments
     ///
+    /// * `option` - The option for which to calculate the implied volatility.
     /// * `market_price` - The market price of the option.
-    /// * `option_type` - The type of option (Call or Put).
     ///
     /// # Returns
     ///
     /// The implied volatility.
-    fn implied_volatility(&self, market_price: f64, option_type: OptionType) -> f64;
-
-    /// Calculate the payoff of the option at maturity.
-    ///
-    /// # Arguments
-    ///
-    /// * `underlying_price` - The price of the underlying asset at maturity.
-    /// * `option_type` - The type of option (Call or Put).
-    ///
-    /// # Returns
-    ///
-    /// The payoff of the option.
-    fn payoff(&self, spot: f64, option_type: OptionType) -> f64 {
-        match option_type {
-            OptionType::Call => (spot - self.strike()).max(0.0),
-            OptionType::Put => (self.strike() - spot).max(0.0),
-        }
-    }
-
-    /// Get the strike price of the option.
-    ///
-    /// # Returns
-    ///
-    /// The strike price of the option.
-    fn strike(&self) -> f64;
+    fn implied_volatility<T: Option>(&self, option: T, market_price: f64) -> f64;
 }
 
 /// Trait for calculating the Greeks of an option.
 pub trait Greeks {
     // First order Greeks
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
-    fn delta(&self, option_type: OptionType) -> f64;
+    fn delta<T: Option>(&self, option: T) -> f64;
     /// Gamma measures the rate of change of the option delta with respect to changes in the price of the underlying asset.
-    fn gamma(&self, option_type: OptionType) -> f64;
+    fn gamma<T: Option>(&self, option: T) -> f64;
     /// Theta measures the rate of change of the option price with respect to changes in time to maturity.
-    fn theta(&self, option_type: OptionType) -> f64;
+    fn theta<T: Option>(&self, option: T) -> f64;
     /// Vega measures the rate of change of the option price with respect to changes in the volatility of the underlying asset.
-    fn vega(&self, option_type: OptionType) -> f64;
+    fn vega<T: Option>(&self, option: T) -> f64;
     /// Rho measures the rate of change of the option price with respect to changes in the risk-free interest rate.
-    fn rho(&self, option_type: OptionType) -> f64;
+    fn rho<T: Option>(&self, option: T) -> f64;
 
     // Higher order Greeks
     /// Lambda measures the rate of change of the option delta with respect to changes in the risk-free interest rate.
-    fn lambda(&self, option_type: OptionType) -> f64 {
+    fn lambda<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Vanna measures the rate of change of the option delta with respect to changes in the volatility of the underlying asset.
-    fn vanna(&self, option_type: OptionType) -> f64 {
+    fn vanna<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Charm measures the rate of change of the option delta with respect to changes in time to maturity.
-    fn charm(&self, option_type: OptionType) -> f64 {
+    fn charm<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Vomma measures the rate of change of the option vega with respect to changes in the volatility of the underlying asset.
-    fn vomma(&self, option_type: OptionType) -> f64 {
+    fn vomma<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Veta measures the rate of change of the option vega with respect to changes in time to maturity.
-    fn veta(&self, option_type: OptionType) -> f64 {
+    fn veta<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Speed measures the rate of change of the option gamma with respect to changes in the price of the underlying asset.
-    fn speed(&self, option_type: OptionType) -> f64 {
+    fn speed<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Zomma measures the rate of change of the option gamma with respect to changes in the volatility of the underlying asset.
-    fn zomma(&self, option_type: OptionType) -> f64 {
+    fn zomma<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Color measures the rate of change of the option gamma with respect to changes in time to maturity.
-    fn color(&self, option_type: OptionType) -> f64 {
+    fn color<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
     }
     /// Ultima measures the rate of change of the option vomma with respect to changes in the volatility of the underlying asset.
-    fn ultima(&self, option_type: OptionType) -> f64 {
+    fn ultima<T: Option>(&self, option: T) -> f64 {
         0.0 // Placeholder value
-    }
-}
-
-/// Enum representing the type of option.
-#[derive(Clone, Copy, Debug)]
-pub enum OptionType {
-    /// Call option (gives the holder the right to buy the underlying asset)
-    Call,
-    /// Put option (gives the holder the right to sell the underlying asset)
-    Put,
-}
-
-/// Enum representing the style of the option.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum OptionStyle {
-    /// American option (can be exercised at any time)
-    American,
-    /// European option (default, can be exercised only at expiration)
-    European,
-    /// Bermudan option (can be exercised at specific dates)
-    Bermudan,
-    /// Asian option (payoff depends on average price of underlying asset)
-    Asian,
-    /// Barrier option (payoff depends on whether underlying asset crosses a barrier)
-    Barrier,
-    /// Binary option (payout is fixed amount or nothing)
-    Binary,
-    /// Digital option (payout is fixed amount or nothing; also known as cash-or-nothing or asset-or-nothing option)
-    Digital,
-    /// Lookback option (payoff depends on extrema of underlying asset)
-    Lookback,
-}
-
-impl Default for OptionStyle {
-    /// Default option style is European.
-    ///     
-    /// # Returns
-    ///
-    /// The default option style.
-    fn default() -> Self {
-        OptionStyle::European
     }
 }

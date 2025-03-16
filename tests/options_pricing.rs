@@ -1,195 +1,387 @@
 use approx::assert_abs_diff_eq;
 use quantrs::options::{
-    BinomialTreeOption, BlackScholesOption, Greeks, MonteCarloOption, Option, OptionGreeks,
-    OptionPricing, OptionStyle, OptionType,
+    AmericanOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks,
+    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionType,
 };
 
 // Function to assert that a type implements the Option trait
 fn assert_implements_option_trait<T: Option>(option: &T) {
     // This function does nothing but ensures that T implements the Option trait and required methods
-    T::price(option, OptionType::Call);
-    T::price(option, OptionType::Put);
-    T::implied_volatility(option, 10.0, OptionType::Call);
-    T::strike(option);
-    T::style(option);
+    option.style();
+    option.instrument();
+    option.strike();
+    option.option_type();
+    option.flip();
+    option.payoff(100.0);
+}
+
+// Function to assert that a type implements the OptionPricing trait
+fn assert_implements_model_trait<T: OptionPricing>(model: &T) {
+    // This function does nothing but ensures that T implements the OptionPricing trait and required methods
+    let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+
+    T::price(model, option.clone());
+    T::price(model, option.flip());
+    T::implied_volatility(model, option, 10.0);
 }
 
 // Black-Scholes Option Tests
 mod black_scholes_tests {
+    use quantrs::options::types::BinaryOption;
+
     use super::*;
 
     #[test]
-    fn test_black_scholes_call_price() {
-        let bs_option = BlackScholesOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            ..Default::default()
-        };
-        let price = bs_option.price(OptionType::Call);
-        assert_abs_diff_eq!(price, 10.4506, epsilon = 0.0001);
+    fn test_black_scholes_european_itm() {
+        let instrument = Instrument::new(120.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(2.0, 0.03, 0.27);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 32.2287, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, 6.4052, epsilon = 0.0001);
     }
 
     #[test]
-    fn test_black_scholes_put_price() {
-        let bs_option = BlackScholesOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            ..Default::default()
-        };
-        let price = bs_option.price(OptionType::Put);
-        assert_abs_diff_eq!(price, 5.5735, epsilon = 0.0001);
+    fn test_black_scholes_european_otm() {
+        let instrument = Instrument::new(50.0);
+        let option = EuropeanOption::new(instrument, 65.0, OptionType::Call);
+        let model = BlackScholesModel::new(0.43, 0.1, 0.31);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.8083, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, 13.0725, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_european_div_itm() {
+        let mut instrument = Instrument::new(120.0);
+        instrument.continuous_dividend_yield = 0.01;
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(2.0, 0.03, 0.27);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 30.3564, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, 6.9091, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_european_div_otm() {
+        let mut instrument = Instrument::new(50.0);
+        instrument.continuous_dividend_yield = 0.05;
+        let option = EuropeanOption::new(instrument, 65.0, OptionType::Call);
+        let model = BlackScholesModel::new(0.43, 0.1, 0.31);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.6470, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, 13.9748, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_european_edge() {
+        let instrument = Instrument::new(120.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(0.0, 0.03, 0.27);
+
+        let price = model.price(option);
+        assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
+
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 120.0, OptionType::Put);
+        let model = BlackScholesModel::new(0.0, 0.03, 0.27);
+
+        let price = model.price(option);
+        assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
+
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(0.0, 0.03, 0.27);
+
+        let price = model.price(option.clone());
+        assert!(price.is_nan());
+
+        let price = model.price(option.flip());
+        assert!(price.is_nan());
+
+        let instrument = Instrument::new(0.0);
+        let option = EuropeanOption::new(instrument, 0.0, OptionType::Call);
+        let model = BlackScholesModel::new(0.0, 0.0, 0.0);
+
+        let price = model.price(option.clone());
+        assert!(price.is_nan());
+
+        let price = model.price(option.flip());
+        assert!(price.is_nan());
+    }
+
+    #[test]
+    fn test_black_scholes_european_call_greeks() {
+        let option = EuropeanOption::new(Instrument::new(80.0), 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(4.0, 0.05, 0.02);
+
+        // Sanity check for input values
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.5652, epsilon = 0.0001);
+
+        let delta = model.delta(option.clone());
+        assert_abs_diff_eq!(delta, 0.2882, epsilon = 0.0001);
+        let gamma = model.gamma(option.clone());
+        assert_abs_diff_eq!(gamma, 0.1067, epsilon = 0.0001);
+        let vega = model.vega(option.clone());
+        assert_abs_diff_eq!(vega, 54.6104, epsilon = 0.0001);
+        let rho = model.rho(option.clone());
+        assert_abs_diff_eq!(rho, 89.9698, epsilon = 0.0001);
+        let theta = model.theta(option.clone());
+        assert_abs_diff_eq!(theta, 1.2611, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_european_put_greeks() {
+        let option = EuropeanOption::new(Instrument::new(110.0), 100.0, OptionType::Put);
+        let model = BlackScholesModel::new(0.43, 0.05, 0.2);
+
+        // Sanity check for input values
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 1.3884, epsilon = 0.0001);
+
+        let delta = model.delta(option.clone());
+        assert_abs_diff_eq!(delta, -0.1695, epsilon = 0.0001);
+        let gamma = model.gamma(option.clone());
+        assert_abs_diff_eq!(gamma, 0.0175, epsilon = 0.0001);
+        let vega = model.vega(option.clone());
+        assert_abs_diff_eq!(vega, 18.2170, epsilon = 0.0001);
+        let rho = model.rho(option.clone());
+        assert_abs_diff_eq!(rho, -8.6131, epsilon = 0.0001);
+        let theta = model.theta(option.clone());
+        assert_abs_diff_eq!(theta, 3.2350, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_binary_itm() {
+        let instrument = Instrument::new(120.0);
+        let option = BinaryOption::new(instrument, 115.0, OptionType::Call);
+        let model = BlackScholesModel::new(4.0, 0.05, 0.3);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.4434, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, -0.4434, epsilon = 0.0001);
+    }
+    #[test]
+
+    fn test_black_scholes_binary_otm() {
+        let instrument = Instrument::new(70.0);
+        let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+        let model = BlackScholesModel::new(2.0, 0.03, 0.15);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.2167, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, -0.2167, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_binary_div_itm() {
+        let mut instrument = Instrument::new(120.0);
+        instrument.continuous_dividend_yield = 0.01;
+        let option = BinaryOption::new(instrument, 115.0, OptionType::Call);
+        let model = BlackScholesModel::new(4.0, 0.05, 0.3);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.4216, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, -0.4216, epsilon = 0.0001);
+    }
+    #[test]
+
+    fn test_black_scholes_binary_div_otm() {
+        let mut instrument = Instrument::new(70.0);
+        instrument.continuous_dividend_yield = 0.02;
+        let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+        let model = BlackScholesModel::new(2.0, 0.03, 0.15);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.1666, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, -0.1666, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_binary_edge() {
+        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.5323, epsilon = 0.0001);
+
+        let price = model.price(option.flip());
+        assert_abs_diff_eq!(price, -0.5323, epsilon = 0.0001);
+
+        let option = BinaryOption::new(Instrument::new(0.0), 0.0, OptionType::Call);
+        let model = BlackScholesModel::new(0.0, 0.0, 0.0);
+        let price = model.price(option);
+        assert!(price.is_nan());
+    }
+
+    #[test]
+    fn test_black_scholes_binary_call_greeks() {
+        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+        // Sanity check for input values
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 0.5323, epsilon = 0.0001);
+
+        let delta = model.delta(option.clone());
+        assert_abs_diff_eq!(delta, 0.0188, epsilon = 0.0001);
+        let gamma = model.gamma(option.clone());
+        assert_abs_diff_eq!(gamma, -0.0003, epsilon = 0.0001);
+        let vega = model.vega(option.clone());
+        assert_abs_diff_eq!(vega, -0.6567, epsilon = 0.0001);
+        let rho = model.rho(option.clone());
+        assert_abs_diff_eq!(rho, 1.3439, epsilon = 0.0001);
+        let theta = model.theta(option.clone());
+        assert_abs_diff_eq!(theta, -0.0015, epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_black_scholes_binary_put_greeks() {
+        let option = BinaryOption::new(Instrument::new(110.0), 100.0, OptionType::Put);
+        let model = BlackScholesModel::new(0.43, 0.05, 0.2);
+
+        // Sanity check for input values
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, -0.7784, epsilon = 0.0001);
+
+        let delta = model.delta(option.clone());
+        assert_abs_diff_eq!(delta, -0.0193, epsilon = 0.0001);
+        let gamma = model.gamma(option.clone());
+        assert_abs_diff_eq!(gamma, 0.0013, epsilon = 0.0001);
+        let vega = model.vega(option.clone());
+        assert_abs_diff_eq!(vega, 1.3283, epsilon = 0.0001);
+        let rho = model.rho(option.clone());
+        assert_abs_diff_eq!(rho, -0.9970, epsilon = 0.0001);
+        let theta = model.theta(option.clone());
+        assert_abs_diff_eq!(theta, -0.1930, epsilon = 0.0001);
     }
 
     #[test]
     fn test_black_scholes_iv() {
-        let bs_option = BlackScholesOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            ..Default::default()
-        };
+        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+        let iv = model.implied_volatility(option.clone(), 10.0);
+        assert_abs_diff_eq!(iv, 0.1880, epsilon = 0.0001);
 
-        let market_price = 10.0;
-        let iv = bs_option.implied_volatility(market_price, OptionType::Call);
-        assert_abs_diff_eq!(iv, 0.2, epsilon = 0.0001);
-
-        let market_price = 1200.0;
-        let iv = bs_option.implied_volatility(market_price, OptionType::Call);
-        assert_abs_diff_eq!(iv, 3171.5007, epsilon = 0.0001);
-    }
-
-    #[test]
-    fn test_black_scholes_greeks() {
-        let bs_option = BlackScholesOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            ..Default::default()
-        };
-        let delta = bs_option.delta(OptionType::Call);
-        assert_abs_diff_eq!(delta, 0.5, epsilon = 0.0001);
-        let gamma = bs_option.gamma(OptionType::Call);
-        assert_abs_diff_eq!(gamma, 0.1, epsilon = 0.0001);
-        let theta = bs_option.theta(OptionType::Call);
-        assert_abs_diff_eq!(theta, -0.01, epsilon = 0.0001);
-        let vega = bs_option.vega(OptionType::Call);
-        assert_abs_diff_eq!(vega, 37.524, epsilon = 0.0001);
-        let rho = bs_option.rho(OptionType::Call);
-        assert_abs_diff_eq!(rho, 0.05, epsilon = 0.0001);
+        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+        let iv = model.implied_volatility(option, 1200.0);
+        assert_abs_diff_eq!(iv, 2947.0381, epsilon = 0.0001);
     }
 }
 
 // Binomial Tree Option Tests
 mod binomial_tree_tests {
+    use quantrs::options::AmericanOption;
+
     use super::*;
 
     #[test]
     fn test_binomial_tree_european_itm() {
-        let bt_us = BinomialTreeOption {
-            spot: 52.0,
-            strike: 50.0,
-            time_to_maturity: 2.0,
-            risk_free_rate: 0.05,
-            volatility: 0.182321557,
-            steps: 2,
-            style: OptionStyle::European,
-        };
-        assert_abs_diff_eq!(bt_us.price(OptionType::Call), 8.8258, epsilon = 0.0001);
-        assert_abs_diff_eq!(bt_us.price(OptionType::Put), 2.0677, epsilon = 0.0001);
+        let instrument = Instrument::new(52.0);
+        let option = EuropeanOption::new(instrument, 50.0, OptionType::Call);
+        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+
+        assert_abs_diff_eq!(model.price(option.clone()), 8.8258, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(option.clone().flip()), 2.0677, epsilon = 0.0001);
     }
 
     #[test]
-    fn test_binomial_tree_european_ootm() {
-        let bt_eu = BinomialTreeOption {
-            spot: 50.0,
-            strike: 60.0,
-            time_to_maturity: 2.0,
-            risk_free_rate: 0.05,
-            volatility: 0.182321557,
-            steps: 2,
-            style: OptionStyle::European,
-        };
-        assert_abs_diff_eq!(bt_eu.price(OptionType::Call), 3.8360, epsilon = 0.0001);
-        assert_abs_diff_eq!(bt_eu.price(OptionType::Put), 8.1262, epsilon = 0.0001);
+    fn test_binomial_tree_european_otm() {
+        let instrument = Instrument::new(50.0);
+        let option = EuropeanOption::new(instrument, 60.0, OptionType::Call);
+        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+
+        assert_abs_diff_eq!(model.price(option.clone()), 3.8360, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(option.clone().flip()), 8.1262, epsilon = 0.0001);
     }
 
     #[test]
     fn test_binomial_tree_american_itm() {
-        let bt_us = BinomialTreeOption {
-            spot: 52.0,
-            strike: 50.0,
-            time_to_maturity: 2.0,
-            risk_free_rate: 0.05,
-            volatility: 0.182321557,
-            steps: 2,
-            style: OptionStyle::American,
-        };
-        assert_abs_diff_eq!(bt_us.price(OptionType::Call), 8.8258, epsilon = 0.0001);
-        assert_abs_diff_eq!(bt_us.price(OptionType::Put), 2.5722, epsilon = 0.0001);
+        let instrument = Instrument::new(52.0);
+        let option = AmericanOption::new(instrument, 50.0, OptionType::Call);
+        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+
+        assert_abs_diff_eq!(model.price(option.clone()), 8.8258, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(option.clone().flip()), 2.5722, epsilon = 0.0001);
     }
 
     #[test]
-    fn test_binomial_tree_american_ootm() {
-        let bt_eu = BinomialTreeOption {
-            spot: 50.0,
-            strike: 60.0,
-            time_to_maturity: 2.0,
-            risk_free_rate: 0.05,
-            volatility: 0.182321557,
-            steps: 2,
-            style: OptionStyle::American,
-        };
-        assert_abs_diff_eq!(bt_eu.price(OptionType::Call), 10.0000, epsilon = 0.0001);
-        assert_abs_diff_eq!(bt_eu.price(OptionType::Put), 10.0000, epsilon = 0.0001);
+    fn test_binomial_tree_american_otm() {
+        let instrument = Instrument::new(50.0);
+        let option = AmericanOption::new(instrument, 60.0, OptionType::Call);
+        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+
+        assert_abs_diff_eq!(model.price(option.clone()), 10.0000, epsilon = 0.0001);
+        assert_abs_diff_eq!(
+            model.price(option.clone().flip()),
+            10.0000,
+            epsilon = 0.0001
+        );
     }
 
     #[test]
     fn test_binomial_tree_iv() {
-        let bt_option = BinomialTreeOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            steps: 100,
-            ..Default::default()
-        };
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
         let market_price = 10.0;
-        let iv = bt_option.implied_volatility(market_price, OptionType::Call);
+        let iv = model.implied_volatility(option.clone(), market_price);
         assert!(iv > 0.0); // TODO: Add a proper assertion based on expected value
     }
 
     #[test]
     fn test_binomial_tree_greeks() {
-        let bt_option = BinomialTreeOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            steps: 100,
-            ..Default::default()
-        };
-        let delta = bt_option.delta(OptionType::Call);
-        assert_abs_diff_eq!(delta, 0.5, epsilon = 0.0001);
-        let gamma = bt_option.gamma(OptionType::Call);
-        assert_abs_diff_eq!(gamma, 0.1, epsilon = 0.0001);
-        let theta = bt_option.theta(OptionType::Call);
-        assert_abs_diff_eq!(theta, -0.01, epsilon = 0.0001);
-        let vega = bt_option.vega(OptionType::Call);
-        assert_abs_diff_eq!(vega, 0.2, epsilon = 0.0001);
-        let rho = bt_option.rho(OptionType::Call);
-        assert_abs_diff_eq!(rho, 0.05, epsilon = 0.0001);
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+        let result = std::panic::catch_unwind(|| {
+            model.delta(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for delta calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.gamma(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for gamma calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.theta(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for theta calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.vega(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for vega calculation");
+
+        let result = std::panic::catch_unwind(|| {
+            model.rho(option.clone());
+        });
+        assert!(result.is_err(), "Expected panic for rho calculation");
     }
 }
 
@@ -199,78 +391,58 @@ mod monte_carlo_tests {
 
     #[test]
     fn test_monte_carlo_call_price() {
-        let mc_option = MonteCarloOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            simulations: 10_000,
-            ..Default::default()
-        };
-        let price = mc_option.price(OptionType::Call);
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+
+        let price = model.price(option.clone());
         assert_abs_diff_eq!(price, 10.45, epsilon = 0.5);
     }
 
     #[test]
     fn test_monte_carlo_put_price() {
-        let mc_option = MonteCarloOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            simulations: 10_000,
-            ..Default::default()
-        };
-        let price = mc_option.price(OptionType::Put);
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+
+        let price = model.price(option.clone().flip());
         assert_abs_diff_eq!(price, 5.57, epsilon = 0.5);
     }
 
     #[test]
     fn test_monte_carlo_iv() {
-        let mc_option = MonteCarloOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            simulations: 10_000,
-            ..Default::default()
-        };
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+
         let market_price = 10.0;
-        let iv = mc_option.implied_volatility(market_price, OptionType::Call);
+        let iv = model.implied_volatility(option.clone(), market_price);
         assert!(iv > 0.0, "IV should be greater than 0");
 
         let market_price = 0.0;
-        let iv = mc_option.implied_volatility(market_price, OptionType::Call);
+        let iv = model.implied_volatility(option.clone(), market_price);
         assert!(iv == 0.0, "IV should be zero for unrealistic prices");
 
         let market_price = 110.0;
-        let iv = mc_option.implied_volatility(market_price, OptionType::Call);
+        let iv = model.implied_volatility(option, market_price);
         assert!(iv == 0.0, "IV should be zero for unrealistic prices");
     }
 
     #[test]
     fn test_monte_carlo_greeks() {
-        let mc_option = MonteCarloOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            simulations: 10_000,
-            ..Default::default()
-        };
-        let _delta = mc_option.delta(OptionType::Call);
+        let instrument = Instrument::new(100.0);
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+
+        let _delta = model.delta(option.clone());
         // assert_abs_diff_eq!(delta, 822.13, epsilon = 0.05); // Allowing a larger epsilon due to simulation variability
-        let _gamma = mc_option.gamma(OptionType::Call);
+        let _gamma = model.gamma(option.clone());
         // assert_abs_diff_eq!(gamma, 0.01, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
-        let _theta = mc_option.theta(OptionType::Call);
+        let _theta = model.theta(option.clone());
         // assert_abs_diff_eq!(theta, -0.01, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
-        let _vega = mc_option.vega(OptionType::Call);
+        let _vega = model.vega(option.clone());
         // assert_abs_diff_eq!(vega, 0.2, epsilon = 0.05); // Allowing a larger epsilon due to simulation variability
-        let _rho = mc_option.rho(OptionType::Call);
+        let _rho = model.rho(option.clone());
         // assert_abs_diff_eq!(rho, 0.05, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
     }
 }
@@ -281,21 +453,18 @@ mod greeks_tests {
 
     #[test]
     fn test_greeks() {
-        let bt_option = BinomialTreeOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            steps: 100,
-            ..Default::default()
-        };
-        let greeks = OptionGreeks::calculate(&bt_option, OptionType::Call);
-        assert_abs_diff_eq!(greeks.delta, 0.5, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.gamma, 0.1, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.theta, -0.01, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.vega, 0.2, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.rho, 0.05, epsilon = 0.0001);
+        let mut instrument = Instrument::new(100.0);
+        instrument.continuous_dividend_yield = 0.01;
+        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+        let greeks = OptionGreeks::calculate(&model, option.clone());
+
+        assert_abs_diff_eq!(greeks.delta, 0.6118, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.gamma, 0.0191, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.theta, 5.7696, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.vega, 37.7593, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.rho, 51.3500, epsilon = 0.0001);
     }
 }
 
@@ -304,36 +473,25 @@ mod option_trait_tests {
     use super::*;
 
     #[test]
-    fn test_all_options_implement_option_trait() {
-        let bs_option = BlackScholesOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            ..Default::default()
-        };
-        assert_implements_option_trait(&bs_option);
+    fn test_trait_implementations() {
+        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&option);
+        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&option);
+        let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&option);
+        let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&option);
+        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&option);
+        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&option);
 
-        let bt_option = BinomialTreeOption {
-            spot: 100.0,
-            strike: 100.0,
-            time_to_maturity: 1.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            steps: 2,
-            ..Default::default()
-        };
-        assert_implements_option_trait(&bt_option);
-
-        let mc_option = MonteCarloOption {
-            spot: 100.0,
-            strike: 100.0,
-            risk_free_rate: 0.05,
-            volatility: 0.2,
-            simulations: 10,
-            ..Default::default()
-        };
-        assert_implements_option_trait(&mc_option);
+        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+        assert_implements_model_trait(&model);
+        let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 2);
+        assert_implements_model_trait(&model);
+        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10);
+        assert_implements_model_trait(&model);
     }
 }

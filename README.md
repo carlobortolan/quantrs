@@ -23,14 +23,81 @@ Please check out the documentation [here][docs-url].
 
 ## Features
 
-### Core Features
+## Features
 
-- [ ] Options pricing
-  - [ ] Black-Scholes (work in progress)
-  - [ ] Binomial tree (work in progress)
-  - [ ] Monte Carlo simulation (work in progress)
-  - [ ] Greeks (work in progress)
-  - [ ] Implied volatility (work in progress)
+### Options Pricing
+
+For now quantrs only supports options pricing. The following features are available:
+
+- [x] Option types: European, American, Binary Cash-or-Nothing, Binary Asset-or-Nothing
+- [x] Option pricing: Black-Scholes, Binomial Tree, Monte Carlo Simulation
+- [x] Greeks: Delta, Gamma, Theta, Vega, Rho
+- [x] Implied volatility
+
+| Model                   | Black-Scholes       | Binomial Tree | Monte Carlo Simulation |
+| ----------------------- | ------------------- | ------------- | ---------------------- |
+| European Options        | ✅                  | ✅            | ⏳                     |
+| American Options        | ❌ (not applicable) | ✅            | ⏳                     |
+| Binary Cash-or-Nothing  | ✅                  | ❌            | ❌                     |
+| Binary Asset-or-Nothing | ⏳                  | ❌            | ❌                     |
+| Greeks                  | ✅                  | ⏳            | ⏳                     |
+| Implied Volatility      | ✅ (not tested yet) | ⏳            | ⏳                     |
+
+(✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported)
+
+## Usage
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+quantrs = "0.1.2"
+```
+
+Now if you want to e.g., model binary call options using the Black-Scholes model, you can:
+
+```rust
+use quantrs::options::*;
+
+fn main() {
+    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
+    let mut instrument = Instrument::new(100.0);
+    instrument.continuous_dividend_yield = 0.02;
+
+
+    // Create a new Cash-or-Nothing binary call option with a strike price of 85
+    let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+
+    // Create a new Black-Scholes model with:
+    // - Time to maturity (T) = 0.78 years
+    // - Risk-free interest rate (r) = 5%
+    // - Volatility (σ) = 20%
+    let model = BlackScholesModel::new(0.78, 0.05, 0.2);
+
+    // Calculate the price of the binary call option using the Black-Scholes model
+    let price = model.price(option.clone());
+    println!("Price: {}", price);
+
+    // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
+    let greeks = OptionGreeks::calculate(&model, option);
+    println!("Greeks: {:?}\n", greeks);
+}
+```
+
+This will output:
+
+```text
+Price: 0.8006934914644723
+Greeks: OptionGreeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
+```
+
+See the [documentation][docs-url] for more information and examples.
+
+## Minimum supported Rust version (MSRV)
+
+This crate requires a Rust version of 1.65.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+
+## Outlook
 
 ### Planned Features
 
@@ -61,38 +128,6 @@ Please check out the documentation [here][docs-url].
   - [ ] Risk parity
   - [ ] Minimum variance
   - [ ] Maximum diversification
-
-## Usage
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-quantrs = "0.1"
-```
-
-Now you can use the library in your code:
-
-```rust
-use quantrs::options::*;
-
-fn main() {
-    let option = BlackScholesOption {
-        spot: 100.0,
-        strike: 100.0,
-        time_to_maturity: 1.0,
-        risk_free_rate: 0.05,
-        volatility: 0.2,
-    };
-    println!("Option price: {}", option.price(OptionType::Call));
-}
-```
-
-See the [documentation][docs-url] and the [examples](examples) for more information.
-
-## Minimum supported Rust version (MSRV)
-
-This crate requires a Rust version of 1.65.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
 ## Contributing
 
