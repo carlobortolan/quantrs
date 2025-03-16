@@ -67,7 +67,7 @@
 //! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
 //! let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 //!
-//! let price = model.price(option);
+//! let price = model.price(&option);
 //! println!("Option price: {}", price);
 //! ```
 
@@ -148,8 +148,8 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// The price of the call option.
-    fn price_euro_call<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
+    fn price_euro_call<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         let nd1 = normal.cdf(d1);
@@ -179,8 +179,8 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// The price of the put option.
-    fn price_euro_put<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
+    fn price_euro_put<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         let nd1 = normal.cdf(-d1);
@@ -210,8 +210,8 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// The price of the binary option.
-    pub fn price_cash_or_nothing<T: Option>(&self, option: T) -> f64 {
-        let (_, d2) = self.calculate_d1_d2(&option);
+    pub fn price_cash_or_nothing<T: Option>(&self, option: &T) -> f64 {
+        let (_, d2) = self.calculate_d1_d2(option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.option_type() {
@@ -233,8 +233,8 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// The price of the binary option.
-    pub fn price_asset_or_nothing<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
+    pub fn price_asset_or_nothing<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.option_type() {
@@ -261,7 +261,7 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// The price of the option.
-    fn price_with_volatility<T: Option>(&self, option: T, volatility: f64) -> f64 {
+    fn price_with_volatility<T: Option>(&self, option: &T, volatility: f64) -> f64 {
         let sqrt_t = self.time_to_maturity.sqrt();
         let n_dividends = option
             .instrument()
@@ -304,22 +304,28 @@ impl BlackScholesModel {
 }
 
 impl OptionPricing for BlackScholesModel {
-    fn price<T: Option>(&self, option: T) -> f64 {
+    fn price<T: Option>(&self, option: &T) -> f64 {
         match (option.option_type(), option.style()) {
             (OptionType::Call, OptionStyle::European) => self.price_euro_call(option),
             (OptionType::Put, OptionStyle::European) => self.price_euro_put(option),
             (_, OptionStyle::Binary(CashOrNothing)) => self.price_cash_or_nothing(option),
             (_, OptionStyle::Binary(AssetOrNothing)) => self.price_asset_or_nothing(option),
+            //(OptionType::Call, OptionStyle::Rainbow(_)) => {
+            //    option.instrument().assets.iter().map(|asset| {
+            //        let option = option.clone().with_instrument(asset.clone());
+            //        self.price(option)
+            //    }).sum()
+            //}
             _ => panic!("Unsupported option type or style"),
         }
     }
 
-    fn implied_volatility<T: Option>(&self, option: T, market_price: f64) -> f64 {
+    fn implied_volatility<T: Option>(&self, option: &T, market_price: f64) -> f64 {
         let mut sigma = 0.2; // Initial guess
         let tolerance = 1e-5;
         let max_iterations = 100;
         for _ in 0..max_iterations {
-            let price = self.price_with_volatility(option.clone(), sigma);
+            let price = self.price_with_volatility(option, sigma);
             let vega = self.vega(option.clone());
             let diff = market_price - price;
             if diff.abs() < tolerance {

@@ -12,7 +12,7 @@ fn assert_implements_option_trait<T: Option>(option: &T) {
     option.strike();
     option.option_type();
     option.flip();
-    option.payoff(100.0);
+    option.payoff(Some(100.0));
 }
 
 // Function to assert that a type implements the OptionPricing trait
@@ -20,8 +20,8 @@ fn assert_implements_model_trait<T: OptionPricing>(model: &T) {
     // This function does nothing but ensures that T implements the OptionPricing trait and required methods
     let option = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
 
-    T::price(model, option.clone());
-    T::price(model, option.flip());
+    T::price(model, &option);
+    T::price(model, &option.flip());
 }
 
 // Black-Scholes Option Tests
@@ -39,10 +39,10 @@ mod black_scholes_tests {
             let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
             let model = BlackScholesModel::new(2.0, 0.03, 0.27);
 
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 32.2287, epsilon = 0.0001);
 
-            let price = model.price(option.flip());
+            let price = model.price(&option.flip());
             assert_abs_diff_eq!(price, 6.4052, epsilon = 0.0001);
         }
 
@@ -52,10 +52,10 @@ mod black_scholes_tests {
             let option = EuropeanOption::new(instrument, 65.0, OptionType::Call);
             let model = BlackScholesModel::new(0.43, 0.1, 0.31);
 
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.8083, epsilon = 0.0001);
 
-            let price = model.price(option.flip());
+            let price = model.price(&option.flip());
             assert_abs_diff_eq!(price, 13.0725, epsilon = 0.0001);
         }
 
@@ -67,10 +67,10 @@ mod black_scholes_tests {
             let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
             let model = BlackScholesModel::new(2.0, 0.03, 0.27);
 
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 30.3564, epsilon = 0.0001);
 
-            let price = model.price(option.flip());
+            let price = model.price(&option.flip());
             assert_abs_diff_eq!(price, 6.9091, epsilon = 0.0001);
         }
 
@@ -82,10 +82,10 @@ mod black_scholes_tests {
             let option = EuropeanOption::new(instrument, 65.0, OptionType::Call);
             let model = BlackScholesModel::new(0.43, 0.1, 0.31);
 
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.6470, epsilon = 0.0001);
 
-            let price = model.price(option.flip());
+            let price = model.price(&option.flip());
             assert_abs_diff_eq!(price, 13.9748, epsilon = 0.0001);
         }
 
@@ -95,34 +95,34 @@ mod black_scholes_tests {
             let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
             let model = BlackScholesModel::new(0.0, 0.03, 0.27);
 
-            let price = model.price(option);
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
 
             let instrument = Instrument::new().with_spot(100.0);
             let option = EuropeanOption::new(instrument, 120.0, OptionType::Put);
             let model = BlackScholesModel::new(0.0, 0.03, 0.27);
 
-            let price = model.price(option);
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
 
             let instrument = Instrument::new().with_spot(100.0);
             let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
             let model = BlackScholesModel::new(0.0, 0.03, 0.27);
 
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert!(price.is_nan());
 
-            let price = model.price(option.flip());
+            let price = model.price(&option.flip());
             assert!(price.is_nan());
 
             let instrument = Instrument::new().with_spot(0.0);
             let option = EuropeanOption::new(instrument, 0.0, OptionType::Call);
             let model = BlackScholesModel::new(0.0, 0.0, 0.0);
 
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert!(price.is_nan());
 
-            let price = model.price(option.flip());
+            let price = model.price(&option.flip());
             assert!(price.is_nan());
         }
 
@@ -133,7 +133,7 @@ mod black_scholes_tests {
             let model = BlackScholesModel::new(4.0, 0.05, 0.02);
 
             // Sanity check for input values
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.5652, epsilon = 0.0001);
 
             let delta = model.delta(option.clone());
@@ -155,7 +155,7 @@ mod black_scholes_tests {
             let model = BlackScholesModel::new(0.43, 0.05, 0.2);
 
             // Sanity check for input values
-            let price = model.price(option.clone());
+            let price = model.price(&option);
             assert_abs_diff_eq!(price, 1.3884, epsilon = 0.0001);
 
             let delta = model.delta(option.clone());
@@ -183,10 +183,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::cash_or_nothing(instrument, 115.0, OptionType::Call);
                 let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.4434, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 0.3754, epsilon = 0.0001);
             }
             #[test]
@@ -196,10 +196,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
                 let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.2167, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 0.7251, epsilon = 0.0001);
             }
 
@@ -211,10 +211,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::cash_or_nothing(instrument, 115.0, OptionType::Call);
                 let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.4216, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 0.3971, epsilon = 0.0001);
             }
             #[test]
@@ -226,10 +226,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
                 let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.1666, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 0.7751, epsilon = 0.0001);
             }
 
@@ -242,17 +242,17 @@ mod black_scholes_tests {
                 );
                 let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.5323, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 0.4189, epsilon = 0.0001);
 
                 let model = BlackScholesModel::new(1.0, 0.00, 0.2);
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.4602, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 0.5398, epsilon = 0.0001);
 
                 let option = BinaryOption::cash_or_nothing(
@@ -261,7 +261,7 @@ mod black_scholes_tests {
                     OptionType::Call,
                 );
                 let model = BlackScholesModel::new(0.0, 0.0, 0.0);
-                let price = model.price(option);
+                let price = model.price(&option);
                 assert!(price.is_nan());
             }
 
@@ -275,7 +275,7 @@ mod black_scholes_tests {
                 let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
                 // Sanity check for input values
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.5323, epsilon = 0.0001);
 
                 let delta = model.delta(option.clone());
@@ -300,7 +300,7 @@ mod black_scholes_tests {
                 let model = BlackScholesModel::new(0.43, 0.05, 0.2);
 
                 // Sanity check for input values
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 0.2003, epsilon = 0.0001);
 
                 let delta = model.delta(option.clone());
@@ -327,10 +327,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::asset_or_nothing(instrument, 115.0, OptionType::Call);
                 let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 73.7523, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 32.6781, epsilon = 0.0001);
             }
             #[test]
@@ -342,10 +342,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::asset_or_nothing(instrument, 85.0, OptionType::Call);
                 let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 8.5309, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 53.5535, epsilon = 0.0001);
             }
 
@@ -357,10 +357,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::asset_or_nothing(instrument, 115.0, OptionType::Call);
                 let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 85.1028, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 30.1919, epsilon = 0.0001);
             }
             #[test]
@@ -372,10 +372,10 @@ mod black_scholes_tests {
                 let option = BinaryOption::asset_or_nothing(instrument, 85.0, OptionType::Call);
                 let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 15.9618, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 51.2935, epsilon = 0.0001);
             }
 
@@ -388,10 +388,10 @@ mod black_scholes_tests {
                 );
                 let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 63.6831, epsilon = 0.0001);
 
-                let price = model.price(option.flip());
+                let price = model.price(&option.flip());
                 assert_abs_diff_eq!(price, 36.3169, epsilon = 0.0001);
 
                 let option = BinaryOption::asset_or_nothing(
@@ -400,7 +400,7 @@ mod black_scholes_tests {
                     OptionType::Call,
                 );
                 let model = BlackScholesModel::new(0.0, 0.0, 0.0);
-                let price = model.price(option);
+                let price = model.price(&option);
                 assert!(price.is_nan());
             }
 
@@ -416,7 +416,7 @@ mod black_scholes_tests {
                 let model = BlackScholesModel::new(2.1, 0.05, 0.2);
 
                 // Sanity check for input values
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 55.0923, epsilon = 0.0001);
 
                 let delta = model.delta(option.clone());
@@ -441,7 +441,7 @@ mod black_scholes_tests {
                 let model = BlackScholesModel::new(0.43, 0.05, 0.2);
 
                 // Sanity check for input values
-                let price = model.price(option.clone());
+                let price = model.price(&option);
                 assert_abs_diff_eq!(price, 18.6422, epsilon = 0.0001);
 
                 let delta = model.delta(option.clone());
@@ -469,16 +469,16 @@ mod black_scholes_tests {
         let model = BlackScholesModel::new(2.5, 0.02, 0.2);
 
         // Sanity check for input values
-        let price = model.price(option.clone());
+        let price = model.price(&option);
         assert_abs_diff_eq!(price, 11.5133, epsilon = 0.0001);
 
-        let iv = model.implied_volatility(option.clone(), 15.0);
+        let iv = model.implied_volatility(&option, 15.0);
         assert_abs_diff_eq!(iv, 0.2477, epsilon = 0.0001);
 
         let option =
             EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
-        let iv = model.implied_volatility(option, 1200.0);
+        let iv = model.implied_volatility(&option, 1200.0);
         assert_abs_diff_eq!(iv, 2947.0381, epsilon = 0.0001);
     }
 }
@@ -495,8 +495,8 @@ mod binomial_tree_tests {
         let option = EuropeanOption::new(instrument, 50.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
-        assert_abs_diff_eq!(model.price(option.clone()), 8.8258, epsilon = 0.0001);
-        assert_abs_diff_eq!(model.price(option.clone().flip()), 2.0677, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(&option), 8.8258, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(&option.flip()), 2.0677, epsilon = 0.0001);
     }
 
     #[test]
@@ -505,8 +505,8 @@ mod binomial_tree_tests {
         let option = EuropeanOption::new(instrument, 60.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
-        assert_abs_diff_eq!(model.price(option.clone()), 3.8360, epsilon = 0.0001);
-        assert_abs_diff_eq!(model.price(option.clone().flip()), 8.1262, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(&option), 3.8360, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(&option.flip()), 8.1262, epsilon = 0.0001);
     }
 
     #[test]
@@ -515,8 +515,8 @@ mod binomial_tree_tests {
         let option = AmericanOption::new(instrument, 50.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
-        assert_abs_diff_eq!(model.price(option.clone()), 8.8258, epsilon = 0.0001);
-        assert_abs_diff_eq!(model.price(option.clone().flip()), 2.5722, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(&option), 8.8258, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(&option.flip()), 2.5722, epsilon = 0.0001);
     }
 
     #[test]
@@ -525,12 +525,8 @@ mod binomial_tree_tests {
         let option = AmericanOption::new(instrument, 60.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
-        assert_abs_diff_eq!(model.price(option.clone()), 10.0000, epsilon = 0.0001);
-        assert_abs_diff_eq!(
-            model.price(option.clone().flip()),
-            10.0000,
-            epsilon = 0.0001
-        );
+        assert_abs_diff_eq!(model.price(&option), 10.0000, epsilon = 0.0001);
+        assert_abs_diff_eq!(model.price(&option.flip()), 10.0000, epsilon = 0.0001);
     }
 
     #[test]
@@ -541,7 +537,7 @@ mod binomial_tree_tests {
 
         let market_price = 10.0;
         let result = std::panic::catch_unwind(|| {
-            model.implied_volatility(option.clone(), market_price);
+            model.implied_volatility(&option, market_price);
         });
         assert!(result.is_err(), "Expected panic for delta calculation");
     }
@@ -589,7 +585,7 @@ mod monte_carlo_tests {
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
-        let price = model.price(option.clone());
+        let price = model.price(&option);
         assert_abs_diff_eq!(price, 10.45, epsilon = 0.5);
     }
 
@@ -599,7 +595,7 @@ mod monte_carlo_tests {
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
-        let price = model.price(option.clone().flip());
+        let price = model.price(&option.flip());
         assert_abs_diff_eq!(price, 5.57, epsilon = 0.5);
     }
 
@@ -610,11 +606,11 @@ mod monte_carlo_tests {
         let _model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
         let _market_price = 10.0;
-        // let iv = model.implied_volatility(option.clone(), market_price);
+        // let iv = model.implied_volatility(&option, market_price);
         // assert!(iv > 0.0, "IV should be greater than 0");
 
         let _market_price = 0.0;
-        // let iv = model.implied_volatility(option.clone(), market_price);
+        // let iv = model.implied_volatility(&option, market_price);
         // assert!(iv == 0.0, "IV should be zero for unrealistic prices");
 
         let _market_price = 110.0;
@@ -628,15 +624,15 @@ mod monte_carlo_tests {
         let _option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let _model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
-        // let _delta = model.delta(option.clone());
+        // let _delta = model.delta(&option);
         // assert_abs_diff_eq!(delta, 822.13, epsilon = 0.05); // Allowing a larger epsilon due to simulation variability
-        // let _gamma = model.gamma(option.clone());
+        // let _gamma = model.gamma(&option);
         // assert_abs_diff_eq!(gamma, 0.01, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
-        // let _theta = model.theta(option.clone());
+        // let _theta = model.theta(&option);
         // assert_abs_diff_eq!(theta, -0.01, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
-        // let _vega = model.vega(option.clone());
+        // let _vega = model.vega(&option);
         // assert_abs_diff_eq!(vega, 0.2, epsilon = 0.05); // Allowing a larger epsilon due to simulation variability
-        // let _rho = model.rho(option.clone());
+        // let _rho = model.rho(&option);
         // assert_abs_diff_eq!(rho, 0.05, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
     }
 }
@@ -653,7 +649,7 @@ mod greeks_tests {
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
-        let greeks = OptionGreeks::calculate(&model, option.clone());
+        let greeks = OptionGreeks::calculate(&model, option);
 
         assert_abs_diff_eq!(greeks.delta, 0.6118, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.gamma, 0.0191, epsilon = 0.0001);

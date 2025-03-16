@@ -6,10 +6,12 @@
 pub mod american_option;
 pub mod binary_option;
 pub mod european_option;
+pub mod rainbow_option;
 
 pub use american_option::AmericanOption;
 pub use binary_option::BinaryOption;
 pub use european_option::EuropeanOption;
+pub use rainbow_option::RainbowOption;
 
 /// Enum representing the type of option.
 #[derive(Clone, Copy, Debug)]
@@ -32,7 +34,7 @@ pub enum OptionStyle {
     /// Basket option (payoff depends on average price of multiple underlying assets)
     Basket,
     /// Rainbow option (payoff depends on multiple underlying assets)
-    Rainbow,
+    Rainbow(RainbowType),
     /// Barrier option (payoff depends on whether underlying asset crosses a barrier)
     Barrier(BarrierType),
     /// Double barrier option (payoff depends on whether underlying asset crosses two barriers)
@@ -54,6 +56,17 @@ impl Default for OptionStyle {
     fn default() -> Self {
         OptionStyle::European
     }
+}
+
+/// Enum representing the type of a Rainbow option.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum RainbowType {
+    BestOf,
+    WorstOf,
+    CallOnMax,
+    CallOnMin,
+    PutOnMax,
+    PutOnMin,
 }
 
 /// Enum representing the type of a Binary option.

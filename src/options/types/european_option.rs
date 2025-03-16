@@ -22,6 +22,8 @@
 //! println!("Option style: {:?}", option.style());
 //! ```
 
+use std::any::Any;
+
 use super::{OptionStyle, OptionType};
 use crate::options::{Instrument, Option};
 
@@ -70,5 +72,9 @@ impl Option for EuropeanOption {
             OptionType::Put => OptionType::Call,
         };
         EuropeanOption::new(self.instrument.clone(), self.strike, flipped_option_type)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

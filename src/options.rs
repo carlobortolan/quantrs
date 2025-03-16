@@ -16,6 +16,8 @@ pub mod instrument;
 pub mod models;
 pub mod types;
 
+use std::any::Any;
+
 pub use greeks::OptionGreeks;
 pub use instrument::Instrument;
 pub use models::{BinomialTreeModel, BlackScholesModel, MonteCarloModel};
@@ -62,17 +64,25 @@ pub trait Option: Clone {
     ///
     /// # Arguments
     ///
-    /// * `spot` - The price of the underlying asset at maturity.
+    /// * `spot` - The price of the underlying asset at maturity (optional).
     ///
     /// # Returns
     ///
     /// The payoff of the option.
-    fn payoff(&self, spot: f64) -> f64 {
+    fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
+        let spot_price = spot.unwrap_or_else(|| self.instrument().spot);
         match self.option_type() {
-            OptionType::Call => (spot - self.strike()).max(0.0),
-            OptionType::Put => (self.strike() - spot).max(0.0),
+            OptionType::Call => (spot_price - self.strike()).max(0.0),
+            OptionType::Put => (self.strike() - spot_price).max(0.0),
         }
     }
+
+    /// Get the option as a trait object.
+    ///
+    /// # Returns
+    ///
+    /// The option as a trait object.
+    fn as_any(&self) -> &dyn Any;
 }
 
 /// Trait for option pricing models.
@@ -86,7 +96,7 @@ pub trait OptionPricing {
     /// # Returns
     ///
     /// The price of the option.
-    fn price<T: Option>(&self, option: T) -> f64;
+    fn price<T: Option>(&self, option: &T) -> f64;
 
     /// Calculate the implied volatility for a given market price.
     ///
@@ -98,7 +108,7 @@ pub trait OptionPricing {
     /// # Returns
     ///
     /// The implied volatility.
-    fn implied_volatility<T: Option>(&self, option: T, market_price: f64) -> f64;
+    fn implied_volatility<T: Option>(&self, option: &T, market_price: f64) -> f64;
 }
 
 /// Trait for calculating the Greeks of an option.

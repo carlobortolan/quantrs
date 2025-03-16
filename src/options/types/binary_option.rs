@@ -24,6 +24,8 @@
 //! println!("Binary option type: {:?}", option.binary_option_type());
 //! ```
 
+use std::any::Any;
+
 use super::{BinaryType, OptionStyle, OptionType};
 use crate::options::{Instrument, Option};
 
@@ -104,5 +106,9 @@ impl Option for BinaryOption {
             flipped_option_type,
             *self.binary_option_type(),
         )
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

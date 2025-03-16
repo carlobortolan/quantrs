@@ -28,11 +28,11 @@ impl FiniteDiffModel {
 }
 
 impl OptionPricing for FiniteDiffModel {
-    fn price<T: Option>(&self, option: T) -> f64 {
+    fn price<T: Option>(&self, option: &T) -> f64 {
         panic!("FiniteDiffModel does not support price calculation yet");
     }
 
-    fn implied_volatility<T: Option>(&self, _option: T, _market_price: f64) -> f64 {
+    fn implied_volatility<T: Option>(&self, _option: &T, _market_price: f64) -> f64 {
         panic!("FiniteDiffModel does not support implied volatility calculation yet");
     }
 }

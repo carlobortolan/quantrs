@@ -68,7 +68,7 @@
 //! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
 //! let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 //!
-//! let price = model.price(option);
+//! let price = model.price(&option);
 //! println!("Option price: {}", price);
 //! ```
 
@@ -100,7 +100,7 @@ impl BinomialTreeModel {
 }
 
 impl OptionPricing for BinomialTreeModel {
-    fn price<T: Option>(&self, option: T) -> f64 {
+    fn price<T: Option>(&self, option: &T) -> f64 {
         // Multiplicative up-/downward movements of an asset in a single step of the binomial tree
         let dt = self.time_to_maturity / self.steps as f64;
         let u = (self.volatility * dt.sqrt()).exp();
@@ -115,9 +115,9 @@ impl OptionPricing for BinomialTreeModel {
         // Initialize option values at maturity
         let mut option_values: Vec<f64> = (0..=self.steps)
             .map(|i| {
-                option.payoff(
+                option.payoff(Some(
                     option.instrument().spot * u.powi(i as i32) * d.powi((self.steps - i) as i32),
-                )
+                ))
             })
             .collect();
 
@@ -128,9 +128,9 @@ impl OptionPricing for BinomialTreeModel {
                     discount_factor * (p * option_values[i + 1] + (1.0 - p) * option_values[i]);
 
                 if option.style() == &OptionStyle::American {
-                    let early_exercise = option.payoff(
+                    let early_exercise = option.payoff(Some(
                         option.instrument().spot * u.powi(i as i32) * d.powi((step - i) as i32),
-                    );
+                    ));
                     option_values[i] = expected_value.max(early_exercise);
                 } else {
                     option_values[i] = expected_value;
@@ -139,13 +139,13 @@ impl OptionPricing for BinomialTreeModel {
         }
 
         if option.style() == &OptionStyle::American {
-            option_values[0].max(option.strike() - option.instrument().spot) // TODO: Change to max(0.0, self.payoff(self.spot, option_type))
+            option_values[0].max(option.strike() - option.instrument().spot) // TODO: Change to max(0.0, self.payoff(Some(self.spot)))
         } else {
             option_values[0] // Return the root node value
         }
     }
 
-    fn implied_volatility<T: Option>(&self, _option: T, _market_price: f64) -> f64 {
+    fn implied_volatility<T: Option>(&self, _option: &T, _market_price: f64) -> f64 {
         panic!("BinomialTreeModel does not support implied volatility calculation yet");
     }
 }
