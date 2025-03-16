@@ -171,7 +171,7 @@ mod black_scholes_tests {
     #[test]
     fn test_black_scholes_binary_itm() {
         let instrument = Instrument::new().with_spot(120.0);
-        let option = BinaryOption::new(instrument, 115.0, OptionType::Call);
+        let option = BinaryOption::cash_or_nothing(instrument, 115.0, OptionType::Call);
         let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
         let price = model.price(option.clone());
@@ -184,7 +184,7 @@ mod black_scholes_tests {
 
     fn test_black_scholes_binary_otm() {
         let instrument = Instrument::new().with_spot(70.0);
-        let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+        let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
         let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
         let price = model.price(option.clone());
@@ -199,7 +199,7 @@ mod black_scholes_tests {
         let instrument = Instrument::new()
             .with_spot(120.0)
             .with_continuous_dividend_yield(0.01);
-        let option = BinaryOption::new(instrument, 115.0, OptionType::Call);
+        let option = BinaryOption::cash_or_nothing(instrument, 115.0, OptionType::Call);
         let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
         let price = model.price(option.clone());
@@ -214,7 +214,7 @@ mod black_scholes_tests {
         let instrument = Instrument::new()
             .with_spot(70.0)
             .with_continuous_dividend_yield(0.02);
-        let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+        let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
         let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
         let price = model.price(option.clone());
@@ -226,7 +226,11 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_edge() {
-        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
+        let option = BinaryOption::cash_or_nothing(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            OptionType::Call,
+        );
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
         let price = model.price(option.clone());
@@ -235,7 +239,8 @@ mod black_scholes_tests {
         let price = model.price(option.flip());
         assert_abs_diff_eq!(price, -0.5323, epsilon = 0.0001);
 
-        let option = BinaryOption::new(Instrument::new().with_spot(0.0), 0.0, OptionType::Call);
+        let option =
+            BinaryOption::cash_or_nothing(Instrument::new().with_spot(0.0), 0.0, OptionType::Call);
         let model = BlackScholesModel::new(0.0, 0.0, 0.0);
         let price = model.price(option);
         assert!(price.is_nan());
@@ -243,7 +248,11 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_call_greeks() {
-        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
+        let option = BinaryOption::cash_or_nothing(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            OptionType::Call,
+        );
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
         // Sanity check for input values
@@ -264,7 +273,11 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_put_greeks() {
-        let option = BinaryOption::new(Instrument::new().with_spot(110.0), 100.0, OptionType::Put);
+        let option = BinaryOption::cash_or_nothing(
+            Instrument::new().with_spot(110.0),
+            100.0,
+            OptionType::Put,
+        );
         let model = BlackScholesModel::new(0.43, 0.05, 0.2);
 
         // Sanity check for input values
@@ -505,9 +518,17 @@ mod option_trait_tests {
         let option =
             AmericanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
         assert_implements_option_trait(&option);
-        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
+        let option = BinaryOption::cash_or_nothing(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            OptionType::Call,
+        );
         assert_implements_option_trait(&option);
-        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
+        let option = BinaryOption::cash_or_nothing(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            OptionType::Put,
+        );
         assert_implements_option_trait(&option);
 
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);

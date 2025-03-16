@@ -70,7 +70,10 @@
 //! println!("Option price: {}", price);
 //! ```
 
-use crate::options::{Greeks, Option, OptionPricing, OptionStyle, OptionType};
+use crate::options::{
+    types::BinaryType::{AssetOrNothing, CashOrNothing},
+    Greeks, Option, OptionPricing, OptionStyle, OptionType,
+};
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
 /// A struct representing a Black-Scholes model.
@@ -86,6 +89,16 @@ pub struct BlackScholesModel {
 
 impl BlackScholesModel {
     /// Create a new `BlackScholesModel`.
+    ///
+    /// # Arguments
+    ///
+    /// * `time_to_maturity` - Time horizon (in years).
+    /// * `risk_free_rate` - Risk-free interest rate (e.g., 0.05 for 5%).
+    /// * `volatility` - Annualized standard deviation of an asset's continuous returns (e.g., 0.2 for 20%).
+    ///     
+    /// # Returns
+    ///
+    /// A new `BlackScholesModel`.
     pub fn new(time_to_maturity: f64, risk_free_rate: f64, volatility: f64) -> Self {
         Self {
             time_to_maturity,
@@ -95,6 +108,10 @@ impl BlackScholesModel {
     }
 
     /// Calculate d1 and d2 for the Black-Scholes formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to calculate d1 and d2 for.
     ///
     /// # Returns
     ///
@@ -123,10 +140,14 @@ impl BlackScholesModel {
 
     /// Calculate the price of an European call option using the Black-Scholes formula.
     ///
+    /// # Arguments
+    ///
+    /// * `option` - The call option to price.
+    ///
     /// # Returns
     ///
     /// The price of the call option.
-    fn call_price<T: Option>(&self, option: T) -> f64 {
+    fn price_euro_call<T: Option>(&self, option: T) -> f64 {
         let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
@@ -150,10 +171,14 @@ impl BlackScholesModel {
 
     /// Calculate the price of an European put option using the Black-Scholes formula.
     ///
+    /// # Arguments
+    ///
+    /// * `option` - The binary option to price.
+    ///
     /// # Returns
     ///
     /// The price of the put option.
-    fn put_price<T: Option>(&self, option: T) -> f64 {
+    fn price_euro_put<T: Option>(&self, option: T) -> f64 {
         let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
@@ -179,12 +204,35 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `option_type` - The type of option (Call or Put).
+    /// * `option` - The binary option to price.
     ///
     /// # Returns
     ///
     /// The price of the binary option.
-    fn binary_price<T: Option>(&self, option: T) -> f64 {
+    pub fn price_cash_or_nothing<T: Option>(&self, option: T) -> f64 {
+        let (_, d2) = self.calculate_d1_d2(&option);
+
+        let normal = Normal::new(0.0, 1.0).unwrap();
+        match option.option_type() {
+            OptionType::Call => {
+                (-self.risk_free_rate * self.time_to_maturity).exp() * normal.cdf(d2)
+            }
+            OptionType::Put => {
+                -(-self.risk_free_rate * self.time_to_maturity).exp() * normal.cdf(d2)
+            }
+        }
+    }
+
+    /// Calculate the price of a binary asset-or-nothing European option using the Black-Scholes formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The binary option to price.
+    ///
+    /// # Returns
+    ///
+    /// The price of the binary option.
+    pub fn price_asset_or_nothing<T: Option>(&self, option: T) -> f64 {
         let (_, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
@@ -202,7 +250,7 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `option_type` - The type of option (Call or Put).
+    /// * `option` - The option to price.
     /// * `volatility` - The volatility of the underlying asset.
     ///
     /// # Returns
@@ -253,9 +301,10 @@ impl BlackScholesModel {
 impl OptionPricing for BlackScholesModel {
     fn price<T: Option>(&self, option: T) -> f64 {
         match (option.option_type(), option.style()) {
-            (OptionType::Call, OptionStyle::European) => self.call_price(option),
-            (OptionType::Put, OptionStyle::European) => self.put_price(option),
-            (_, OptionStyle::Binary) => self.binary_price(option),
+            (OptionType::Call, OptionStyle::European) => self.price_euro_call(option),
+            (OptionType::Put, OptionStyle::European) => self.price_euro_put(option),
+            (_, OptionStyle::Binary(CashOrNothing)) => self.price_cash_or_nothing(option),
+            (_, OptionStyle::Binary(AssetOrNothing)) => self.price_asset_or_nothing(option),
             _ => panic!("Unsupported option type or style"),
         }
     }
@@ -293,7 +342,7 @@ impl Greeks for BlackScholesModel {
                         * (normal.cdf(d1) - 1.0)
                 }
             },
-            OptionStyle::Binary => {
+            OptionStyle::Binary(CashOrNothing) => {
                 let delta = (-self.risk_free_rate * self.time_to_maturity).exp() * normal.pdf(d2)
                     / (self.volatility * option.instrument().spot * self.time_to_maturity.sqrt());
 
@@ -324,7 +373,7 @@ impl Greeks for BlackScholesModel {
             OptionStyle::European => {
                 normal.pdf(d1) / (adjusted_spot * self.volatility * self.time_to_maturity.sqrt())
             }
-            OptionStyle::Binary => {
+            OptionStyle::Binary(CashOrNothing) => {
                 let gamma =
                     -(-self.risk_free_rate * self.time_to_maturity).exp() * normal.pdf(d2) * d1
                         / (self.volatility.powi(2)
@@ -386,7 +435,7 @@ impl Greeks for BlackScholesModel {
                             * normal.cdf(-d1)
                 }
             },
-            OptionStyle::Binary => match option.option_type() {
+            OptionStyle::Binary(CashOrNothing) => match option.option_type() {
                 OptionType::Call => {
                     (-self.risk_free_rate * self.time_to_maturity).exp()
                         * (normal.pdf(d2)
@@ -441,7 +490,7 @@ impl Greeks for BlackScholesModel {
                     * normal.pdf(d1)
                     * self.time_to_maturity.sqrt()
             }
-            OptionStyle::Binary => {
+            OptionStyle::Binary(CashOrNothing) => {
                 let vega =
                     -(-self.risk_free_rate * self.time_to_maturity).exp() * d1 * normal.pdf(d2)
                         / self.volatility;
@@ -474,7 +523,7 @@ impl Greeks for BlackScholesModel {
                         * normal.cdf(-d2)
                 }
             },
-            OptionStyle::Binary => match option.option_type() {
+            OptionStyle::Binary(CashOrNothing) => match option.option_type() {
                 OptionType::Call => {
                     (-self.risk_free_rate * self.time_to_maturity).exp()
                         * (self.time_to_maturity.sqrt() * normal.pdf(d2) / self.volatility

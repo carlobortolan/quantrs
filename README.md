@@ -64,7 +64,7 @@ fn main() {
         .with_continuous_dividend_yield(0.02);
 
     // Create a new Cash-or-Nothing binary call option with a strike price of 85
-    let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+    let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
 
     // Create a new Black-Scholes model with:
     // - Time to maturity (T) = 0.78 years

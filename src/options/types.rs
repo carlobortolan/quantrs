@@ -34,7 +34,7 @@ pub enum OptionStyle {
     /// Barrier option (payoff depends on whether underlying asset crosses a barrier)
     Barrier,
     /// Binary option (payout is fixed amount or nothing)
-    Binary,
+    Binary(BinaryType),
     /// Digital option (payout is fixed amount or nothing; also known as cash-or-nothing or asset-or-nothing option)
     Digital,
     /// Lookback option (payoff depends on extrema of underlying asset)
@@ -50,4 +50,11 @@ impl Default for OptionStyle {
     fn default() -> Self {
         OptionStyle::European
     }
+}
+
+/// Enum representing the type of a Binary option.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum BinaryType {
+    AssetOrNothing,
+    CashOrNothing,
 }
