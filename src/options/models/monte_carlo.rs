@@ -1,6 +1,9 @@
 //! Module for Monte Carlo option pricing model.
 
-use crate::options::{Option, OptionPricing, OptionStyle};
+use crate::options::{Instrument, Option, OptionPricing, OptionStyle};
+use rand::rngs::ThreadRng;
+use rand_distr::{Distribution, Normal};
+
 /// A struct representing a Monte Carlo Simulation model for option pricing.
 #[derive(Debug, Default, Clone)]
 pub struct MonteCarloModel {
@@ -29,6 +32,18 @@ impl MonteCarloModel {
             simulations,
         }
     }
+
+    fn simulate_asset_price(&self, instrument: &Instrument, rng: &mut ThreadRng) -> f64 {
+        let normal = Normal::new(0.0, 1.0).unwrap();
+        let z = normal.sample(rng);
+        instrument.spot
+            * ((self.risk_free_rate
+                - instrument.continuous_dividend_yield
+                - 0.5 * self.volatility.powi(2))
+                * self.time_to_maturity
+                + self.volatility * z * self.time_to_maturity.sqrt())
+            .exp()
+    }
 }
 
 impl OptionPricing for MonteCarloModel {
@@ -53,42 +68,41 @@ impl OptionPricing for MonteCarloModel {
 
 impl MonteCarloModel {
     fn price_european<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
-        unimplemented!()
+        let mut rng = rand::rng();
+        let mut total_price = 0.0;
+        for _ in 0..self.simulations {
+            let simulated_price = self.simulate_asset_price(option.instrument(), &mut rng);
+            total_price += option.payoff(Some(simulated_price));
+        }
+        (total_price / self.simulations as f64)
+            * (-self.risk_free_rate * self.time_to_maturity).exp()
     }
 
     fn price_basket<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
         unimplemented!()
     }
 
     fn price_rainbow<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
         unimplemented!()
     }
 
     fn price_barrier<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
         unimplemented!()
     }
 
     fn price_double_barrier<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
         unimplemented!()
     }
 
     fn price_asian<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
         unimplemented!()
     }
 
     fn price_lookback<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
         unimplemented!()
     }
 
     fn price_binary<T: Option>(&self, option: &T) -> f64 {
-        // Implement American option pricing logic here
         unimplemented!()
     }
 }

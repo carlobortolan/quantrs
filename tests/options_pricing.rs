@@ -579,61 +579,86 @@ mod binomial_tree_tests {
 mod monte_carlo_tests {
     use super::*;
 
-    #[test]
-    fn test_monte_carlo_call_price() {
-        let instrument = Instrument::new().with_spot(100.0);
-        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+    mod european_option_tests {
+        use rand_distr::num_traits::Zero;
 
-        let price = model.price(&option);
-        assert_abs_diff_eq!(price, 10.45, epsilon = 0.5);
-    }
+        use super::*;
 
-    #[test]
-    fn test_monte_carlo_put_price() {
-        let instrument = Instrument::new().with_spot(100.0);
-        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+        #[test]
+        fn test_itm() {
+            let instrument = Instrument::new().with_spot(110.0);
+            let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+            let model = MonteCarloModel::new(0.7, 0.03, 0.2, 2_000);
 
-        let price = model.price(&option.flip());
-        assert_abs_diff_eq!(price, 5.57, epsilon = 0.5);
-    }
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 14.575, epsilon = 1.0);
 
-    #[test]
-    fn test_monte_carlo_iv() {
-        let instrument = Instrument::new().with_spot(100.0);
-        let _option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-        let _model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 2.497, epsilon = 1.0);
+        }
 
-        let _market_price = 10.0;
-        // let iv = model.implied_volatility(&option, market_price);
-        // assert!(iv > 0.0, "IV should be greater than 0");
+        #[test]
+        fn test_otm() {
+            let instrument = Instrument::new().with_spot(85.0);
+            let option = EuropeanOption::new(instrument, 70.0, OptionType::Call);
+            let model = MonteCarloModel::new(0.7, 0.05, 0.3, 2_000);
 
-        let _market_price = 0.0;
-        // let iv = model.implied_volatility(&option, market_price);
-        // assert!(iv == 0.0, "IV should be zero for unrealistic prices");
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 19.264, epsilon = 1.0);
 
-        let _market_price = 110.0;
-        // let iv = model.implied_volatility(option, market_price);
-        // assert!(iv == 0.0, "IV should be zero for unrealistic prices");
-    }
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 1.857, epsilon = 1.0);
+        }
 
-    #[test]
-    fn test_monte_carlo_greeks() {
-        let instrument = Instrument::new().with_spot(100.0);
-        let _option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-        let _model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+        #[test]
+        fn test_div_itm() {
+            let instrument = Instrument::new()
+                .with_spot(105.0)
+                .with_continuous_dividend_yield(0.05);
+            let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+            let model = MonteCarloModel::new(1.2, 0.04, 0.1, 2_000);
 
-        // let _delta = model.delta(&option);
-        // assert_abs_diff_eq!(delta, 822.13, epsilon = 0.05); // Allowing a larger epsilon due to simulation variability
-        // let _gamma = model.gamma(&option);
-        // assert_abs_diff_eq!(gamma, 0.01, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
-        // let _theta = model.theta(&option);
-        // assert_abs_diff_eq!(theta, -0.01, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
-        // let _vega = model.vega(&option);
-        // assert_abs_diff_eq!(vega, 0.2, epsilon = 0.05); // Allowing a larger epsilon due to simulation variability
-        // let _rho = model.rho(&option);
-        // assert_abs_diff_eq!(rho, 0.05, epsilon = 0.01); // Allowing a larger epsilon due to simulation variability
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 6.2640, epsilon = 0.5);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 2.6921, epsilon = 0.5);
+        }
+
+        #[test]
+        fn test_div_otm() {
+            let instrument = Instrument::new()
+                .with_spot(70.0)
+                .with_continuous_dividend_yield(0.05);
+            let option = EuropeanOption::new(instrument, 72.0, OptionType::Call);
+            let model = MonteCarloModel::new(0.43, 0.02, 0.2, 2_000);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 2.3985, epsilon = 0.5);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 5.2709, epsilon = 0.5);
+        }
+
+        #[test]
+        fn test_edge() {
+            let instrument = Instrument::new().with_spot(100.0);
+            let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+            let model = MonteCarloModel::new(2.0, 0.05, 0.2, 2_000);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 16.127, epsilon = 1.5);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 6.611, epsilon = 1.5);
+
+            let instrument = Instrument::new().with_spot(0.0);
+            let option = EuropeanOption::new(instrument, 0.0, OptionType::Call);
+            let model = MonteCarloModel::new(0.0, 0.0, 0.0, 2_000);
+
+            let price = model.price(&option);
+            assert!(price.is_nan() || price.is_zero());
+        }
     }
 }
 
