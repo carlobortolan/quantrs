@@ -23,8 +23,6 @@ Please check out the documentation [here][docs-url].
 
 ## Features
 
-## Features
-
 ### Options Pricing
 
 For now quantrs only supports options pricing. The following features are available:
