@@ -44,10 +44,10 @@ For now quantrs only supports options pricing. The following features are availa
 | Greeks (Δ, ν, Θ, ρ, Γ)          | ✅              | ⏳       | ⏳                   | ❌          | ❌            | ❌     |
 | Implied Volatility              | ✅              | ⏳       | ⏳                   | ❌          | ❌            | ❌     |
 
-> [!note] \
-> \* "Exotic" options with standard excerise style; only differ in their payoff value)\
-> \*\* Non-vanilla path-dependent "exotic" options)\
-> ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable)
+> [!information] \
+> \* "Exotic" options with standard excerise style; only differ in their payoff value\
+> \*\* Non-vanilla path-dependent "exotic" options\
+> ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
 
 ## Usage
 
