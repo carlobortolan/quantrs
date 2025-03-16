@@ -23,22 +23,28 @@
 //! ```
 
 use super::{Greeks, Option};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 
 /// A struct representing the Greeks of an option.
 #[derive(Debug)]
 pub struct OptionGreeks {
+    // First-order Greeks
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
     pub delta: f64,
-    /// Gamma measures the rate of change of the option delta with respect to changes in the price of the underlying asset.
-    pub gamma: f64,
-    /// Theta measures the rate of change of the option price with respect to changes in time to maturity.
-    pub theta: f64,
     /// Vega measures the rate of change of the option price with respect to changes in the volatility of the underlying asset.
     pub vega: f64,
+    /// Theta measures the rate of change of the option price with respect to changes in time to maturity.
+    pub theta: f64,
     /// Rho measures the rate of change of the option price with respect to changes in the risk-free interest rate.
     pub rho: f64,
     /// Lambda measures the rate of change of the option delta with respect to changes in the risk-free interest rate.
     pub lambda: f64,
+    /// Epsilon measures the rate of change of the option delta with respect to changes in the dividend yield.
+    pub epsilon: f64,
+
+    // Second-order Greeks
+    /// Gamma measures the rate of change of the option delta with respect to changes in the price of the underlying asset.
+    pub gamma: f64,
     /// Vanna measures the rate of change of the option delta with respect to changes in the volatility of the underlying asset.
     pub vanna: f64,
     /// Charm measures the rate of change of the option delta with respect to changes in time to maturity.
@@ -48,6 +54,10 @@ pub struct OptionGreeks {
     /// Veta measures the rate of change of the option vega with respect to changes in time to maturity.
     pub veta: f64,
     /// Speed measures the rate of change of the option gamma with respect to changes in the price of the underlying asset.
+    pub vera: f64,
+
+    // Third-order Greeks
+    /// Speed measures the rate of change of the option gamma with respect to changes in the price of the underlying asset.
     pub speed: f64,
     /// Zomma measures the rate of change of the option gamma with respect to changes in the volatility of the underlying asset.
     pub zomma: f64,
@@ -55,6 +65,8 @@ pub struct OptionGreeks {
     pub color: f64,
     /// Ultima measures the rate of change of the option vomma with respect to changes in the volatility of the underlying asset.
     pub ultima: f64,
+    /// Parmicharma measures the rate of change of charm over the passage of time.
+    pub parmicharma: f64,
 }
 
 impl OptionGreeks {
@@ -68,22 +80,28 @@ impl OptionGreeks {
     /// Returns
     ///
     /// The calculated Greeks.
+    #[rustfmt::skip]
     pub fn calculate<T: Greeks, S: Option>(model: &T, option: S) -> Self {
         OptionGreeks {
-            delta: model.delta(option.clone()),
-            gamma: model.gamma(option.clone()),
-            theta: model.theta(option.clone()),
-            vega: model.vega(option.clone()),
-            rho: model.rho(option.clone()),
-            lambda: model.lambda(option.clone()),
-            vanna: model.vanna(option.clone()),
-            charm: model.charm(option.clone()),
-            vomma: model.vomma(option.clone()),
-            veta: model.veta(option.clone()),
-            speed: model.speed(option.clone()),
-            zomma: model.zomma(option.clone()),
-            color: model.color(option.clone()),
-            ultima: model.ultima(option.clone()),
+            delta: catch_unwind(AssertUnwindSafe(|| model.delta(option.clone()))).unwrap_or_default(),
+            vega: catch_unwind(AssertUnwindSafe(|| model.vega(option.clone()))).unwrap_or_default(),
+            theta: catch_unwind(AssertUnwindSafe(|| model.theta(option.clone()))).unwrap_or_default(),
+            rho: catch_unwind(AssertUnwindSafe(|| model.rho(option.clone()))).unwrap_or_default(),
+            lambda: catch_unwind(AssertUnwindSafe(|| model.lambda(option.clone()))).unwrap_or_default(),
+            epsilon: catch_unwind(AssertUnwindSafe(|| model.epsilon(option.clone()))).unwrap_or_default(),
+
+            gamma: catch_unwind(AssertUnwindSafe(|| model.gamma(option.clone()))).unwrap_or_default(),
+            vanna: catch_unwind(AssertUnwindSafe(|| model.vanna(option.clone()))).unwrap_or_default(),
+            charm: catch_unwind(AssertUnwindSafe(|| model.charm(option.clone()))).unwrap_or_default(),
+            vomma: catch_unwind(AssertUnwindSafe(|| model.vomma(option.clone()))).unwrap_or_default(),
+            veta: catch_unwind(AssertUnwindSafe(|| model.veta(option.clone()))).unwrap_or_default(),
+            vera: catch_unwind(AssertUnwindSafe(|| model.vera(option.clone()))).unwrap_or_default(),
+
+            speed: catch_unwind(AssertUnwindSafe(|| model.speed(option.clone()))).unwrap_or_default(),
+            zomma: catch_unwind(AssertUnwindSafe(|| model.zomma(option.clone()))).unwrap_or_default(),
+            color: catch_unwind(AssertUnwindSafe(|| model.color(option.clone()))).unwrap_or_default(),
+            ultima: catch_unwind(AssertUnwindSafe(|| model.ultima(option.clone()))).unwrap_or_default(),
+            parmicharma: catch_unwind(AssertUnwindSafe(|| model.parmicharma(option.clone()))).unwrap_or_default(),
         }
     }
 }

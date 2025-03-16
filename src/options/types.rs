@@ -29,16 +29,20 @@ pub enum OptionStyle {
     European,
     /// Bermudan option (can be exercised at specific dates)
     Bermudan,
+    /// Basket option (payoff depends on average price of multiple underlying assets)
+    Basket,
+    /// Rainbow option (payoff depends on multiple underlying assets)
+    Rainbow,
+    /// Barrier option (payoff depends on whether underlying asset crosses a barrier)
+    Barrier(BarrierType),
+    /// Double barrier option (payoff depends on whether underlying asset crosses two barriers)
+    DoubleBarrier(BarrierType, BarrierType),
     /// Asian option (payoff depends on average price of underlying asset)
     Asian,
-    /// Barrier option (payoff depends on whether underlying asset crosses a barrier)
-    Barrier,
-    /// Binary option (payout is fixed amount or nothing)
-    Binary(BinaryType),
-    /// Digital option (payout is fixed amount or nothing; also known as cash-or-nothing or asset-or-nothing option)
-    Digital,
     /// Lookback option (payoff depends on extrema of underlying asset)
-    Lookback,
+    Lookback(LookbackType),
+    /// Binary option (payout is fixed amount or nothing; aka digital option)
+    Binary(BinaryType),
 }
 
 impl Default for OptionStyle {
@@ -50,6 +54,22 @@ impl Default for OptionStyle {
     fn default() -> Self {
         OptionStyle::European
     }
+}
+
+/// Enum representing the type of a Binary option.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum BarrierType {
+    DownAndIn,
+    DownAndOut,
+    UpAndIn,
+    UpAndOut,
+}
+
+/// Enum representing the type of a Lookback option.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LookbackType {
+    Fixed,
+    Floating,
 }
 
 /// Enum representing the type of a Binary option.

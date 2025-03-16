@@ -27,21 +27,26 @@ Please check out the documentation [here][docs-url].
 
 For now quantrs only supports options pricing. The following features are available:
 
-- [x] Option types: European, American, Binary Cash-or-Nothing, Binary Asset-or-Nothing
-- [x] Option pricing: Black-Scholes, Binomial Tree, Monte Carlo Simulation
-- [x] Greeks: Delta, Gamma, Theta, Vega, Rho
-- [x] Implied volatility
+| Model                           | Black-Scholes           | Black-76 | Binomial / Lattice   | Monte-Carlo    | Finite Diff       | Heston           |
+| ------------------------------- | ----------------------- | -------- | -------------------- | -------------- | ----------------- | ---------------- |
+| European                        | ✅                      | ⏳       | ✅                   | ⏳             | ⏳                | ⏳               |
+| American                        | ❌                      | ❌       | ✅                   | ❌ (Least Sq.) | ⏳                | ❌               |
+| Bermudan                        | ❌                      | ❌       | ⏳                   | ❌ (Least Sq.) | ❌ (complex)      | ❌               |
+| \* Basket                       | ⏳ (for each component) | ❌       | ⏳ (approximation)   | ⏳             | ❌                | ❌ (multi-asset) |
+| \* Rainbow                      | ⏳ (for each component) | ❌       | ⏳ (approximation)   | ⏳             | ❌                | ❌ (multi-asset) |
+| \*\* Barrier                    | ❌ (modified BSM)       | ❌       | ⏳                   | ⏳             | ⏳                | ⏳               |
+| \*\* Double Barrier             | ❌ (modified BSM)       | ❌       | ⏳                   | ⏳             | ❌ (complex)      | ⏳               |
+| \*\* Asian                      | ❌ (modified BSM)       | ❌       | ❌ (only arithmetic) | ⏳             | ⏳                | ⏳               |
+| \*\* Lookback (fixed strike)    | ⏳                      | ❌       | ❌                   | ⏳             | ⏳                | ⏳               |
+| \*\* Lookback (floating strike) | ⏳                      | ❌       | ❌                   | ⏳             | ⏳                | ⏳               |
+| \*\* Binary Cash-or-Nothing     | ✅                      | ⏳       | ⏳                   | ⏳             | ❌ (modified PDE) | ⏳               |
+| \*\* Binary Asset-or-Nothing    | ✅                      | ⏳       | ⏳                   | ⏳             | ❌ (modified PDE) | ⏳               |
+| Greeks (Δ, ν, Θ, ρ, Γ)          | ✅                      | ⏳       | ⏳                   | ❌             | ❌                | ❌               |
+| Implied Volatility              | ✅                      | ⏳       | ⏳                   | ❌             | ❌                | ❌               |
 
-| Model                   | Black-Scholes       | Binomial Tree | Monte Carlo Simulation |
-| ----------------------- | ------------------- | ------------- | ---------------------- |
-| European Options        | ✅                  | ✅            | ⏳                     |
-| American Options        | ❌ (not applicable) | ✅            | ⏳                     |
-| Binary Cash-or-Nothing  | ✅                  | ❌            | ❌                     |
-| Binary Asset-or-Nothing | ✅                  | ❌            | ❌                     |
-| Greeks                  | ✅                  | ⏳            | ⏳                     |
-| Implied Volatility      | ✅                  | ⏳            | ⏳                     |
-
-(✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported)
+> [!note] \* "Exotic" options with standard excerise style; only differ in their payoff value)\
+> \*\* Non-vanilla path-dependent "exotic" options)\
+> ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable)
 
 ## Usage
 
