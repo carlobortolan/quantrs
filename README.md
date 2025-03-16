@@ -37,7 +37,7 @@ For now quantrs only supports options pricing. The following features are availa
 | European Options        | ✅                  | ✅            | ⏳                     |
 | American Options        | ❌ (not applicable) | ✅            | ⏳                     |
 | Binary Cash-or-Nothing  | ✅                  | ❌            | ❌                     |
-| Binary Asset-or-Nothing | ⏳                  | ❌            | ❌                     |
+| Binary Asset-or-Nothing | ✅                  | ❌            | ❌                     |
 | Greeks                  | ✅                  | ⏳            | ⏳                     |
 | Implied Volatility      | ✅                  | ⏳            | ⏳                     |
 
@@ -49,7 +49,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.2"
+quantrs = "0.1.3"
 ```
 
 Now if you want to e.g., model binary call options using the Black-Scholes model, you can:

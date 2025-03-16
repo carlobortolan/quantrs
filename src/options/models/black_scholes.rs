@@ -55,7 +55,8 @@
 //!
 //! - [Wikipedia - Black-Scholes model](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model)
 //! - [Black-Scholes Calculator](https://www.math.drexel.edu/~pg/fin/VanillaCalculator.html)
-//! - [Black-Scholes Binary Options](https://quantpie.co.uk/bsm_bin_c_formula/bs_bin_c_summary.php)
+//! - [Cash or Nothing Options' Greeks](https://quantpie.co.uk/bsm_bin_c_formula/bs_bin_c_summary.php)
+//! - [Asset or Nothing Options' Greeks](https://quantpie.co.uk/bsm_bin_a_formula/bs_bin_a_summary.php)
 //!
 //! ## Example
 //!
@@ -218,7 +219,7 @@ impl BlackScholesModel {
                 (-self.risk_free_rate * self.time_to_maturity).exp() * normal.cdf(d2)
             }
             OptionType::Put => {
-                -(-self.risk_free_rate * self.time_to_maturity).exp() * normal.cdf(d2)
+                (-self.risk_free_rate * self.time_to_maturity).exp() * normal.cdf(-d2)
             }
         }
     }
@@ -233,15 +234,19 @@ impl BlackScholesModel {
     ///
     /// The price of the binary option.
     pub fn price_asset_or_nothing<T: Option>(&self, option: T) -> f64 {
-        let (_, d2) = self.calculate_d1_d2(&option);
+        let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.option_type() {
             OptionType::Call => {
-                (-self.risk_free_rate * self.time_to_maturity).exp() * normal.cdf(d2)
+                option.instrument().spot
+                    * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
+                    * normal.cdf(d1)
             }
             OptionType::Put => {
-                -(-self.risk_free_rate * self.time_to_maturity).exp() * normal.cdf(d2)
+                option.instrument().spot
+                    * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
+                    * normal.cdf(-d1)
             }
         }
     }
@@ -351,6 +356,24 @@ impl Greeks for BlackScholesModel {
                     OptionType::Put => -delta,
                 }
             }
+            OptionStyle::Binary(AssetOrNothing) => match option.option_type() {
+                OptionType::Call => {
+                    (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
+                        * normal.pdf(d1)
+                        / (self.volatility * self.time_to_maturity.sqrt())
+                        + (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
+                            .exp()
+                            * normal.cdf(d1)
+                }
+                OptionType::Put => {
+                    -(-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
+                        * normal.pdf(d1)
+                        / (self.volatility * self.time_to_maturity.sqrt())
+                        + (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
+                            .exp()
+                            * normal.cdf(-d1)
+                }
+            },
             _ => panic!("Unsupported option style for delta calculation"),
         }
     }
@@ -379,6 +402,19 @@ impl Greeks for BlackScholesModel {
                         / (self.volatility.powi(2)
                             * option.instrument().spot.powi(2)
                             * self.time_to_maturity);
+
+                match option.option_type() {
+                    OptionType::Call => gamma,
+                    OptionType::Put => -gamma,
+                }
+            }
+            OptionStyle::Binary(AssetOrNothing) => {
+                let gamma = -(-option.instrument().continuous_dividend_yield
+                    * self.time_to_maturity)
+                    .exp()
+                    * normal.pdf(d1)
+                    * d2
+                    / (option.instrument().spot * self.volatility.powi(2) * self.time_to_maturity);
 
                 match option.option_type() {
                     OptionType::Call => gamma,
@@ -465,6 +501,40 @@ impl Greeks for BlackScholesModel {
                             - self.risk_free_rate * normal.cdf(-d2))
                 }
             },
+            OptionStyle::Binary(AssetOrNothing) => match option.option_type() {
+                OptionType::Call => {
+                    option.instrument().spot
+                        * (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
+                            .exp()
+                        * (normal.pdf(d1) * 1.0
+                            / (2.0
+                                * self.time_to_maturity
+                                * self.volatility
+                                * self.time_to_maturity.sqrt())
+                            * ((option.instrument().spot / option.strike()).ln()
+                                - (self.risk_free_rate
+                                    - option.instrument().continuous_dividend_yield
+                                    + 0.5 * self.volatility.powi(2))
+                                    * self.time_to_maturity)
+                            + option.instrument().continuous_dividend_yield * nd1)
+                }
+                OptionType::Put => {
+                    option.instrument().spot
+                        * (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
+                            .exp()
+                        * (-normal.pdf(d1) * 1.0
+                            / (2.0
+                                * self.time_to_maturity
+                                * self.volatility
+                                * self.time_to_maturity.sqrt())
+                            * ((option.instrument().spot / option.strike()).ln()
+                                - (self.risk_free_rate
+                                    - option.instrument().continuous_dividend_yield
+                                    + 0.5 * self.volatility.powi(2))
+                                    * self.time_to_maturity)
+                            + option.instrument().continuous_dividend_yield * -nd1)
+                }
+            },
             _ => panic!("Unsupported option style for theta calculation"),
         }
     }
@@ -500,12 +570,25 @@ impl Greeks for BlackScholesModel {
                     OptionType::Put => -vega,
                 }
             }
+            OptionStyle::Binary(AssetOrNothing) => {
+                let vega = -option.instrument().spot
+                    * (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
+                        .exp()
+                    * d2
+                    * normal.pdf(d1)
+                    / (self.volatility);
+
+                match option.option_type() {
+                    OptionType::Call => vega,
+                    OptionType::Put => -vega,
+                }
+            }
             _ => panic!("Unsupported option style for vega calculation"),
         }
     }
 
     fn rho<T: Option>(&self, option: T) -> f64 {
-        let (_, d2) = self.calculate_d1_d2(&option);
+        let (d1, d2) = self.calculate_d1_d2(&option);
 
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.style() {
@@ -535,6 +618,19 @@ impl Greeks for BlackScholesModel {
                             + self.time_to_maturity * normal.cdf(-d2))
                 }
             },
+            OptionStyle::Binary(AssetOrNothing) => {
+                let rho = option.instrument().spot
+                    * (-option.instrument().continuous_dividend_yield * self.time_to_maturity)
+                        .exp()
+                    * self.time_to_maturity.sqrt()
+                    * normal.pdf(d1)
+                    / (self.volatility);
+
+                match option.option_type() {
+                    OptionType::Call => rho,
+                    OptionType::Put => -rho,
+                }
+            }
             _ => panic!("Unsupported option style for rho calculation"),
         }
     }
