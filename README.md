@@ -39,7 +39,7 @@ For now quantrs only supports options pricing. The following features are availa
 | Binary Cash-or-Nothing  | ✅                  | ❌            | ❌                     |
 | Binary Asset-or-Nothing | ⏳                  | ❌            | ❌                     |
 | Greeks                  | ✅                  | ⏳            | ⏳                     |
-| Implied Volatility      | ✅ (not tested yet) | ⏳            | ⏳                     |
+| Implied Volatility      | ✅                  | ⏳            | ⏳                     |
 
 (✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported)
 
@@ -59,8 +59,9 @@ use quantrs::options::*;
 
 fn main() {
     // Create a new instrument with a spot price of 100 and a dividend yield of 2%
-    let mut instrument = Instrument::new(100.0);
-    instrument.continuous_dividend_yield = 0.02;
+    let instrument = Instrument::new()
+        .with_spot(100.0)
+        .with_continuous_dividend_yield(0.02);
 
     // Create a new Cash-or-Nothing binary call option with a strike price of 85
     let option = BinaryOption::new(instrument, 85.0, OptionType::Call);

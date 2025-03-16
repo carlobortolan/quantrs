@@ -11,7 +11,7 @@
 //! ```
 //! use quantrs::options::{EuropeanOption, BlackScholesModel, OptionGreeks, OptionType, Instrument};
 //!
-//! let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+//! let option = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
 //! let model = quantrs::options::BlackScholesModel::new(1.0, 0.05, 0.2);
 //!
 //! let greeks = OptionGreeks::calculate(&model, option);

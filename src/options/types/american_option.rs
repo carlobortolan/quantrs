@@ -14,7 +14,7 @@
 //! ```
 //! use quantrs::options::{Option, AmericanOption, Instrument, OptionType};
 //!
-//! let instrument = Instrument::new(100.0);
+//! let instrument = Instrument::new().with_spot(100.0);
 //! let option = AmericanOption::new(instrument, 100.0, OptionType::Call);
 //!
 //! println!("Option type: {:?}", option.option_type());

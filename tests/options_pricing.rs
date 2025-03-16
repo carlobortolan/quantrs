@@ -18,7 +18,7 @@ fn assert_implements_option_trait<T: Option>(option: &T) {
 // Function to assert that a type implements the OptionPricing trait
 fn assert_implements_model_trait<T: OptionPricing>(model: &T) {
     // This function does nothing but ensures that T implements the OptionPricing trait and required methods
-    let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+    let option = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
 
     T::price(model, option.clone());
     T::price(model, option.flip());
@@ -33,7 +33,7 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_european_itm() {
-        let instrument = Instrument::new(120.0);
+        let instrument = Instrument::new().with_spot(120.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BlackScholesModel::new(2.0, 0.03, 0.27);
 
@@ -46,7 +46,7 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_european_otm() {
-        let instrument = Instrument::new(50.0);
+        let instrument = Instrument::new().with_spot(50.0);
         let option = EuropeanOption::new(instrument, 65.0, OptionType::Call);
         let model = BlackScholesModel::new(0.43, 0.1, 0.31);
 
@@ -59,8 +59,9 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_european_div_itm() {
-        let mut instrument = Instrument::new(120.0);
-        instrument.continuous_dividend_yield = 0.01;
+        let instrument = Instrument::new()
+            .with_spot(120.0)
+            .with_continuous_dividend_yield(0.01);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BlackScholesModel::new(2.0, 0.03, 0.27);
 
@@ -73,8 +74,9 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_european_div_otm() {
-        let mut instrument = Instrument::new(50.0);
-        instrument.continuous_dividend_yield = 0.05;
+        let instrument = Instrument::new()
+            .with_spot(50.0)
+            .with_continuous_dividend_yield(0.05);
         let option = EuropeanOption::new(instrument, 65.0, OptionType::Call);
         let model = BlackScholesModel::new(0.43, 0.1, 0.31);
 
@@ -87,21 +89,21 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_european_edge() {
-        let instrument = Instrument::new(120.0);
+        let instrument = Instrument::new().with_spot(120.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BlackScholesModel::new(0.0, 0.03, 0.27);
 
         let price = model.price(option);
         assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
 
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 120.0, OptionType::Put);
         let model = BlackScholesModel::new(0.0, 0.03, 0.27);
 
         let price = model.price(option);
         assert_abs_diff_eq!(price, 20.0, epsilon = 0.0001);
 
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BlackScholesModel::new(0.0, 0.03, 0.27);
 
@@ -111,7 +113,7 @@ mod black_scholes_tests {
         let price = model.price(option.flip());
         assert!(price.is_nan());
 
-        let instrument = Instrument::new(0.0);
+        let instrument = Instrument::new().with_spot(0.0);
         let option = EuropeanOption::new(instrument, 0.0, OptionType::Call);
         let model = BlackScholesModel::new(0.0, 0.0, 0.0);
 
@@ -124,7 +126,8 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_european_call_greeks() {
-        let option = EuropeanOption::new(Instrument::new(80.0), 100.0, OptionType::Call);
+        let option =
+            EuropeanOption::new(Instrument::new().with_spot(80.0), 100.0, OptionType::Call);
         let model = BlackScholesModel::new(4.0, 0.05, 0.02);
 
         // Sanity check for input values
@@ -145,7 +148,8 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_european_put_greeks() {
-        let option = EuropeanOption::new(Instrument::new(110.0), 100.0, OptionType::Put);
+        let option =
+            EuropeanOption::new(Instrument::new().with_spot(110.0), 100.0, OptionType::Put);
         let model = BlackScholesModel::new(0.43, 0.05, 0.2);
 
         // Sanity check for input values
@@ -166,7 +170,7 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_itm() {
-        let instrument = Instrument::new(120.0);
+        let instrument = Instrument::new().with_spot(120.0);
         let option = BinaryOption::new(instrument, 115.0, OptionType::Call);
         let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
@@ -179,7 +183,7 @@ mod black_scholes_tests {
     #[test]
 
     fn test_black_scholes_binary_otm() {
-        let instrument = Instrument::new(70.0);
+        let instrument = Instrument::new().with_spot(70.0);
         let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
         let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
@@ -192,8 +196,9 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_div_itm() {
-        let mut instrument = Instrument::new(120.0);
-        instrument.continuous_dividend_yield = 0.01;
+        let instrument = Instrument::new()
+            .with_spot(120.0)
+            .with_continuous_dividend_yield(0.01);
         let option = BinaryOption::new(instrument, 115.0, OptionType::Call);
         let model = BlackScholesModel::new(4.0, 0.05, 0.3);
 
@@ -206,8 +211,9 @@ mod black_scholes_tests {
     #[test]
 
     fn test_black_scholes_binary_div_otm() {
-        let mut instrument = Instrument::new(70.0);
-        instrument.continuous_dividend_yield = 0.02;
+        let instrument = Instrument::new()
+            .with_spot(70.0)
+            .with_continuous_dividend_yield(0.02);
         let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
         let model = BlackScholesModel::new(2.0, 0.03, 0.15);
 
@@ -220,7 +226,7 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_edge() {
-        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
         let price = model.price(option.clone());
@@ -229,7 +235,7 @@ mod black_scholes_tests {
         let price = model.price(option.flip());
         assert_abs_diff_eq!(price, -0.5323, epsilon = 0.0001);
 
-        let option = BinaryOption::new(Instrument::new(0.0), 0.0, OptionType::Call);
+        let option = BinaryOption::new(Instrument::new().with_spot(0.0), 0.0, OptionType::Call);
         let model = BlackScholesModel::new(0.0, 0.0, 0.0);
         let price = model.price(option);
         assert!(price.is_nan());
@@ -237,7 +243,7 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_call_greeks() {
-        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
         // Sanity check for input values
@@ -258,7 +264,7 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_binary_put_greeks() {
-        let option = BinaryOption::new(Instrument::new(110.0), 100.0, OptionType::Put);
+        let option = BinaryOption::new(Instrument::new().with_spot(110.0), 100.0, OptionType::Put);
         let model = BlackScholesModel::new(0.43, 0.05, 0.2);
 
         // Sanity check for input values
@@ -279,12 +285,24 @@ mod black_scholes_tests {
 
     #[test]
     fn test_black_scholes_iv() {
-        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
-        let model = BlackScholesModel::new(1.0, 0.05, 0.2);
-        let iv = model.implied_volatility(option.clone(), 10.0);
-        assert_abs_diff_eq!(iv, 0.1880, epsilon = 0.0001);
+        let option = EuropeanOption::new(
+            Instrument::new()
+                .with_spot(125.0)
+                .with_continuous_dividend_yield(0.03),
+            130.0,
+            OptionType::Call,
+        );
+        let model = BlackScholesModel::new(2.5, 0.02, 0.2);
 
-        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        // Sanity check for input values
+        let price = model.price(option.clone());
+        assert_abs_diff_eq!(price, 11.5133, epsilon = 0.0001);
+
+        let iv = model.implied_volatility(option.clone(), 15.0);
+        assert_abs_diff_eq!(iv, 0.2477, epsilon = 0.0001);
+
+        let option =
+            EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
         let iv = model.implied_volatility(option, 1200.0);
         assert_abs_diff_eq!(iv, 2947.0381, epsilon = 0.0001);
@@ -299,7 +317,7 @@ mod binomial_tree_tests {
 
     #[test]
     fn test_binomial_tree_european_itm() {
-        let instrument = Instrument::new(52.0);
+        let instrument = Instrument::new().with_spot(52.0);
         let option = EuropeanOption::new(instrument, 50.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
@@ -309,7 +327,7 @@ mod binomial_tree_tests {
 
     #[test]
     fn test_binomial_tree_european_otm() {
-        let instrument = Instrument::new(50.0);
+        let instrument = Instrument::new().with_spot(50.0);
         let option = EuropeanOption::new(instrument, 60.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
@@ -319,7 +337,7 @@ mod binomial_tree_tests {
 
     #[test]
     fn test_binomial_tree_american_itm() {
-        let instrument = Instrument::new(52.0);
+        let instrument = Instrument::new().with_spot(52.0);
         let option = AmericanOption::new(instrument, 50.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
@@ -329,7 +347,7 @@ mod binomial_tree_tests {
 
     #[test]
     fn test_binomial_tree_american_otm() {
-        let instrument = Instrument::new(50.0);
+        let instrument = Instrument::new().with_spot(50.0);
         let option = AmericanOption::new(instrument, 60.0, OptionType::Call);
         let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
@@ -343,7 +361,7 @@ mod binomial_tree_tests {
 
     #[test]
     fn test_binomial_tree_iv() {
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 
@@ -354,7 +372,7 @@ mod binomial_tree_tests {
 
     #[test]
     fn test_binomial_tree_greeks() {
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 
@@ -391,7 +409,7 @@ mod monte_carlo_tests {
 
     #[test]
     fn test_monte_carlo_call_price() {
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
@@ -401,7 +419,7 @@ mod monte_carlo_tests {
 
     #[test]
     fn test_monte_carlo_put_price() {
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
@@ -411,7 +429,7 @@ mod monte_carlo_tests {
 
     #[test]
     fn test_monte_carlo_iv() {
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
@@ -430,7 +448,7 @@ mod monte_carlo_tests {
 
     #[test]
     fn test_monte_carlo_greeks() {
-        let instrument = Instrument::new(100.0);
+        let instrument = Instrument::new().with_spot(100.0);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
@@ -453,8 +471,9 @@ mod greeks_tests {
 
     #[test]
     fn test_greeks() {
-        let mut instrument = Instrument::new(100.0);
-        instrument.continuous_dividend_yield = 0.01;
+        let instrument = Instrument::new()
+            .with_spot(100.0)
+            .with_continuous_dividend_yield(0.01);
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
@@ -474,17 +493,21 @@ mod option_trait_tests {
 
     #[test]
     fn test_trait_implementations() {
-        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let option =
+            EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
         assert_implements_option_trait(&option);
-        let option = EuropeanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        let option =
+            EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
         assert_implements_option_trait(&option);
-        let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let option =
+            AmericanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
         assert_implements_option_trait(&option);
-        let option = AmericanOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        let option =
+            AmericanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
         assert_implements_option_trait(&option);
-        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Call);
+        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
         assert_implements_option_trait(&option);
-        let option = BinaryOption::new(Instrument::new(100.0), 100.0, OptionType::Put);
+        let option = BinaryOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
         assert_implements_option_trait(&option);
 
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);

@@ -62,7 +62,7 @@
 //! ```
 //! use quantrs::options::{MonteCarloModel, OptionType, OptionPricing, Instrument, OptionStyle, EuropeanOption};
 //!
-//! let instrument = Instrument::new(100.0);
+//! let instrument = Instrument::new().with_spot(100.0);
 //! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
 //! let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 //!
