@@ -27,7 +27,7 @@ Please check out the documentation [here][docs-url].
 
 ### Options Pricing
 
-For now quantrs only supports options pricing. The following features are available:
+For now quantrs only supports options pricing. The following models are available:
 
 |                                 | Black-Scholes   | Black-76 | Lattice      | Monte-Carlo | Finite Diff   | Heston |
 | ------------------------------- | --------------- | -------- | ------------ | ----------- | ------------- | ------ |
@@ -106,35 +106,7 @@ This crate requires a Rust version of 1.65.0 or higher. Increases in MSRV will b
 
 ## Outlook
 
-### Planned Features
-
-- [ ] Data retrieval
-  - [ ] Yahoo Finance
-  - [ ] Alpha Vantage
-  - [ ] Quandl
-  - [ ] IEX Cloud
-- [ ] Fixed income & IR
-  - [ ] Bond pricing
-  - [ ] Duration
-  - [ ] Convexity
-  - [ ] Yield curve
-  - [ ] Term structure
-  - [ ] Forward rates
-  - [ ] Interest rate models
-- [ ] Time series analysis
-  - [ ] Moving averages
-  - [ ] Volatility
-  - [ ] Correlation
-  - [ ] Cointegration
-  - [ ] ARIMA
-  - [ ] GARCH
-  - [ ] Kalman filter
-- [ ] Portfolio optimization
-  - [ ] Mean-variance optimization
-  - [ ] Black-Litterman model
-  - [ ] Risk parity
-  - [ ] Minimum variance
-  - [ ] Maximum diversification
+See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
 
 ## Contributing
 
