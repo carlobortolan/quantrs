@@ -14,7 +14,7 @@ fn main() {
 }
 
 fn example_black_scholes() {
-    let instrument = Instrument::new(100.0);
+    let instrument = Instrument::new().with_spot(100.0);
     let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
     let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
@@ -30,7 +30,7 @@ fn example_black_scholes() {
 }
 
 fn example_binomial_tree() {
-    let instrument = Instrument::new(100.0);
+    let instrument = Instrument::new().with_spot(100.0);
     let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
     let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 
@@ -46,7 +46,7 @@ fn example_binomial_tree() {
 }
 
 fn example_greeks() {
-    let instrument = Instrument::new(100.0);
+    let instrument = Instrument::new().with_spot(100.0);
     let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
     let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
@@ -67,7 +67,7 @@ fn example_greeks() {
 }
 
 fn example_monte_carlo() {
-    let instrument = Instrument::new(100.0);
+    let instrument = Instrument::new().with_spot(100.0);
     let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
     let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
 
@@ -83,14 +83,25 @@ fn example_monte_carlo() {
 }
 
 fn example_from_readme() {
-    let mut instrument = Instrument::new(100.0);
-    instrument.continuous_dividend_yield = 0.02;
-    let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
+    let instrument = Instrument::new()
+        .with_spot(100.0)
+        .with_continuous_dividend_yield(0.02);
+
+    // Create a new Cash-or-Nothing binary call option with a strike price of 85
+    let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
+
+    // Create a new Black-Scholes model with:
+    // - Time to maturity (T) = 0.78 years
+    // - Risk-free interest rate (r) = 5%
+    // - Volatility (σ) = 20%
     let model = BlackScholesModel::new(0.78, 0.05, 0.2);
 
+    // Calculate the price of the binary call option using the Black-Scholes model
     let price = model.price(option.clone());
     println!("Price: {}", price);
 
+    // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
     let greeks = OptionGreeks::calculate(&model, option);
     println!("Greeks: {:?}\n", greeks);
 }

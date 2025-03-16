@@ -8,21 +8,23 @@
 //! - **Underlying Instrument**: The asset on which the option is based.
 //! - **Strike Price**: The price at which the option can be exercised.
 //! - **Option Type**: Specifies whether the option is a call (right to buy) or a put (right to sell).
+//! - **Binary Option Type**: Specifies whether the option is Asset-or-Nothing or Cash-or-Nothing.
 //!
 //! ## Example
 //!
 //! ```
 //! use quantrs::options::{Option, BinaryOption, Instrument, OptionType};
 //!
-//! let instrument = Instrument::new(100.0);
-//! let option = BinaryOption::new(instrument, 100.0, OptionType::Call);
+//! let instrument = Instrument::new().with_spot(100.0);
+//! let option = BinaryOption::cash_or_nothing(instrument, 100.0, OptionType::Call);
 //!
 //! println!("Option type: {:?}", option.option_type());
 //! println!("Strike price: {}", option.strike());
 //! println!("Option style: {:?}", option.style());
+//! println!("Binary option type: {:?}", option.binary_option_type());
 //! ```
 
-use super::{OptionStyle, OptionType};
+use super::{BinaryType, OptionStyle, OptionType};
 use crate::options::{Instrument, Option};
 
 /// A struct representing a Binary option.
@@ -34,22 +36,49 @@ pub struct BinaryOption {
     pub strike: f64,
     /// Type of the option (Call or Put).
     pub option_type: OptionType,
+    /// Style of the option (Binary with specific type).
+    pub option_style: OptionStyle,
 }
 
 impl BinaryOption {
     /// Create a new `BinaryOption`.
-    pub fn new(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
+    pub fn new(
+        instrument: Instrument,
+        strike: f64,
+        option_type: OptionType,
+        binary_option_type: BinaryType,
+    ) -> Self {
         Self {
             instrument,
             strike,
             option_type,
+            option_style: OptionStyle::Binary(binary_option_type),
+        }
+    }
+
+    /// Create a new `CashOrNothing` binary option.
+    pub fn cash_or_nothing(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
+        Self::new(instrument, strike, option_type, BinaryType::CashOrNothing)
+    }
+
+    /// Create a new `AssetOrNothing` binary option.
+    pub fn asset_or_nothing(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
+        Self::new(instrument, strike, option_type, BinaryType::AssetOrNothing)
+    }
+
+    /// Get the binary option type.
+    pub fn binary_option_type(&self) -> &BinaryType {
+        if let OptionStyle::Binary(ref binary_option_type) = self.option_style {
+            binary_option_type
+        } else {
+            panic!("Not a binary option")
         }
     }
 }
 
 impl Option for BinaryOption {
     fn style(&self) -> &OptionStyle {
-        &OptionStyle::Binary
+        &self.option_style
     }
 
     fn instrument(&self) -> &Instrument {
@@ -69,6 +98,11 @@ impl Option for BinaryOption {
             OptionType::Call => OptionType::Put,
             OptionType::Put => OptionType::Call,
         };
-        BinaryOption::new(self.instrument.clone(), self.strike, flipped_option_type)
+        BinaryOption::new(
+            self.instrument.clone(),
+            self.strike,
+            flipped_option_type,
+            *self.binary_option_type(),
+        )
     }
 }

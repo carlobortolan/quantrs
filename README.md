@@ -37,9 +37,9 @@ For now quantrs only supports options pricing. The following features are availa
 | European Options        | ✅                  | ✅            | ⏳                     |
 | American Options        | ❌ (not applicable) | ✅            | ⏳                     |
 | Binary Cash-or-Nothing  | ✅                  | ❌            | ❌                     |
-| Binary Asset-or-Nothing | ⏳                  | ❌            | ❌                     |
+| Binary Asset-or-Nothing | ✅                  | ❌            | ❌                     |
 | Greeks                  | ✅                  | ⏳            | ⏳                     |
-| Implied Volatility      | ✅ (not tested yet) | ⏳            | ⏳                     |
+| Implied Volatility      | ✅                  | ⏳            | ⏳                     |
 
 (✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported)
 
@@ -49,7 +49,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.2"
+quantrs = "0.1.3"
 ```
 
 Now if you want to e.g., model binary call options using the Black-Scholes model, you can:
@@ -59,11 +59,12 @@ use quantrs::options::*;
 
 fn main() {
     // Create a new instrument with a spot price of 100 and a dividend yield of 2%
-    let mut instrument = Instrument::new(100.0);
-    instrument.continuous_dividend_yield = 0.02;
+    let instrument = Instrument::new()
+        .with_spot(100.0)
+        .with_continuous_dividend_yield(0.02);
 
     // Create a new Cash-or-Nothing binary call option with a strike price of 85
-    let option = BinaryOption::new(instrument, 85.0, OptionType::Call);
+    let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
 
     // Create a new Black-Scholes model with:
     // - Time to maturity (T) = 0.78 years
