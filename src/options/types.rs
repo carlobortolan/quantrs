@@ -4,13 +4,17 @@
 //!
 //! - [Wikipedia: Option Style](https://en.wikipedia.org/wiki/Option_style)
 pub mod american_option;
+pub mod asian_option;
 pub mod binary_option;
 pub mod european_option;
+pub mod lookback_option;
 pub mod rainbow_option;
 
 pub use american_option::AmericanOption;
+pub use asian_option::AsianOption;
 pub use binary_option::BinaryOption;
 pub use european_option::EuropeanOption;
+pub use lookback_option::LookbackOption;
 pub use rainbow_option::RainbowOption;
 
 /// Enum representing the type of option.
@@ -40,7 +44,7 @@ pub enum OptionStyle {
     /// Double barrier option (payoff depends on whether underlying asset crosses two barriers)
     DoubleBarrier(BarrierType, BarrierType),
     /// Asian option (payoff depends on average price of underlying asset)
-    Asian,
+    Asian(AsianType),
     /// Lookback option (payoff depends on extrema of underlying asset)
     Lookback(LookbackType),
     /// Binary option (payout is fixed amount or nothing; aka digital option)
@@ -81,6 +85,15 @@ pub enum BarrierType {
 /// Enum representing the type of a Lookback option.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LookbackType {
+    Fixed,
+    Floating,
+}
+
+/// Enum representing the type of an Asian option.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum AsianType {
+    Average,
+    GeometricAverage,
     Fixed,
     Floating,
 }

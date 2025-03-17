@@ -21,11 +21,26 @@
 //!     .with_weighted_assets(vec![(asset1, 0.5), (asset2, 0.5)]);
 //! ```
 
+use rand::rngs::ThreadRng;
+use rand_distr::{Distribution, Normal};
+
 /// A struct representing an instrument with dividend properties.
 #[derive(Debug, Default, Clone)]
 pub struct Instrument {
     /// Current price of the underlying asset.
     pub spot: f64,
+    /// Average spot price of the underlying asset.
+    pub avg_spot: f64,
+    /// Geometric average of the spot price of the underlying asset.
+    pub geo_avg_spot: f64,
+    /// Maximum spot price of the underlying asset.
+    pub max_spot: f64,
+    /// Minimum spot price of the underlying asset.
+    pub min_spot: f64,
+    /// Maximum average spot price of the underlying asset.
+    pub max_spot_avg: f64,
+    /// Minimum average spot price of the underlying asset.
+    pub min_spot_avg: f64,
     /// Continuous dividend yield where the dividend amount is proportional to the level of the underlying asset (e.g., 0.02 for 2%).
     pub continuous_dividend_yield: f64,
     /// Discrete proportional dividend yield (e.g., 0.02 for 2%).
@@ -41,6 +56,12 @@ impl Instrument {
     pub fn new() -> Self {
         Self {
             spot: 0.0,
+            avg_spot: 0.0,
+            geo_avg_spot: 0.0,
+            max_spot: 0.0,
+            min_spot: 0.0,
+            max_spot_avg: 0.0,
+            min_spot_avg: 0.0,
             continuous_dividend_yield: 0.0,
             discrete_dividend_yield: 0.0,
             dividend_times: Vec::new(),
@@ -51,6 +72,42 @@ impl Instrument {
     /// Set the spot price of the instrument.
     pub fn with_spot(mut self, spot: f64) -> Self {
         self.spot = spot;
+        self
+    }
+
+    /// Set the average spot price of the instrument.
+    pub fn with_avg_spot(mut self, avg_spot: f64) -> Self {
+        self.avg_spot = avg_spot;
+        self
+    }
+
+    /// Set the geometric average of the spot price of the instrument.
+    pub fn with_geo_avg_spot(mut self, geo_avg_spot: f64) -> Self {
+        self.geo_avg_spot = geo_avg_spot;
+        self
+    }
+
+    /// Set the maximum spot price of the instrument.
+    pub fn with_max_spot(mut self, max_spot: f64) -> Self {
+        self.max_spot = max_spot;
+        self
+    }
+
+    /// Set the minimum spot price of the instrument.
+    pub fn with_min_spot(mut self, min_spot: f64) -> Self {
+        self.min_spot = min_spot;
+        self
+    }
+
+    /// Set the maximum average spot price of the instrument.
+    pub fn with_max_spot_avg(mut self, max_spot_avg: f64) -> Self {
+        self.max_spot_avg = max_spot_avg;
+        self
+    }
+
+    /// Set the minimum average spot price of the instrument.
+    pub fn with_min_spot_avg(mut self, min_spot_avg: f64) -> Self {
+        self.min_spot_avg = min_spot_avg;
         self
     }
 
@@ -96,4 +153,131 @@ impl Instrument {
             .map(|(asset, _)| (asset.0.clone(), asset.1))
             .collect();
     }
+
+    /// Simulate random asset prices (Milstein method)
+    // TODO: TEST
+    pub fn milstein_simulation(&self, rng: &mut ThreadRng, volatility: f64) -> Vec<f64> {
+        let normal = Normal::new(0.0, 1.0).unwrap();
+        let dt = 1.0 / 252.0; // Daily time step
+        let mut prices = vec![self.spot; 252];
+        for i in 1..252 {
+            let z = normal.sample(rng);
+            prices[i] = prices[i - 1]
+                * (-self.continuous_dividend_yield * dt
+                    + 0.5 * volatility.powi(2) * dt
+                    + volatility * z * dt.sqrt())
+                .exp();
+        }
+        prices
+    }
+
+    /// Simulate random asset prices (Euler method)
+    // TODO: TEST
+    pub fn euler_simulation(&self, rng: &mut ThreadRng, volatility: f64) -> Vec<f64> {
+        let normal = Normal::new(0.0, 1.0).unwrap();
+        let dt = 1.0 / 252.0; // Daily time step
+        let mut prices = vec![self.spot; 252];
+        for i in 1..252 {
+            let z = normal.sample(rng);
+            prices[i] = prices[i - 1]
+                * (1.0 + self.continuous_dividend_yield * dt + volatility * z * dt.sqrt()).exp();
+        }
+        prices
+    }
+
+    /// Simulate random asset prices' logarithms
+    pub fn log_simulation(
+        &self,
+        rng: &mut ThreadRng,
+        volatility: f64,
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        steps: usize,
+    ) -> Vec<f64> {
+        let dt = time_to_maturity / steps as f64; // Time step
+        let normal = Normal::new(0.0, dt.sqrt()).unwrap();
+        let mut logs = vec![self.spot.ln(); steps];
+        for i in 1..steps {
+            let z = normal.sample(rng);
+            logs[i] = logs[i - 1]
+                + (risk_free_rate - self.continuous_dividend_yield - 0.5 * volatility.powi(2)) * dt
+                + volatility * z;
+        }
+        logs
+    }
+
+    /// Average asset prices
+    pub fn simulate_arithmetic_average(
+        &self,
+        rng: &mut ThreadRng,
+        method: SimMethod,
+        volatility: f64,
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        steps: usize,
+    ) -> f64 {
+        let prices = match method {
+            SimMethod::Milstein => self.milstein_simulation(rng, volatility),
+            SimMethod::Euler => self.euler_simulation(rng, volatility),
+            SimMethod::Log => self
+                .log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
+                .iter()
+                .map(|x| x.exp())
+                .collect(),
+        };
+        prices.iter().sum::<f64>() / prices.len() as f64
+    }
+
+    /// Geometric average asset prices
+    pub fn simulate_geometric_average(
+        &self,
+        rng: &mut ThreadRng,
+        method: SimMethod,
+        volatility: f64,
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        steps: usize,
+    ) -> f64 {
+        let prices = match method {
+            SimMethod::Milstein => self.milstein_simulation(rng, volatility),
+            SimMethod::Euler => self.euler_simulation(rng, volatility),
+            SimMethod::Log => self
+                .log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
+                .iter()
+                .map(|x| x.exp())
+                .collect(),
+        };
+        prices
+            .iter()
+            .product::<f64>()
+            .powf(1.0 / prices.len() as f64)
+    }
+
+    // Directly simulate the asset price using the geometric Brownian motion formula
+    pub fn simulate_geometric_brownian_motion(
+        &self,
+        rng: &mut ThreadRng,
+        volatility: f64,
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        steps: usize,
+    ) -> f64 {
+        let normal = Normal::new(0.0, 1.0).unwrap();
+        let dt = time_to_maturity / steps as f64;
+        let mut price = self.spot;
+        for _ in 0..steps {
+            let z = normal.sample(rng);
+            price *= ((risk_free_rate - self.continuous_dividend_yield - 0.5 * volatility.powi(2))
+                * dt
+                + volatility * z * dt.sqrt())
+            .exp();
+        }
+        price
+    }
+}
+/// Enum for different simulation methods.
+pub enum SimMethod {
+    Milstein,
+    Euler,
+    Log,
 }

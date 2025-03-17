@@ -6,11 +6,11 @@ use quantrs::options::{
 };
 
 fn main() {
-    // example_from_readme();
-    // example_black_scholes();
-    // example_binomial_tree();
-    // example_greeks();
-    // example_monte_carlo();
+    example_from_readme();
+    example_black_scholes();
+    example_binomial_tree();
+    example_greeks();
+    example_monte_carlo();
     rainbow_option_example();
 }
 
@@ -70,7 +70,7 @@ fn example_greeks() {
 fn example_monte_carlo() {
     let instrument = Instrument::new().with_spot(100.0);
     let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-    let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+    let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000, 1);
 
     let call_price = model.price(&option);
     println!("Monte Carlo Call Price: {}", call_price);
@@ -113,7 +113,7 @@ fn rainbow_option_example() {
     let asset3 = Instrument::new().with_spot(86.0);
 
     // Pays 50% of the best return (at maturity), 30% of the second best and 20% of the third best
-    let weights = vec![0.5, 0.3, 0.2];
+    let _weights = vec![0.5, 0.3, 0.2];
 
     let instrument = Instrument::new().with_assets(vec![(asset1), (asset2), (asset3)]);
 

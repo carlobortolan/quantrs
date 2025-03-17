@@ -31,7 +31,7 @@ For now quantrs only supports options pricing. The following models are availabl
 
 |                                 | Black-Scholes   | Black-76 | Lattice      | Monte-Carlo | Finite Diff   | Heston |
 | ------------------------------- | --------------- | -------- | ------------ | ----------- | ------------- | ------ |
-| European                        | ✅              | ⏳       | ✅           | ⏳          | ⏳            | ⏳     |
+| European                        | ✅              | ⏳       | ✅           | ✅          | ⏳            | ⏳     |
 | American                        | ❌              | ❌       | ✅           | ❌ (L. Sq.) | ⏳            | ❌     |
 | Bermudan                        | ❌              | ❌       | ⏳           | ❌ (L. Sq.) | ❌ (complex)  | ❌     |
 | \* Basket                       | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳          | ❌            | ❌     |

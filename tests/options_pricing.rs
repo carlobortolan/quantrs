@@ -1,7 +1,8 @@
 use approx::assert_abs_diff_eq;
 use quantrs::options::{
-    AmericanOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks,
-    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionType,
+    AmericanOption, AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel,
+    EuropeanOption, Greeks, Instrument, LookbackOption, MonteCarloModel, Option, OptionGreeks,
+    OptionPricing, OptionType,
 };
 
 // Function to assert that a type implements the Option trait
@@ -588,7 +589,7 @@ mod monte_carlo_tests {
         fn test_itm() {
             let instrument = Instrument::new().with_spot(110.0);
             let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-            let model = MonteCarloModel::new(0.7, 0.03, 0.2, 2_000);
+            let model = MonteCarloModel::new(0.7, 0.03, 0.2, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 14.575, epsilon = 1.0);
@@ -601,7 +602,7 @@ mod monte_carlo_tests {
         fn test_otm() {
             let instrument = Instrument::new().with_spot(85.0);
             let option = EuropeanOption::new(instrument, 70.0, OptionType::Call);
-            let model = MonteCarloModel::new(0.7, 0.05, 0.3, 2_000);
+            let model = MonteCarloModel::new(0.7, 0.05, 0.3, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 19.264, epsilon = 1.0);
@@ -616,7 +617,7 @@ mod monte_carlo_tests {
                 .with_spot(105.0)
                 .with_continuous_dividend_yield(0.05);
             let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-            let model = MonteCarloModel::new(1.2, 0.04, 0.1, 2_000);
+            let model = MonteCarloModel::new(1.2, 0.04, 0.1, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 6.2640, epsilon = 0.5);
@@ -631,7 +632,7 @@ mod monte_carlo_tests {
                 .with_spot(70.0)
                 .with_continuous_dividend_yield(0.05);
             let option = EuropeanOption::new(instrument, 72.0, OptionType::Call);
-            let model = MonteCarloModel::new(0.43, 0.02, 0.2, 2_000);
+            let model = MonteCarloModel::new(0.43, 0.02, 0.2, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 2.3985, epsilon = 0.5);
@@ -644,7 +645,7 @@ mod monte_carlo_tests {
         fn test_edge() {
             let instrument = Instrument::new().with_spot(100.0);
             let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-            let model = MonteCarloModel::new(2.0, 0.05, 0.2, 2_000);
+            let model = MonteCarloModel::new(2.0, 0.05, 0.2, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 16.127, epsilon = 1.5);
@@ -654,10 +655,66 @@ mod monte_carlo_tests {
 
             let instrument = Instrument::new().with_spot(0.0);
             let option = EuropeanOption::new(instrument, 0.0, OptionType::Call);
-            let model = MonteCarloModel::new(0.0, 0.0, 0.0, 2_000);
+            let model = MonteCarloModel::new(0.0, 0.0, 0.0, 2_000, 1);
 
             let price = model.price(&option);
             assert!(price.is_nan() || price.is_zero());
+        }
+    }
+
+    mod asian_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_fixed_itm() {
+            let instrument = Instrument::new().with_spot(110.0);
+            let option = AsianOption::fixed(instrument, 100.0, OptionType::Call);
+            let model = MonteCarloModel::new(0.7, 0.03, 0.2, 10_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 12.0, epsilon = 1.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.595, epsilon = 0.5);
+        }
+
+        #[test]
+        fn test_fixed_otm() {
+            let instrument = Instrument::new().with_spot(85.0);
+            let option = AsianOption::fixed(instrument, 90.0, OptionType::Call);
+            let model = MonteCarloModel::new(0.7, 0.05, 0.3, 10_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 3.629, epsilon = 0.5);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 6.474, epsilon = 0.5);
+        }
+
+        #[test]
+        fn test_floating_itm() {
+            let instrument = Instrument::new().with_spot(110.0).with_avg_spot(159.76);
+            let option = AsianOption::floating(instrument, OptionType::Call);
+            let model = MonteCarloModel::new(0.7, 0.03, 0.2, 10_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 4.951, epsilon = 0.1);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 3.44, epsilon = 0.1);
+        }
+
+        #[test]
+        fn test_floating_otm() {
+            let instrument = Instrument::new().with_spot(85.0).with_avg_spot(159.76);
+            let option = AsianOption::floating(instrument, OptionType::Call);
+            let model = MonteCarloModel::new(0.7, 0.05, 0.3, 2_000, 1);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 19.264, epsilon = 1.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 1.857, epsilon = 1.0);
         }
     }
 }
@@ -690,36 +747,40 @@ mod option_trait_tests {
 
     #[test]
     fn test_trait_implementations() {
-        let option =
-            EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
-        assert_implements_option_trait(&option);
-        let option =
-            EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
-        assert_implements_option_trait(&option);
-        let option =
-            AmericanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
-        assert_implements_option_trait(&option);
-        let option =
-            AmericanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
-        assert_implements_option_trait(&option);
-        let option = BinaryOption::cash_or_nothing(
+        let opt = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&opt);
+        let opt = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&opt);
+        let opt = AmericanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&opt);
+        let opt = AmericanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&opt);
+        let opt = AsianOption::fixed(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
+        assert_implements_option_trait(&opt);
+        let opt = AsianOption::fixed(Instrument::new().with_spot(100.0), 100.0, OptionType::Put);
+        assert_implements_option_trait(&opt);
+        let opt = LookbackOption::fixed(Instrument::new().with_spot(100.0), OptionType::Call);
+        assert_implements_option_trait(&opt);
+        let opt = LookbackOption::fixed(Instrument::new().with_spot(100.0), OptionType::Put);
+        assert_implements_option_trait(&opt);
+        let opt = BinaryOption::cash_or_nothing(
             Instrument::new().with_spot(100.0),
             100.0,
             OptionType::Call,
         );
-        assert_implements_option_trait(&option);
-        let option = BinaryOption::cash_or_nothing(
+        assert_implements_option_trait(&opt);
+        let opt = BinaryOption::cash_or_nothing(
             Instrument::new().with_spot(100.0),
             100.0,
             OptionType::Put,
         );
-        assert_implements_option_trait(&option);
+        assert_implements_option_trait(&opt);
 
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
         assert_implements_model_trait(&model);
         let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 2);
         assert_implements_model_trait(&model);
-        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10);
+        let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10, 1);
         assert_implements_model_trait(&model);
     }
 }
