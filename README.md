@@ -38,7 +38,7 @@ For now quantrs only supports options pricing. The following models are availabl
 | \* Rainbow                      | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳          | ❌            | ❌     |
 | \*\* Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳          | ⏳            | ⏳     |
 | \*\* Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳          | ❌ (complex)  | ⏳     |
-| \*\* Asian                      | ❌ (mod. BSM)   | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
+| \*\* Asian                      | ❌ (mod. BSM)   | ❌       | ❌           | ✅          | ⏳            | ⏳     |
 | \*\* Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
 | \*\* Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
 | \*\* Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ⏳          | ❌ (mod. PDE) | ⏳     |

@@ -27,11 +27,12 @@ pub enum OptionType {
 }
 
 /// Enum representing the style of the option.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub enum OptionStyle {
     /// American option (can be exercised at any time)
     American,
     /// European option (default, can be exercised only at expiration)
+    #[default]
     European,
     /// Bermudan option (can be exercised at specific dates)
     Bermudan,
@@ -44,22 +45,11 @@ pub enum OptionStyle {
     /// Double barrier option (payoff depends on whether underlying asset crosses two barriers)
     DoubleBarrier(BarrierType, BarrierType),
     /// Asian option (payoff depends on average price of underlying asset)
-    Asian(AsianType),
+    Asian(Permutation),
     /// Lookback option (payoff depends on extrema of underlying asset)
-    Lookback(LookbackType),
+    Lookback(Permutation),
     /// Binary option (payout is fixed amount or nothing; aka digital option)
     Binary(BinaryType),
-}
-
-impl Default for OptionStyle {
-    /// Default option style is European.
-    ///
-    /// # Returns
-    ///
-    /// The default option style.
-    fn default() -> Self {
-        OptionStyle::European
-    }
 }
 
 /// Enum representing the type of a Rainbow option.
@@ -82,18 +72,9 @@ pub enum BarrierType {
     UpAndOut,
 }
 
-/// Enum representing the type of a Lookback option.
+/// Enum representing the type of a Lookback or Asian option.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum LookbackType {
-    Fixed,
-    Floating,
-}
-
-/// Enum representing the type of an Asian option.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum AsianType {
-    Average,
-    GeometricAverage,
+pub enum Permutation {
     Fixed,
     Floating,
 }

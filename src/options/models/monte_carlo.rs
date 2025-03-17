@@ -3,6 +3,14 @@
 use crate::options::{Option, OptionPricing, OptionStyle, SimMethod};
 use rand::rngs::ThreadRng;
 
+/// Enum for averaging methods.
+#[derive(Debug, Default, Clone, Copy)]
+pub enum AvgMethod {
+    Geometric,
+    #[default]
+    Arithmetic,
+}
+
 /// A struct representing a Monte Carlo Simulation model for option pricing.
 #[derive(Debug, Default, Clone)]
 pub struct MonteCarloModel {
@@ -16,6 +24,8 @@ pub struct MonteCarloModel {
     pub simulations: usize,
     /// Number of steps in the simulation.
     pub steps: usize,
+    /// average method
+    pub method: AvgMethod,
 }
 
 impl MonteCarloModel {
@@ -26,6 +36,7 @@ impl MonteCarloModel {
         volatility: f64,
         simulations: usize,
         steps: usize,
+        method: AvgMethod,
     ) -> Self {
         Self {
             time_to_maturity,
@@ -33,12 +44,44 @@ impl MonteCarloModel {
             volatility,
             simulations,
             steps: steps.max(1),
+            method,
         }
     }
 
-    /// Create a new `MonteCarloModel` with the default values.
-    pub fn default(time_to_maturity: f64, risk_free_rate: f64, volatility: f64) -> Self {
-        Self::new(time_to_maturity, risk_free_rate, volatility, 10_000, 20)
+    /// Create a new `MonteCarloModel` with the geometric averaging method.
+    pub fn geometric(
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        volatility: f64,
+        simulations: usize,
+        steps: usize,
+    ) -> Self {
+        Self::new(
+            time_to_maturity,
+            risk_free_rate,
+            volatility,
+            simulations,
+            steps,
+            AvgMethod::Geometric,
+        )
+    }
+
+    /// Create a new `MonteCarloModel` with the arithmetic averaging method.
+    pub fn arithmetic(
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        volatility: f64,
+        simulations: usize,
+        steps: usize,
+    ) -> Self {
+        Self::new(
+            time_to_maturity,
+            risk_free_rate,
+            volatility,
+            simulations,
+            steps,
+            AvgMethod::Arithmetic,
+        )
     }
 }
 
@@ -82,13 +125,13 @@ impl MonteCarloModel {
 
     fn price_asian<T: Option>(&self, option: &T) -> f64 {
         let mut rng: ThreadRng = rand::rng();
-        let mut total_price = 0.0;
-        let mut min_avg_price = f64::MAX;
-        let mut max_avg_price = f64::MIN;
+        let mut sum = 0.0;
+        let mut min_spot = f64::MAX;
+        let mut max_spot = f64::MIN;
 
         for _ in 0..self.simulations {
-            // Simulate random asset prices and calculate the average price
-            let avg_price = option.instrument().simulate_arithmetic_average(
+            // Simulate random asset prices and calculate the average price (discounted)
+            let avg_price = option.instrument().simulate_geometric_average(
                 &mut rng,
                 SimMethod::Log,
                 self.volatility,
@@ -97,21 +140,21 @@ impl MonteCarloModel {
                 self.steps,
             );
 
-            // Update min and max average prices
-            if avg_price < min_avg_price {
-                min_avg_price = avg_price;
-            }
-            if avg_price > max_avg_price {
-                max_avg_price = avg_price;
-            }
+            // Update min and max spot prices
+            min_spot = min_spot.min(avg_price);
+            max_spot = max_spot.max(avg_price);
 
             // Calculate each payoff
-            total_price += option.payoff(Some(avg_price));
+            sum += (-(self.risk_free_rate - option.instrument().continuous_dividend_yield)
+                * self.time_to_maturity)
+                .exp()
+                * option.payoff(Some(avg_price));
         }
 
+        println!("Min Spot: {}, Max Spot: {}", min_spot, max_spot);
+
         // Calculate the average payoff and discount it to present value
-        (total_price / self.simulations as f64)
-            * (-self.risk_free_rate * self.time_to_maturity).exp()
+        sum / self.simulations as f64
     }
 
     fn price_basket<T: Option>(&self, option: &T) -> f64 {

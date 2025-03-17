@@ -21,6 +21,7 @@
 //!     .with_weighted_assets(vec![(asset1, 0.5), (asset2, 0.5)]);
 //! ```
 
+use core::f64;
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
@@ -154,33 +155,22 @@ impl Instrument {
             .collect();
     }
 
-    /// Simulate random asset prices (Milstein method)
-    // TODO: TEST
-    pub fn milstein_simulation(&self, rng: &mut ThreadRng, volatility: f64) -> Vec<f64> {
-        let normal = Normal::new(0.0, 1.0).unwrap();
-        let dt = 1.0 / 252.0; // Daily time step
-        let mut prices = vec![self.spot; 252];
-        for i in 1..252 {
-            let z = normal.sample(rng);
-            prices[i] = prices[i - 1]
-                * (-self.continuous_dividend_yield * dt
-                    + 0.5 * volatility.powi(2) * dt
-                    + volatility * z * dt.sqrt())
-                .exp();
-        }
-        prices
-    }
-
     /// Simulate random asset prices (Euler method)
-    // TODO: TEST
-    pub fn euler_simulation(&self, rng: &mut ThreadRng, volatility: f64) -> Vec<f64> {
+    pub fn euler_simulation(
+        &self,
+        rng: &mut ThreadRng,
+        risk_free_rate: f64,
+        volatility: f64,
+    ) -> Vec<f64> {
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let dt = 1.0 / 252.0; // Daily time step
+        let dt: f64 = 1.0 / 252.0; // Daily time step
         let mut prices = vec![self.spot; 252];
         for i in 1..252 {
             let z = normal.sample(rng);
             prices[i] = prices[i - 1]
-                * (1.0 + self.continuous_dividend_yield * dt + volatility * z * dt.sqrt()).exp();
+                * (1.0
+                    + (risk_free_rate - self.continuous_dividend_yield) * dt
+                    + volatility * z * dt.sqrt());
         }
         prices
     }
@@ -195,7 +185,7 @@ impl Instrument {
         steps: usize,
     ) -> Vec<f64> {
         let dt = time_to_maturity / steps as f64; // Time step
-        let normal = Normal::new(0.0, dt.sqrt()).unwrap();
+        let normal: Normal<f64> = Normal::new(0.0, dt.sqrt()).unwrap(); // Adjusted standard deviation
         let mut logs = vec![self.spot.ln(); steps];
         for i in 1..steps {
             let z = normal.sample(rng);
@@ -216,16 +206,19 @@ impl Instrument {
         risk_free_rate: f64,
         steps: usize,
     ) -> f64 {
-        let prices = match method {
-            SimMethod::Milstein => self.milstein_simulation(rng, volatility),
-            SimMethod::Euler => self.euler_simulation(rng, volatility),
-            SimMethod::Log => self
-                .log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
-                .iter()
-                .map(|x| x.exp())
-                .collect(),
+        let prices: Vec<f64> = match method {
+            SimMethod::Milstein => unimplemented!("Milstein method not implemented"),
+            SimMethod::Euler => self.euler_simulation(rng, risk_free_rate, volatility),
+            SimMethod::Log => {
+                self.log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
+            }
         };
-        prices.iter().sum::<f64>() / prices.len() as f64
+
+        let res = prices.iter().sum::<f64>() / (prices.len()) as f64;
+        match method {
+            SimMethod::Log => res.exp(),
+            _ => res,
+        }
     }
 
     /// Geometric average asset prices
@@ -238,19 +231,18 @@ impl Instrument {
         risk_free_rate: f64,
         steps: usize,
     ) -> f64 {
-        let prices = match method {
-            SimMethod::Milstein => self.milstein_simulation(rng, volatility),
-            SimMethod::Euler => self.euler_simulation(rng, volatility),
-            SimMethod::Log => self
-                .log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
-                .iter()
-                .map(|x| x.exp())
-                .collect(),
+        let prices: Vec<f64> = match method {
+            SimMethod::Milstein => unimplemented!("Milstein method not implemented"),
+            SimMethod::Euler => self.euler_simulation(rng, risk_free_rate, volatility),
+            SimMethod::Log => {
+                self.log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
+            }
         };
-        prices
-            .iter()
-            .product::<f64>()
-            .powf(1.0 / prices.len() as f64)
+
+        match method {
+            SimMethod::Log => (prices.iter().sum::<f64>() / prices.len() as f64).exp(),
+            _ => (prices.iter().map(|price| price.ln()).sum::<f64>() / prices.len() as f64).exp(),
+        }
     }
 
     // Directly simulate the asset price using the geometric Brownian motion formula
@@ -275,6 +267,7 @@ impl Instrument {
         price
     }
 }
+
 /// Enum for different simulation methods.
 pub enum SimMethod {
     Milstein,

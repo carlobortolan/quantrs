@@ -1,4 +1,4 @@
-use crate::options::{types::AsianType, Instrument, Option, OptionStyle, OptionType};
+use crate::options::{types::Permutation, Instrument, Option, OptionStyle, OptionType};
 
 #[derive(Clone, Debug)]
 pub struct AsianOption {
@@ -6,7 +6,7 @@ pub struct AsianOption {
     pub strike: f64,
     pub option_type: OptionType,
     pub option_style: OptionStyle,
-    pub asian_type: AsianType,
+    pub asian_type: Permutation,
 }
 
 impl AsianOption {
@@ -15,7 +15,7 @@ impl AsianOption {
         instrument: Instrument,
         strike: f64,
         option_type: OptionType,
-        asian_type: AsianType,
+        asian_type: Permutation,
     ) -> Self {
         Self {
             instrument,
@@ -28,12 +28,12 @@ impl AsianOption {
 
     /// Create a new `Fixed` Asian option.
     pub fn fixed(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
-        Self::new(instrument, strike, option_type, AsianType::Fixed)
+        Self::new(instrument, strike, option_type, Permutation::Fixed)
     }
 
     /// Create a new `Floating` Asian option.
     pub fn floating(instrument: Instrument, option_type: OptionType) -> Self {
-        Self::new(instrument, 0.0, option_type, AsianType::Floating) // strike is not used for floating
+        Self::new(instrument, 0.0, option_type, Permutation::Floating) // strike is not used for floating
     }
 }
 
@@ -57,15 +57,15 @@ impl Option for AsianOption {
     fn payoff(&self, avg_price: std::option::Option<f64>) -> f64 {
         let avg_price = avg_price.unwrap_or(self.instrument.spot);
         match self.asian_type {
-            AsianType::Fixed => match self.option_type {
+            Permutation::Fixed => match self.option_type {
                 OptionType::Call => (avg_price - self.strike).max(0.0),
                 OptionType::Put => (self.strike - avg_price).max(0.0),
             },
-            AsianType::Floating => match self.option_type {
+            Permutation::Floating => match self.option_type {
+                // spot is the price at maturity
                 OptionType::Call => (self.instrument.spot - avg_price).max(0.0),
                 OptionType::Put => (avg_price - self.instrument.spot).max(0.0),
             },
-            _ => panic!("Unsupported Asian type"),
         }
     }
 

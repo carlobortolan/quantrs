@@ -1,8 +1,9 @@
 // Run:  cargo run --release --example options_pricing
 
 use quantrs::options::{
-    types::RainbowOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption,
-    Greeks, Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionType,
+    types::RainbowOption, AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel,
+    EuropeanOption, Greeks, Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing,
+    OptionType,
 };
 
 fn main() {
@@ -12,6 +13,7 @@ fn main() {
     example_greeks();
     example_monte_carlo();
     rainbow_option_example();
+    example_asian();
 }
 
 fn example_black_scholes() {
@@ -67,10 +69,31 @@ fn example_greeks() {
     println!("Rho: {}\n", model.rho(option.clone()));
 }
 
+fn example_asian() {
+    let instrument = Instrument::new()
+        .with_spot(35.0)
+        .with_continuous_dividend_yield(0.0);
+    let option = AsianOption::fixed(instrument.clone(), 29.0, OptionType::Call);
+    let arithmetic_model = MonteCarloModel::arithmetic(1.0, 0.08, 0.3, 10_000, 20);
+    let geometric_model = MonteCarloModel::geometric(1.0, 0.08, 0.3, 10_000, 20);
+
+    let price = arithmetic_model.price(&option);
+    println!("Arithmetic Call Price: {}", price);
+
+    let price = arithmetic_model.price(&option.flip());
+    println!("Arithmetic Put Price: {}", price);
+
+    let price = geometric_model.price(&option);
+    println!("Geometric Call Price: {}", price);
+
+    let price = geometric_model.price(&option.flip());
+    println!("Geometric Put Price: {}", price);
+}
+
 fn example_monte_carlo() {
     let instrument = Instrument::new().with_spot(100.0);
     let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-    let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000, 1);
+    let model = MonteCarloModel::arithmetic(1.0, 0.05, 0.2, 10_000, 1);
 
     let call_price = model.price(&option);
     println!("Monte Carlo Call Price: {}", call_price);
