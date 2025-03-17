@@ -36,9 +36,9 @@ This document outlines the planned features and improvements for the `quantrs` l
 
 ### Monte-Carlo
 
-- [ ] European Options Price and Greeks
-- [ ] Cash or Nothing Binary Options Price and Greeks
-- [ ] Asset or Nothing Binary Options Price and Greeks
+- [x] European Options Price and Greeks
+- [x] Cash or Nothing Binary Options Price and Greeks
+- [x] Asset or Nothing Binary Options Price and Greeks
 - [ ] Basket Options Price and Greeks
 - [ ] Rainbow Options Price and Greeks
 - [ ] Barrier Options Price and Greeks

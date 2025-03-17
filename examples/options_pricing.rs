@@ -136,7 +136,7 @@ fn rainbow_option_example() {
     let asset3 = Instrument::new().with_spot(86.0);
 
     // Pays 50% of the best return (at maturity), 30% of the second best and 20% of the third best
-    let _weights = vec![0.5, 0.3, 0.2];
+    let _weights = [0.5, 0.3, 0.2];
 
     let instrument = Instrument::new().with_assets(vec![(asset1), (asset2), (asset3)]);
 
