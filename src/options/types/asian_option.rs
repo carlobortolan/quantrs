@@ -1,5 +1,30 @@
+//! Module for Asian option type.
+//!
+//! An Asian option is a type of options contract where the payoff depends on the average price of the underlying asset over a certain period of time.
+//! This averaging feature makes Asian options less volatile and generally cheaper than their European or American counterparts.
+//!
+//! ## Characteristics
+//!
+//! - **Underlying Instrument**: The asset on which the option is based.
+//! - **Strike Price**: The price at which the option can be exercised (for fixed strike options).
+//! - **Option Type**: Specifies whether the option is a call (right to buy) or a put (right to sell).
+//! - **Asian Type**: Specifies whether the option is a fixed strike or floating strike.
+//!
+//! ## Example
+//!
+//! ```
+//! use quantrs::options::{Option, AsianOption, Instrument, OptionType, Permutation};
+//!
+//! let instrument = Instrument::new().with_spot(100.0);
+//! let option = AsianOption::new(instrument, 100.0, OptionType::Call, Permutation::Fixed);
+//!
+//! println!("Option type: {:?}", option.option_type());
+//! println!("Strike price: {}", option.strike());
+//! println!("Option style: {:?}", option.style());
+//! ```
 use crate::options::{types::Permutation, Instrument, Option, OptionStyle, OptionType};
 
+/// A struct representing an Asian option.
 #[derive(Clone, Debug)]
 pub struct AsianOption {
     pub instrument: Instrument,

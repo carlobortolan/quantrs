@@ -1,4 +1,30 @@
 //! Module for Monte Carlo option pricing model.
+//!
+//! This module provides a Monte Carlo simulation model for pricing various types of options.
+//! The Monte Carlo method is a statistical technique that uses random sampling to estimate the
+//! expected value of an option's payoff.
+//!
+//! ## Characteristics
+//!
+//! - **Time to Maturity**: The time horizon (in years) for the option.
+//! - **Risk-Free Rate**: The risk-free interest rate (e.g., 0.05 for 5%).
+//! - **Volatility**: The volatility of the underlying asset (e.g., 0.2 for 20%).
+//! - **Simulations**: The number of simulations to run.
+//! - **Steps**: The number of steps in each simulation.
+//! - **Averaging Method**: The method used to average the simulated prices (geometric or arithmetic).
+//!
+//! ## Example
+//!
+//! ```rust
+//! use quantrs::options::{MonteCarloModel, Option, Instrument, OptionType, AvgMethod};
+//!
+//! let instrument = Instrument::new().with_spot(100.0);
+//! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
+//! let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000, 252, AvgMethod::Arithmetic);
+//!
+//! let price = model.price(&option);
+//! println!("Monte Carlo Call Price: {}", price);
+//! ```
 
 use crate::options::{Option, OptionPricing, OptionStyle, SimMethod};
 use rand::rngs::ThreadRng;

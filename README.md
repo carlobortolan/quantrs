@@ -27,7 +27,9 @@ Please check out the documentation [here][docs-url].
 
 ### Options Pricing
 
-For now quantrs only supports options pricing. The following models are available:
+For now quantrs only supports options pricing of vanilla and exotic options with continuous dividends yields.
+
+The following models are available:
 
 |                                 | Black-Scholes   | Black-76 | Lattice      | Monte-Carlo | Finite Diff   | Heston |
 | ------------------------------- | --------------- | -------- | ------------ | ----------- | ------------- | ------ |
@@ -38,7 +40,8 @@ For now quantrs only supports options pricing. The following models are availabl
 | \* Rainbow                      | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳          | ❌            | ❌     |
 | \*\* Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳          | ⏳            | ⏳     |
 | \*\* Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳          | ❌ (complex)  | ⏳     |
-| \*\* Asian                      | ❌ (mod. BSM)   | ❌       | ❌           | ✅          | ⏳            | ⏳     |
+| \*\* Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅          | ⏳            | ⏳     |
+| \*\* Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅ (flaky)  | ⏳            | ⏳     |
 | \*\* Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
 | \*\* Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳          | ⏳            | ⏳     |
 | \*\* Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ⏳          | ❌ (mod. PDE) | ⏳     |

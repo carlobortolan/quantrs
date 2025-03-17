@@ -43,7 +43,7 @@ This document outlines the planned features and improvements for the `quantrs` l
 - [ ] Rainbow Options Price and Greeks
 - [ ] Barrier Options Price and Greeks
 - [ ] Double Barrier Options Price and Greeks
-- [ ] Asian Options Price and Greeks
+- [x] Asian Options Price and Greeks
 - [ ] Lookback Options Price and Greeks
 - [ ] Binary Cash-or-Nothing Options Price and Greeks
 - [ ] Binary Asset-or-Nothing Options Price and Greeks
