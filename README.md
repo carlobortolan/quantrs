@@ -44,8 +44,8 @@ The following models are available:
 | ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅ (flaky)         | ⏳            | ⏳     |
 | ²Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳                 | ⏳            | ⏳     |
 | ²Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳                 | ⏳            | ⏳     |
-| ²Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ⏳                 | ❌ (mod. PDE) | ⏳     |
-| ²Binary Asset-or-Nothing    | ✅              | ⏳       | ⏳           | ⏳                 | ❌ (mod. PDE) | ⏳     |
+| ²Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ✅                 | ❌ (mod. PDE) | ⏳     |
+| ²Binary Asset-or-Nothing    | ✅              | ⏳       | ⏳           | ✅                 | ❌ (mod. PDE) | ⏳     |
 | Greeks (Δ, ν, Θ, ρ, Γ)      | ✅              | ⏳       | ⏳           | ❌                 | ❌            | ❌     |
 | Implied Volatility          | ✅              | ⏳       | ⏳           | ❌                 | ❌            | ❌     |
 

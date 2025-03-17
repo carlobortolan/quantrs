@@ -61,7 +61,7 @@
 //! ## Example
 //!
 //! ```
-//! use quantrs::options::{BlackScholesModel, OptionType, OptionPricing, Instrument, OptionStyle, EuropeanOption};
+//! use quantrs::options::{BlackScholesModel, OptionType, OptionPricing, Instrument, EuropeanOption};
 //!
 //! let instrument = Instrument::new().with_spot(100.0);
 //! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
@@ -325,6 +325,7 @@ impl OptionPricing for BlackScholesModel {
         }
     }
 
+    /// Calculate the implied volatility of an option using the Newton-Raphson method.
     fn implied_volatility<T: Option>(&self, option: &T, market_price: f64) -> f64 {
         let mut sigma = 0.2; // Initial guess
         let tolerance = 1e-5;
@@ -341,7 +342,55 @@ impl OptionPricing for BlackScholesModel {
         }
         sigma
     }
+
+    // Calculate the implied volatility of an option using the Brent method.
+    //fn implied_volatility<T: Option>(&self, option: &T, market_price: f64) -> f64 {
+    //    let normal = Normal::new(0.0, 1.0).unwrap();
+    //    let f = |sigma: f64| self.price_with_volatility(option, sigma, &normal) - market_price;
+    //
+    //    let tol = 1e-5;
+    //    let lower_bound = 1e-5;
+    //    let upper_bound = 5.0;
+    //
+    //    // Ensure that the function values at the bounds have different signs
+    //    if f(lower_bound) * f(upper_bound) > 0.0 {
+    //        panic!("f(min) and f(max) must have different signs");
+    //    }
+    //
+    //    let problem = TestFunc::new(f);
+    //    let solver = BrentRoot::new(lower_bound, upper_bound, tol);
+    //
+    //    let res = Executor::new(problem, solver)
+    //        .configure(|state| state.max_iters(100))
+    //        .run()
+    //        .unwrap();
+    //
+    //    res.state().best_param.unwrap()
+    //}
 }
+
+// struct TestFunc<F> {
+//     f: F,
+// }
+//
+// impl<F> TestFunc<F> {
+//     fn new(f: F) -> Self {
+//         TestFunc { f }
+//     }
+// }
+//
+// impl<F> CostFunction for TestFunc<F>
+// where
+//     F: Fn(f64) -> f64,
+// {
+//     // one dimensional problem, no vector needed
+//     type Param = f64;
+//     type Output = f64;
+//
+//     fn cost(&self, p: &Self::Param) -> Result<Self::Output, Error> {
+//         Ok((self.f)(*p))
+//     }
+// }
 
 impl Greeks for BlackScholesModel {
     fn delta<T: Option>(&self, option: T) -> f64 {

@@ -121,8 +121,8 @@ impl Option for BinaryOption {
                 OptionType::Put => if spot < self.strike { 1.0 } else { 0.0 },
             },
             BinaryType::AssetOrNothing => match self.option_type {
-                OptionType::Call => spot.max(self.strike),
-                OptionType::Put => spot.min(self.strike),
+                OptionType::Call => if spot > self.strike { spot } else { 0.0 },
+                OptionType::Put => if spot < self.strike { spot } else { 0.0 },
             },
         }
     }
