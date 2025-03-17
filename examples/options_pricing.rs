@@ -71,11 +71,11 @@ fn example_greeks() {
 
 fn example_asian() {
     let instrument = Instrument::new()
-        .with_spot(35.0)
+        .with_spot(110.0)
         .with_continuous_dividend_yield(0.0);
-    let option = AsianOption::fixed(instrument.clone(), 29.0, OptionType::Call);
-    let arithmetic_model = MonteCarloModel::arithmetic(1.0, 0.08, 0.3, 10_000, 20);
-    let geometric_model = MonteCarloModel::geometric(1.0, 0.08, 0.3, 10_000, 20);
+    let option = AsianOption::floating(instrument.clone(), OptionType::Call);
+    let arithmetic_model = MonteCarloModel::arithmetic(1.0, 0.03, 0.2, 4_000, 20);
+    let geometric_model = MonteCarloModel::geometric(1.0, 0.03, 0.2, 4_000, 20);
 
     let price = arithmetic_model.price(&option);
     println!("Arithmetic Call Price: {}", price);

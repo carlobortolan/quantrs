@@ -111,4 +111,19 @@ impl Option for BinaryOption {
     fn as_any(&self) -> &dyn Any {
         self
     }
+
+    #[rustfmt::skip]
+    fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
+        let spot = spot.unwrap_or(self.instrument.spot);
+        match self.binary_option_type() {
+            BinaryType::CashOrNothing => match self.option_type {
+                OptionType::Call => if spot > self.strike { 1.0 } else { 0.0 },
+                OptionType::Put => if spot < self.strike { 1.0 } else { 0.0 },
+            },
+            BinaryType::AssetOrNothing => match self.option_type {
+                OptionType::Call => spot.max(self.strike),
+                OptionType::Put => spot.min(self.strike),
+            },
+        }
+    }
 }

@@ -24,7 +24,7 @@ pub use models::*;
 pub use types::*;
 
 /// Supertrait that combines OptionPricing and Greeks.
-pub trait Option: Clone {
+pub trait Option: Clone + Send + Sync {
     /// Get the style of the option.
     ///
     /// # Returns

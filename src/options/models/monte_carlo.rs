@@ -28,6 +28,7 @@
 
 use crate::options::{Option, OptionPricing, OptionStyle, SimMethod};
 use rand::rngs::ThreadRng;
+use rayon::prelude::*;
 
 /// Enum for averaging methods.
 #[derive(Debug, Default, Clone, Copy)]
@@ -109,6 +110,29 @@ impl MonteCarloModel {
             AvgMethod::Arithmetic,
         )
     }
+
+    /// Simulate price paths and compute the expected discounted payoff.
+    fn simulate_price_paths<T: Option>(&self, option: &T) -> f64 {
+        let discount_factor = (-self.risk_free_rate * self.time_to_maturity).exp();
+
+        // Use parallel iteration to simulate multiple price paths
+        let total_payoff: f64 = (0..self.simulations)
+            .into_par_iter() // Rayon parallel iterator
+            .map(|_| {
+                let mut rng = rand::rng();
+                let simulated_price = option.instrument().simulate_geometric_brownian_motion(
+                    &mut rng,
+                    self.volatility,
+                    self.time_to_maturity,
+                    self.risk_free_rate,
+                    self.steps,
+                );
+                option.payoff(Some(simulated_price))
+            })
+            .sum();
+
+        (total_payoff / self.simulations as f64) * discount_factor
+    }
 }
 
 impl OptionPricing for MonteCarloModel {
@@ -133,27 +157,12 @@ impl OptionPricing for MonteCarloModel {
 
 impl MonteCarloModel {
     fn price_european<T: Option>(&self, option: &T) -> f64 {
-        let mut rng = rand::rng();
-        let mut total_price = 0.0;
-        for _ in 0..self.simulations {
-            let simulated_price = option.instrument().simulate_geometric_brownian_motion(
-                &mut rng,
-                self.volatility,
-                self.time_to_maturity,
-                self.risk_free_rate,
-                self.steps,
-            );
-            total_price += option.payoff(Some(simulated_price));
-        }
-        (total_price / self.simulations as f64)
-            * (-self.risk_free_rate * self.time_to_maturity).exp()
+        self.simulate_price_paths(option)
     }
 
     fn price_asian<T: Option>(&self, option: &T) -> f64 {
         let mut rng: ThreadRng = rand::rng();
         let mut sum = 0.0;
-        let mut min_spot = f64::MAX;
-        let mut max_spot = f64::MIN;
 
         for _ in 0..self.simulations {
             // Simulate random asset prices and calculate the average price (discounted)
@@ -166,18 +175,12 @@ impl MonteCarloModel {
                 self.steps,
             );
 
-            // Update min and max spot prices
-            min_spot = min_spot.min(avg_price);
-            max_spot = max_spot.max(avg_price);
-
             // Calculate each payoff
             sum += (-(self.risk_free_rate - option.instrument().continuous_dividend_yield)
                 * self.time_to_maturity)
                 .exp()
                 * option.payoff(Some(avg_price));
         }
-
-        println!("Min Spot: {}, Max Spot: {}", min_spot, max_spot);
 
         // Calculate the average payoff and discount it to present value
         sum / self.simulations as f64
@@ -204,6 +207,6 @@ impl MonteCarloModel {
     }
 
     fn price_binary<T: Option>(&self, option: &T) -> f64 {
-        unimplemented!()
+        self.simulate_price_paths(option)
     }
 }
