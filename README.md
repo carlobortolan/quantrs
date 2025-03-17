@@ -64,7 +64,7 @@ You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.
 cargo bench
 ```
 
-_Published benchmarks have been performed on a selfhosted VM with 32 GB RAM, AMD Ryzen 7 PRO 6850U @ 2.70GHz, and Manjaro Linux x86_64_
+_Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD Ryzen 7 PRO 6850U @ 2.70GHz, and Manjaro Linux x86_64_
 
 ## Usage
 
