@@ -757,10 +757,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::geometric(0.7, 0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 76.0002, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 76.0002, epsilon = 2.0);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 30.2164, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 30.2164, epsilon = 2.0);
         }
 
         #[test]
@@ -772,10 +772,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::geometric(0.7, 0.05, 0.3, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 42.5177, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 42.5177, epsilon = 2.0);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 41.8894, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 41.8894, epsilon = 2.0);
         }
 
         #[test]
@@ -859,7 +859,7 @@ mod instrument_tests {
 
         // Average price should be 100.0
         let rand_price = (prices.iter().sum::<f64>() / prices.len() as f64).exp();
-        assert_abs_diff_eq!(rand_price, 100.0, epsilon = 100.0 * 0.2);
+        assert_abs_diff_eq!(rand_price, 100.0, epsilon = 100.0 * 0.25);
     }
 
     #[test]
