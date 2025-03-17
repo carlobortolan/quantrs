@@ -73,6 +73,7 @@ impl RainbowOption {
     }
 
     /// Calculate the payoff of the Rainbow option.
+    #[rustfmt::skip]
     pub fn payoff(&self) -> f64 {
         let asset_prices: Vec<f64> = self
             .instrument
@@ -83,18 +84,10 @@ impl RainbowOption {
         match self.rainbow_option_type() {
             RainbowType::BestOf => asset_prices.iter().cloned().fold(self.strike, f64::max),
             RainbowType::WorstOf => asset_prices.iter().cloned().fold(self.strike, f64::min),
-            RainbowType::CallOnMax => {
-                (asset_prices.iter().cloned().fold(f64::MIN, f64::max) - self.strike).max(0.0)
-            }
-            RainbowType::CallOnMin => {
-                (asset_prices.iter().cloned().fold(f64::MAX, f64::min) - self.strike).max(0.0)
-            }
-            RainbowType::PutOnMax => {
-                (self.strike - asset_prices.iter().cloned().fold(f64::MIN, f64::max)).max(0.0)
-            }
-            RainbowType::PutOnMin => {
-                (self.strike - asset_prices.iter().cloned().fold(f64::MAX, f64::min)).max(0.0)
-            }
+            RainbowType::CallOnMax => (asset_prices.iter().cloned().fold(f64::MIN, f64::max) - self.strike).max(0.0),
+            RainbowType::CallOnMin => (asset_prices.iter().cloned().fold(f64::MAX, f64::min) - self.strike).max(0.0),
+            RainbowType::PutOnMax => (self.strike - asset_prices.iter().cloned().fold(f64::MIN, f64::max)).max(0.0),
+            RainbowType::PutOnMin => (self.strike - asset_prices.iter().cloned().fold(f64::MAX, f64::min)).max(0.0),
         }
     }
 }
