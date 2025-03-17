@@ -16,13 +16,15 @@ pub mod instrument;
 pub mod models;
 pub mod types;
 
-pub use greeks::OptionGreeks;
-pub use instrument::Instrument;
-pub use models::{BinomialTreeModel, BlackScholesModel, MonteCarloModel};
-pub use types::{AmericanOption, BinaryOption, EuropeanOption, OptionStyle, OptionType};
+use std::any::Any;
+
+pub use greeks::*;
+pub use instrument::*;
+pub use models::*;
+pub use types::*;
 
 /// Supertrait that combines OptionPricing and Greeks.
-pub trait Option: Clone {
+pub trait Option: Clone + Send + Sync {
     /// Get the style of the option.
     ///
     /// # Returns
@@ -62,17 +64,25 @@ pub trait Option: Clone {
     ///
     /// # Arguments
     ///
-    /// * `spot` - The price of the underlying asset at maturity.
+    /// * `spot` - The price of the underlying asset at maturity (optional).
     ///
     /// # Returns
     ///
     /// The payoff of the option.
-    fn payoff(&self, spot: f64) -> f64 {
+    fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
+        let spot_price = spot.unwrap_or_else(|| self.instrument().spot);
         match self.option_type() {
-            OptionType::Call => (spot - self.strike()).max(0.0),
-            OptionType::Put => (self.strike() - spot).max(0.0),
+            OptionType::Call => (spot_price - self.strike()).max(0.0),
+            OptionType::Put => (self.strike() - spot_price).max(0.0),
         }
     }
+
+    /// Get the option as a trait object.
+    ///
+    /// # Returns
+    ///
+    /// The option as a trait object.
+    fn as_any(&self) -> &dyn Any;
 }
 
 /// Trait for option pricing models.
@@ -86,7 +96,7 @@ pub trait OptionPricing {
     /// # Returns
     ///
     /// The price of the option.
-    fn price<T: Option>(&self, option: T) -> f64;
+    fn price<T: Option>(&self, option: &T) -> f64;
 
     /// Calculate the implied volatility for a given market price.
     ///
@@ -98,58 +108,84 @@ pub trait OptionPricing {
     /// # Returns
     ///
     /// The implied volatility.
-    fn implied_volatility<T: Option>(&self, option: T, market_price: f64) -> f64;
+    fn implied_volatility<T: Option>(&self, option: &T, market_price: f64) -> f64;
 }
 
 /// Trait for calculating the Greeks of an option.
 pub trait Greeks {
-    // First order Greeks
+    // First-order Greeks
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
-    fn delta<T: Option>(&self, option: T) -> f64;
-    /// Gamma measures the rate of change of the option delta with respect to changes in the price of the underlying asset.
-    fn gamma<T: Option>(&self, option: T) -> f64;
-    /// Theta measures the rate of change of the option price with respect to changes in time to maturity.
-    fn theta<T: Option>(&self, option: T) -> f64;
+    fn delta<T: Option>(&self, option: T) -> f64 {
+        panic!("Delta not implemented for this model");
+    }
     /// Vega measures the rate of change of the option price with respect to changes in the volatility of the underlying asset.
-    fn vega<T: Option>(&self, option: T) -> f64;
+    fn vega<T: Option>(&self, option: T) -> f64 {
+        panic!("Vega not implemented for this model");
+    }
+    /// Theta measures the rate of change of the option price with respect to changes in time to maturity.
+    fn theta<T: Option>(&self, option: T) -> f64 {
+        panic!("Theta not implemented for this model");
+    }
     /// Rho measures the rate of change of the option price with respect to changes in the risk-free interest rate.
-    fn rho<T: Option>(&self, option: T) -> f64;
-
-    // Higher order Greeks
+    fn rho<T: Option>(&self, option: T) -> f64 {
+        panic!("Rho not implemented for this model");
+    }
     /// Lambda measures the rate of change of the option delta with respect to changes in the risk-free interest rate.
     fn lambda<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Lambda not implemented for this model");
     }
+    /// Epsilon measures the rate of change of the option delta with respect to changes in the dividend yield.
+    fn epsilon<T: Option>(&self, option: T) -> f64 {
+        panic!("Epsilon not implemented for this model");
+    }
+
+    // Second-order Greeks
+    /// Gamma measures the rate of change of the option delta with respect to changes in the price of the underlying asset.
+    fn gamma<T: Option>(&self, option: T) -> f64 {
+        panic!("Gamma not implemented for this model");
+    }
+
     /// Vanna measures the rate of change of the option delta with respect to changes in the volatility of the underlying asset.
     fn vanna<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Vanna not implemented for this model");
     }
     /// Charm measures the rate of change of the option delta with respect to changes in time to maturity.
     fn charm<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Charm not implemented for this model");
     }
     /// Vomma measures the rate of change of the option vega with respect to changes in the volatility of the underlying asset.
     fn vomma<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Vomma not implemented for this model");
     }
     /// Veta measures the rate of change of the option vega with respect to changes in time to maturity.
     fn veta<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Veta not implemented for this model");
     }
+    /// Vera measures the rate of change of the option gamma with respect to changes in the volatility of the underlying asset.
+    fn vera<T: Option>(&self, option: T) -> f64 {
+        panic!("Vera not implemented for this model");
+    }
+
+    // Third-order Greeks
     /// Speed measures the rate of change of the option gamma with respect to changes in the price of the underlying asset.
     fn speed<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Speed not implemented for this model");
     }
     /// Zomma measures the rate of change of the option gamma with respect to changes in the volatility of the underlying asset.
     fn zomma<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Zomma not implemented for this model");
     }
     /// Color measures the rate of change of the option gamma with respect to changes in time to maturity.
     fn color<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Color not implemented for this model");
     }
     /// Ultima measures the rate of change of the option vomma with respect to changes in the volatility of the underlying asset.
     fn ultima<T: Option>(&self, option: T) -> f64 {
-        0.0 // Placeholder value
+        panic!("Ultima not implemented for this model");
+    }
+
+    /// Parmicharma measures the rate of change of charm over the passage of time.
+    fn parmicharma<T: Option>(&self, option: T) -> f64 {
+        panic!("Parmicharma not implemented for this model");
     }
 }

@@ -1,77 +1,42 @@
 //! Module for Monte Carlo option pricing model.
 //!
-//! The Monte Carlo option pricing model is a numerical method used to calculate the theoretical price of options by simulating the random paths of the underlying asset's price.
-//! This method is particularly useful for pricing complex derivatives and options with multiple sources of uncertainty or path-dependent features.
+//! This module provides a Monte Carlo simulation model for pricing various types of options.
+//! The Monte Carlo method is a statistical technique that uses random sampling to estimate the
+//! expected value of an option's payoff.
 //!
-//! The Monte Carlo model makes several assumptions, including:
-//! - The underlying asset follows a stochastic process, typically modeled as a geometric Brownian motion.
-//! - The risk-free interest rate is constant.
-//! - The volatility of the underlying asset is constant.
+//! ## Characteristics
 //!
-//! The Monte Carlo model is widely used by options traders and financial engineers to determine the fair price of an option based on various factors,
-//! including the current price of the underlying asset, the strike price of the option, the time to expiration, the risk-free interest rate,
-//! and the volatility of the underlying asset.
-//!
-//! ## Formula
-//!
-//! The price of an option using the Monte Carlo model is calculated by simulating the random paths of the underlying asset's price and averaging the discounted payoffs.
-//!
-//! The simulated price of the underlying asset at maturity is calculated as follows:
-//!
-//! ```text
-//! ST = S * exp((r - 0.5 * σ^2) * T + σ * sqrt(T) * Z)
-//! ```
-//!
-//! where:
-//! - `ST` is the simulated price of the underlying asset at maturity.
-//! - `S` is the current price of the underlying asset.
-//! - `r` is the risk-free interest rate.
-//! - `T` is the time to maturity.
-//! - `σ` is the volatility of the underlying asset.
-//! - `Z` is a random variable from the standard normal distribution.
-//!
-//! The payoff of the option is calculated as:
-//!
-//! ```text
-//! payoff = max(ST - K, 0) for a call option
-//! payoff = max(K - ST, 0) for a put option
-//! ```
-//!
-//! where:
-//! - `ST` is the simulated price of the underlying asset at maturity.
-//! - `K` is the strike price of the option.
-//! - `max` is the maximum function.
-//!
-//! The option price is then calculated as the discounted average of the simulated payoffs:
-//!
-//! ```text
-//! price = e^(-rT) * (1 / N) * Σ payoff_i
-//! ```
-//!
-//! where:
-//! - `N` is the number of simulations.
-//! - `payoff_i` is the payoff of the option in the i-th simulation.
-//!
-//! ## References
-//!
-//! - [Wikipedia - Monte Carlo methods in finance](https://en.wikipedia.org/wiki/Monte_Carlo_methods_in_finance)
-//! - [Investopedia - Monte Carlo Simulation](https://www.investopedia.com/terms/m/montecarlosimulation.asp)
+//! - **Time to Maturity**: The time horizon (in years) for the option.
+//! - **Risk-Free Rate**: The risk-free interest rate (e.g., 0.05 for 5%).
+//! - **Volatility**: The volatility of the underlying asset (e.g., 0.2 for 20%).
+//! - **Simulations**: The number of simulations to run.
+//! - **Steps**: The number of steps in each simulation.
+//! - **Averaging Method**: The method used to average the simulated prices (geometric or arithmetic).
 //!
 //! ## Example
 //!
-//! ```
-//! use quantrs::options::{MonteCarloModel, OptionType, OptionPricing, Instrument, OptionStyle, EuropeanOption};
+//! ```rust
+//! use quantrs::options::{MonteCarloModel, OptionPricing, Instrument, OptionType, EuropeanOption};
 //!
 //! let instrument = Instrument::new().with_spot(100.0);
 //! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-//! let model = MonteCarloModel::new(1.0, 0.05, 0.2, 10_000);
+//! let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 10_000, 252);
 //!
-//! let price = model.price(option);
-//! println!("Option price: {}", price);
+//! let price = model.price(&option);
+//! println!("Monte Carlo Call Price: {}", price);
 //! ```
 
-use crate::options::{Greeks, Option, OptionPricing, OptionType};
-use rand_distr::{Distribution, Normal};
+use crate::options::{Option, OptionPricing, OptionStyle, SimMethod};
+use rand::rngs::ThreadRng;
+use rayon::prelude::*;
+
+/// Enum for averaging methods.
+#[derive(Debug, Default, Clone, Copy)]
+pub enum AvgMethod {
+    Geometric,
+    #[default]
+    Arithmetic,
+}
 
 /// A struct representing a Monte Carlo Simulation model for option pricing.
 #[derive(Debug, Default, Clone)]
@@ -84,6 +49,10 @@ pub struct MonteCarloModel {
     pub volatility: f64,
     /// Number of simulations to run.
     pub simulations: usize,
+    /// Number of steps in the simulation.
+    pub steps: usize,
+    /// average method
+    pub method: AvgMethod,
 }
 
 impl MonteCarloModel {
@@ -93,146 +62,151 @@ impl MonteCarloModel {
         risk_free_rate: f64,
         volatility: f64,
         simulations: usize,
+        steps: usize,
+        method: AvgMethod,
     ) -> Self {
         Self {
             time_to_maturity,
             risk_free_rate,
             volatility,
             simulations,
+            steps: steps.max(1),
+            method,
         }
+    }
+
+    /// Create a new `MonteCarloModel` with the geometric averaging method.
+    pub fn geometric(
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        volatility: f64,
+        simulations: usize,
+        steps: usize,
+    ) -> Self {
+        Self::new(
+            time_to_maturity,
+            risk_free_rate,
+            volatility,
+            simulations,
+            steps,
+            AvgMethod::Geometric,
+        )
+    }
+
+    /// Create a new `MonteCarloModel` with the arithmetic averaging method.
+    pub fn arithmetic(
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        volatility: f64,
+        simulations: usize,
+        steps: usize,
+    ) -> Self {
+        Self::new(
+            time_to_maturity,
+            risk_free_rate,
+            volatility,
+            simulations,
+            steps,
+            AvgMethod::Arithmetic,
+        )
+    }
+
+    /// Simulate price paths and compute the expected discounted payoff.
+    fn simulate_price_paths<T: Option>(&self, option: &T) -> f64 {
+        let discount_factor = (-self.risk_free_rate * self.time_to_maturity).exp();
+
+        // Use parallel iteration to simulate multiple price paths
+        let total_payoff: f64 = (0..self.simulations)
+            .into_par_iter() // Rayon parallel iterator
+            .map(|_| {
+                let mut rng = rand::rng();
+                let simulated_price = option.instrument().simulate_geometric_brownian_motion(
+                    &mut rng,
+                    self.volatility,
+                    self.time_to_maturity,
+                    self.risk_free_rate,
+                    self.steps,
+                );
+                option.payoff(Some(simulated_price))
+            })
+            .sum();
+
+        (total_payoff / self.simulations as f64) * discount_factor
     }
 }
 
 impl OptionPricing for MonteCarloModel {
-    fn price<T: Option>(&self, option: T) -> f64 {
-        let mut rng = rand::rng();
-        let normal = Normal::new(0.0, 1.0).unwrap();
-        let dt_sqrt = self.time_to_maturity.sqrt();
-        let drift = (self.risk_free_rate - 0.5 * self.volatility.powi(2)) * self.time_to_maturity;
-        let discount_factor = (-self.risk_free_rate * self.time_to_maturity).exp();
-
-        let sum_payoff: f64 = (0..self.simulations)
-            .map(|_| {
-                let z = normal.sample(&mut rng);
-                let st = option.instrument().spot * (drift + self.volatility * dt_sqrt * z).exp();
-                match option.option_type() {
-                    OptionType::Call => (st - option.strike()).max(0.0),
-                    OptionType::Put => (option.strike() - st).max(0.0),
-                }
-            })
-            .sum();
-
-        discount_factor * (sum_payoff / self.simulations as f64)
+    fn price<T: Option>(&self, option: &T) -> f64 {
+        match option.style() {
+            OptionStyle::European => self.price_european(option),
+            OptionStyle::Basket => self.price_basket(option),
+            OptionStyle::Rainbow(_) => self.price_rainbow(option),
+            OptionStyle::Barrier(_) => self.price_barrier(option),
+            OptionStyle::DoubleBarrier(_, _) => self.price_double_barrier(option),
+            OptionStyle::Asian(_) => self.price_asian(option),
+            OptionStyle::Lookback(_) => self.price_lookback(option),
+            OptionStyle::Binary(_) => self.price_binary(option),
+            _ => panic!("Unsupported option style"),
+        }
     }
 
-    fn implied_volatility<T: Option>(&self, option: T, market_price: f64) -> f64 {
-        // Return 0.0 for unrealistic market prices
-        if market_price <= 0.0 || market_price > option.instrument().spot {
-            return 0.0;
-        }
-
-        let mut sigma = 0.2; // Initial guess
-        let tolerance = 1e-5;
-        let max_iterations = 100;
-        let mut prev_sigma = sigma;
-
-        for _ in 0..max_iterations {
-            let price = self.price(option.clone());
-            let vega = self.vega(option.clone());
-            let diff = market_price - price;
-
-            if diff.abs() < tolerance {
-                return sigma;
-            }
-
-            let update = diff / vega;
-            sigma += update.clamp(-0.1, 0.1);
-
-            if (sigma - prev_sigma).abs() < tolerance {
-                return sigma;
-            }
-
-            prev_sigma = sigma;
-        }
-
-        sigma
+    fn implied_volatility<T: Option>(&self, _option: &T, _market_price: f64) -> f64 {
+        unimplemented!()
     }
 }
 
-impl Greeks for MonteCarloModel {
-    fn delta<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut model = self.clone();
-            model.time_to_maturity += epsilon;
-            model.price(option.clone())
-        };
-        let price_down = {
-            let mut model = self.clone();
-            model.time_to_maturity -= epsilon;
-            model.price(option.clone())
-        };
-        (price_up - price_down) / (2.0 * epsilon)
+impl MonteCarloModel {
+    fn price_european<T: Option>(&self, option: &T) -> f64 {
+        self.simulate_price_paths(option)
     }
 
-    fn gamma<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut model = self.clone();
-            model.time_to_maturity += epsilon;
-            model.price(option.clone())
-        };
-        let price_down = {
-            let mut model = self.clone();
-            model.time_to_maturity -= epsilon;
-            model.price(option.clone())
-        };
-        let price = self.price(option.clone());
-        (price_up - 2.0 * price + price_down) / (epsilon * epsilon)
+    fn price_asian<T: Option>(&self, option: &T) -> f64 {
+        let mut rng: ThreadRng = rand::rng();
+        let mut sum = 0.0;
+
+        for _ in 0..self.simulations {
+            // Simulate random asset prices and calculate the average price (discounted)
+            let avg_price = option.instrument().simulate_geometric_average(
+                &mut rng,
+                SimMethod::Log,
+                self.volatility,
+                self.time_to_maturity,
+                self.risk_free_rate,
+                self.steps,
+            );
+
+            // Calculate each payoff
+            sum += (-(self.risk_free_rate - option.instrument().continuous_dividend_yield)
+                * self.time_to_maturity)
+                .exp()
+                * option.payoff(Some(avg_price));
+        }
+
+        // Calculate the average payoff and discount it to present value
+        sum / self.simulations as f64
     }
 
-    fn theta<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut model = self.clone();
-            model.time_to_maturity += epsilon;
-            model.price(option.clone())
-        };
-        let price_down = {
-            let mut model = self.clone();
-            model.time_to_maturity -= epsilon;
-            model.price(option.clone())
-        };
-        (price_down - price_up) / (2.0 * epsilon)
+    fn price_basket<T: Option>(&self, option: &T) -> f64 {
+        unimplemented!()
     }
 
-    fn vega<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut opt = self.clone();
-            opt.volatility += epsilon;
-            self.price(option.clone())
-        };
-        let price_down = {
-            let mut opt = self.clone();
-            opt.volatility -= epsilon;
-            self.price(option.clone())
-        };
-        (price_up - price_down) / (2.0 * epsilon)
+    fn price_rainbow<T: Option>(&self, option: &T) -> f64 {
+        unimplemented!()
     }
 
-    fn rho<T: Option + Clone>(&self, option: T) -> f64 {
-        let epsilon = 1e-4;
-        let price_up = {
-            let mut opt = self.clone();
-            opt.risk_free_rate += epsilon;
-            self.price(option.clone())
-        };
-        let price_down = {
-            let mut opt = self.clone();
-            opt.risk_free_rate -= epsilon;
-            self.price(option.clone())
-        };
-        (price_up - price_down) / (2.0 * epsilon)
+    fn price_barrier<T: Option>(&self, option: &T) -> f64 {
+        unimplemented!()
+    }
+
+    fn price_double_barrier<T: Option>(&self, option: &T) -> f64 {
+        unimplemented!()
+    }
+
+    fn price_lookback<T: Option>(&self, option: &T) -> f64 {
+        unimplemented!()
+    }
+
+    fn price_binary<T: Option>(&self, option: &T) -> f64 {
+        self.simulate_price_paths(option)
     }
 }

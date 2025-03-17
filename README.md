@@ -17,7 +17,9 @@
 [codecov-url]: https://codecov.io/gh/carlobortolan/quantrs
 [crates-msrv-badge]: https://img.shields.io/crates/msrv/quantrs
 
-Quantrs is a tiny quantitative finance library for Rust. It is designed to be simple and easy to use, with a focus on performance and correctness. It is still in the early stages of development, so expect bugs and breaking changes.
+Quantrs is a tiny quantitative finance library for Rust.
+It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading quantlib documentation.
+The library is still in the early stages of development, and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
 
@@ -25,23 +27,34 @@ Please check out the documentation [here][docs-url].
 
 ### Options Pricing
 
-For now quantrs only supports options pricing. The following features are available:
+For now quantrs only supports options pricing of vanilla and exotic options with continuous dividends yields.
 
-- [x] Option types: European, American, Binary Cash-or-Nothing, Binary Asset-or-Nothing
-- [x] Option pricing: Black-Scholes, Binomial Tree, Monte Carlo Simulation
-- [x] Greeks: Delta, Gamma, Theta, Vega, Rho
-- [x] Implied volatility
+The following models are available:
 
-| Model                   | Black-Scholes       | Binomial Tree | Monte Carlo Simulation |
-| ----------------------- | ------------------- | ------------- | ---------------------- |
-| European Options        | ✅                  | ✅            | ⏳                     |
-| American Options        | ❌ (not applicable) | ✅            | ⏳                     |
-| Binary Cash-or-Nothing  | ✅                  | ❌            | ❌                     |
-| Binary Asset-or-Nothing | ✅                  | ❌            | ❌                     |
-| Greeks                  | ✅                  | ⏳            | ⏳                     |
-| Implied Volatility      | ✅                  | ⏳            | ⏳                     |
+|                             | Black-Scholes   | Black-76 | Lattice      | ³Monte-Carlo  | Finite Diff   | Heston |
+| --------------------------- | --------------- | -------- | ------------ | ------------------ | ------------- | ------ |
+| European                    | ✅              | ⏳       | ✅           | ✅                 | ⏳            | ⏳     |
+| American                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)        | ⏳            | ❌     |
+| Bermudan                    | ❌              | ❌       | ⏳           | ❌ (L. Sq.)        | ❌ (complex)  | ❌     |
+| ¹Basket                     | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳                 | ❌            | ❌     |
+| ¹Rainbow                    | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳                 | ❌            | ❌     |
+| ²Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳                 | ⏳            | ⏳     |
+| ²Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳                 | ❌ (complex)  | ⏳     |
+| ²Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅                 | ⏳            | ⏳     |
+| ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅ (flaky)         | ⏳            | ⏳     |
+| ²Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳                 | ⏳            | ⏳     |
+| ²Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳                 | ⏳            | ⏳     |
+| ²Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ✅                 | ❌ (mod. PDE) | ⏳     |
+| ²Binary Asset-or-Nothing    | ✅              | ⏳       | ⏳           | ✅                 | ❌ (mod. PDE) | ⏳     |
+| Greeks (Δ, ν, Θ, ρ, Γ)      | ✅              | ⏳       | ⏳           | ❌                 | ❌            | ❌     |
+| Implied Volatility          | ✅              | ⏳       | ⏳           | ❌                 | ❌            | ❌     |
 
-(✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported)
+> [!note]
+>
+> ¹ "Exotic" options with standard exercise style; only differ in their payoff value\
+> ² Non-vanilla path-dependent "exotic" options\
+> ³ MC simulates underlying price paths based on geometric Brownian motion for Black-Scholes models and geometric average price paths for Asian and Lookback options\
+> ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
 
 ## Usage
 
@@ -73,7 +86,7 @@ fn main() {
     let model = BlackScholesModel::new(0.78, 0.05, 0.2);
 
     // Calculate the price of the binary call option using the Black-Scholes model
-    let price = model.price(option.clone());
+    let price = model.price(&option);
     println!("Price: {}", price);
 
     // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
@@ -97,35 +110,7 @@ This crate requires a Rust version of 1.65.0 or higher. Increases in MSRV will b
 
 ## Outlook
 
-### Planned Features
-
-- [ ] Data retrieval
-  - [ ] Yahoo Finance
-  - [ ] Alpha Vantage
-  - [ ] Quandl
-  - [ ] IEX Cloud
-- [ ] Fixed income & IR
-  - [ ] Bond pricing
-  - [ ] Duration
-  - [ ] Convexity
-  - [ ] Yield curve
-  - [ ] Term structure
-  - [ ] Forward rates
-  - [ ] Interest rate models
-- [ ] Time series analysis
-  - [ ] Moving averages
-  - [ ] Volatility
-  - [ ] Correlation
-  - [ ] Cointegration
-  - [ ] ARIMA
-  - [ ] GARCH
-  - [ ] Kalman filter
-- [ ] Portfolio optimization
-  - [ ] Mean-variance optimization
-  - [ ] Black-Litterman model
-  - [ ] Risk parity
-  - [ ] Minimum variance
-  - [ ] Maximum diversification
+See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
 
 ## Contributing
 
