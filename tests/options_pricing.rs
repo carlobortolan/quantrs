@@ -840,7 +840,7 @@ mod greeks_tests {
             _ = greeks.charm;
         });
         let _result = std::panic::catch_unwind(|| {
-            greeks.vomma;
+            _ = greeks.vomma;
         });
         let _result = std::panic::catch_unwind(|| {
             _ = greeks.veta;
