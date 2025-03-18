@@ -72,7 +72,8 @@
 //! ```
 
 use crate::options::{
-    types::BinaryType::{AssetOrNothing, CashOrNothing}, Option, OptionGreeks, OptionPricing, OptionStyle, OptionType
+    types::BinaryType::{AssetOrNothing, CashOrNothing},
+    Option, OptionGreeks, OptionPricing, OptionStyle, OptionType,
 };
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
