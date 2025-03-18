@@ -72,7 +72,7 @@
 //! println!("Option price: {}", price);
 //! ```
 
-use crate::options::{Greeks, Option, OptionPricing, OptionStyle};
+use crate::options::{Option, OptionGreeks, OptionPricing, OptionStyle};
 
 /// Binomial tree option pricing model.
 #[derive(Debug, Default)]
@@ -150,7 +150,7 @@ impl OptionPricing for BinomialTreeModel {
     }
 }
 
-impl Greeks for BinomialTreeModel {
+impl OptionGreeks for BinomialTreeModel {
     fn delta<T: Option>(&self, option: T) -> f64 {
         panic!("BinomialTreeModel does not support delta calculation yet");
     }

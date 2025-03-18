@@ -72,8 +72,7 @@
 //! ```
 
 use crate::options::{
-    types::BinaryType::{AssetOrNothing, CashOrNothing},
-    Greeks, Option, OptionPricing, OptionStyle, OptionType,
+    types::BinaryType::{AssetOrNothing, CashOrNothing}, Option, OptionGreeks, OptionPricing, OptionStyle, OptionType
 };
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
@@ -392,7 +391,7 @@ impl OptionPricing for BlackScholesModel {
 //     }
 // }
 
-impl Greeks for BlackScholesModel {
+impl OptionGreeks for BlackScholesModel {
     fn delta<T: Option>(&self, option: T) -> f64 {
         let (d1, d2) = self.calculate_d1_d2(&option);
         let normal = Normal::new(0.0, 1.0).unwrap();

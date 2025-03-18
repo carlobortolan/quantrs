@@ -53,7 +53,7 @@ fn example_greeks() {
     let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
     let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
-    let greeks = OptionGreeks::calculate(&model, option.clone());
+    let greeks = Greeks::calculate(&model, option.clone());
 
     println!("Delta: {}", greeks.delta);
     println!("Gamma: {}", greeks.gamma);
@@ -126,7 +126,7 @@ fn example_from_readme() {
     println!("Price: {}", price);
 
     // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-    let greeks = OptionGreeks::calculate(&model, option);
+    let greeks = Greeks::calculate(&model, option);
     println!("Greeks: {:?}\n", greeks);
 }
 

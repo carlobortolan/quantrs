@@ -822,7 +822,7 @@ mod greeks_tests {
         let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
-        let greeks = OptionGreeks::calculate(&model, option);
+        let greeks = Greeks::calculate(&model, option);
 
         assert_abs_diff_eq!(greeks.delta, 0.6118, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.gamma, 0.0191, epsilon = 0.0001);

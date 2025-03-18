@@ -112,7 +112,7 @@ pub trait OptionPricing {
 }
 
 /// Trait for calculating the Greeks of an option.
-pub trait Greeks {
+pub trait OptionGreeks {
     // First-order Greeks
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
     fn delta<T: Option>(&self, option: T) -> f64 {

@@ -9,12 +9,12 @@
 //! ## Example
 //!
 //! ```
-//! use quantrs::options::{EuropeanOption, BlackScholesModel, OptionGreeks, OptionType, Instrument};
+//! use quantrs::options::{EuropeanOption, BlackScholesModel, Greeks, OptionType, Instrument};
 //!
 //! let option = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
 //! let model = quantrs::options::BlackScholesModel::new(1.0, 0.05, 0.2);
 //!
-//! let greeks = OptionGreeks::calculate(&model, option);
+//! let greeks = Greeks::calculate(&model, option);
 //! println!("Delta: {}", greeks.delta);
 //! println!("Gamma: {}", greeks.gamma);
 //! println!("Theta: {}", greeks.theta);
@@ -22,12 +22,12 @@
 //! println!("Rho: {}", greeks.rho);
 //! ```
 
-use super::{Greeks, Option};
+use super::{Option, OptionGreeks};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 /// A struct representing the Greeks of an option.
 #[derive(Debug)]
-pub struct OptionGreeks {
+pub struct Greeks {
     // First-order Greeks
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
     pub delta: f64,
@@ -69,7 +69,7 @@ pub struct OptionGreeks {
     pub parmicharma: f64,
 }
 
-impl OptionGreeks {
+impl Greeks {
     /// Calculate the Greeks for a given option.
     ///
     /// Arguments
@@ -81,8 +81,8 @@ impl OptionGreeks {
     ///
     /// The calculated Greeks.
     #[rustfmt::skip]
-    pub fn calculate<T: Greeks, S: Option>(model: &T, option: S) -> Self {
-        OptionGreeks {
+    pub fn calculate<T: OptionGreeks, S: Option>(model: &T, option: S) -> Self {
+        Greeks {
             delta: catch_unwind(AssertUnwindSafe(|| model.delta(option.clone()))).unwrap_or_default(),
             vega: catch_unwind(AssertUnwindSafe(|| model.vega(option.clone()))).unwrap_or_default(),
             theta: catch_unwind(AssertUnwindSafe(|| model.theta(option.clone()))).unwrap_or_default(),

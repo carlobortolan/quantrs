@@ -29,7 +29,9 @@ Please check out the documentation [here][docs-url].
 
 For now quantrs only supports options pricing of vanilla and exotic options with continuous dividends yields.
 
-The following models are available:
+<details>
+<summary><i>Click here to see supported models</i></summary>
+
 
 |                             | Black-Scholes   | Black-76 | Lattice      | ³Monte-Carlo | Finite Diff   | Heston |
 | --------------------------- | --------------- | -------- | ------------ | ------------ | ------------- | ------ |
@@ -52,17 +54,30 @@ The following models are available:
 > [!note]
 >
 > ¹ _"Exotic" options with standard exercise style; only differ in their payoff value_\
-> ² Non-vanilla path-dependent "exotic" options\
+> ² _Non-vanilla path-dependent "exotic" options_\
 > ³ _MC simulates underlying price paths based on geometric Brownian motion for Black-Scholes models and geometric average price paths for Asian and Lookback options_\
 > ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
 
+</details>
+
 ## Benchmarks
 
-You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.dev/report/)
+Compared to other popular options pricing libraries, quantrs is _significantly_ faster:
 
-```sh
-cargo bench
-```
+<!-- - **⏳x faster** `QuantLib` (C++ bindings) -->
+- **29x faster** than `QuantLib` (python bindings)
+- **111x faster** than `py_vollib`
+- **14x faster** than `RustQuant`
+
+| Library                                            | Mean Execution Time (μs) | Median Execution Time (μs) | Standard Deviation (μs) | Operations Per Second (OPS) |
+| -------------------------------------------------- | ------------------------ | -------------------------- | ----------------------- | --------------------------- |
+| quantrs                                            | 0.0986                   | 0.0985                     | 0.0007                  | 10,142,000                  |
+| [QuantLib](https://www.quantlib.org) (cpp)         | n.a.                     | n.a.                       | n.a.                    | n.a.                        |
+| [QuantLib](https://pypi.org/project/QuantLib) (py) | 2.8551 (29x slower)      | 2.8630 (29x slower)        | 0.9391                  | 350,250                     |
+| [py_vollib](https://github.com/vollib/py_vollib)   | 10.9959 (111x slower)    | 10.8950 (110x slower)      | 1.1398                  | 90,943                      |
+| [RustQuant](https://github.com/avhz/RustQuant)     | 1.4777 (14x slower)      | 1.4750                     | 0.0237                  | 676,727                     |
+
+You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.dev/report/)
 
 _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD Ryzen 7 PRO 6850U @ 2.70GHz, and Manjaro Linux x86_64_
 
@@ -100,7 +115,7 @@ fn main() {
     println!("Price: {}", price);
 
     // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-    let greeks = OptionGreeks::calculate(&model, option);
+    let greeks = Greeks::calculate(&model, option);
     println!("Greeks: {:?}\n", greeks);
 }
 ```
@@ -109,7 +124,7 @@ This will output:
 
 ```text
 Price: 0.8006934914644723
-Greeks: OptionGreeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
+Greeks: Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
 ```
 
 See the [documentation][docs-url] for more information and examples.
