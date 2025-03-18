@@ -73,7 +73,7 @@
 
 use crate::options::{
     types::BinaryType::{AssetOrNothing, CashOrNothing},
-    Option, OptionGreeks, OptionPricing, OptionStyle, OptionType,
+    Instrument, Option, OptionGreeks, OptionPricing, OptionStyle, OptionType,
 };
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
@@ -117,19 +117,18 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// A tuple containing d1 and d2.
-    fn calculate_d1_d2<T: Option>(&self, option: &T) -> (f64, f64) {
+    fn calculate_d1_d2(&self, instrument: &Instrument, strike: f64) -> (f64, f64) {
         let sqrt_t = self.time_to_maturity.sqrt();
-        let n_dividends = option
-            .instrument()
+        let n_dividends = instrument
             .dividend_times
             .iter()
             .filter(|&&t| t <= self.time_to_maturity)
             .count() as f64;
-        let adjusted_spot = option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
+        let adjusted_spot =
+            instrument.spot * (1.0 - instrument.discrete_dividend_yield).powf(n_dividends);
 
-        let d1 = ((adjusted_spot / option.strike()).ln()
-            + (self.risk_free_rate - option.instrument().continuous_dividend_yield
+        let d1 = ((adjusted_spot / strike).ln()
+            + (self.risk_free_rate - instrument.continuous_dividend_yield
                 + 0.5 * self.volatility.powi(2))
                 * self.time_to_maturity)
             / (self.volatility * sqrt_t);
@@ -148,15 +147,13 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// The adjusted spot price.
-    fn calculate_adjusted_spot<T: Option>(&self, option: &T) -> f64 {
-        let n_dividends = option
-            .instrument()
+    fn calculate_adjusted_spot(&self, instrument: &Instrument) -> f64 {
+        let n_dividends = instrument
             .dividend_times
             .iter()
             .filter(|&&t| t <= self.time_to_maturity)
             .count() as f64;
-        option.instrument().spot
-            * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends)
+        instrument.spot * (1.0 - instrument.discrete_dividend_yield).powf(n_dividends)
     }
 
     /// Calculate the price of an European call option using the Black-Scholes formula.
@@ -168,36 +165,34 @@ impl BlackScholesModel {
     /// # Returns
     ///
     /// The price of the call option.
-    fn price_euro_call<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
+    pub fn price_euro_call(&self, instrument: &Instrument, strike: f64, normal: &Normal) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(instrument, strike);
         let nd1 = normal.cdf(d1);
         let nd2 = normal.cdf(d2);
-        let adjusted_spot = self.calculate_adjusted_spot(option);
+        let adjusted_spot = self.calculate_adjusted_spot(instrument);
 
-        adjusted_spot
-            * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
-            * nd1
-            - option.strike() * (-self.risk_free_rate * self.time_to_maturity).exp() * nd2
+        adjusted_spot * (-instrument.continuous_dividend_yield * self.time_to_maturity).exp() * nd1
+            - strike * (-self.risk_free_rate * self.time_to_maturity).exp() * nd2
     }
 
     /// Calculate the price of an European put option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `option` - The binary option to price.
+    /// * `option` - The put option to price.
     ///
     /// # Returns
     ///
     /// The price of the put option.
-    fn price_euro_put<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
+    pub fn price_euro_put(&self, instrument: &Instrument, strike: f64, normal: &Normal) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(instrument, strike);
         let nd1 = normal.cdf(-d1);
         let nd2 = normal.cdf(-d2);
-        let adjusted_spot = self.calculate_adjusted_spot(option);
+        let adjusted_spot = self.calculate_adjusted_spot(instrument);
 
-        option.strike() * (-self.risk_free_rate * self.time_to_maturity).exp() * nd2
+        strike * (-self.risk_free_rate * self.time_to_maturity).exp() * nd2
             - adjusted_spot
-                * (-option.instrument().continuous_dividend_yield * self.time_to_maturity).exp()
+                * (-instrument.continuous_dividend_yield * self.time_to_maturity).exp()
                 * nd1
     }
 
@@ -211,7 +206,7 @@ impl BlackScholesModel {
     ///
     /// The price of the binary option.
     pub fn price_cash_or_nothing<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
-        let (_, d2) = self.calculate_d1_d2(option);
+        let (_, d2) = self.calculate_d1_d2(option.instrument(), option.strike());
 
         match option.option_type() {
             OptionType::Call => {
@@ -233,7 +228,7 @@ impl BlackScholesModel {
     ///
     /// The price of the binary option.
     pub fn price_asset_or_nothing<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
+        let (d1, d2) = self.calculate_d1_d2(option.instrument(), option.strike());
 
         match option.option_type() {
             OptionType::Call => {
@@ -247,6 +242,16 @@ impl BlackScholesModel {
                     * normal.cdf(-d1)
             }
         }
+    }
+
+    /// Calculate the price of a rainbow call using the Black-Scholes formula.
+    pub fn price_rainbow_call<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
+        self.price_euro_call(option.instrument(), option.strike(), normal)
+    }
+
+    /// Calculate the price of a rainbow put using the Black-Scholes formula.
+    pub fn price_rainbow_put<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
+        self.price_euro_put(option.instrument(), option.strike(), normal)
     }
 
     /// Calculate the option price using the Black-Scholes formula with a given volatility.
@@ -306,21 +311,16 @@ impl BlackScholesModel {
 }
 
 impl OptionPricing for BlackScholesModel {
+    #[rustfmt::skip]
     fn price<T: Option>(&self, option: &T) -> f64 {
         let normal = Normal::new(0.0, 1.0).unwrap();
         match (option.option_type(), option.style()) {
-            (OptionType::Call, OptionStyle::European) => self.price_euro_call(option, &normal),
-            (OptionType::Put, OptionStyle::European) => self.price_euro_put(option, &normal),
+            (OptionType::Call, OptionStyle::European) => self.price_euro_call(option.instrument(), option.strike(), &normal),
+            (OptionType::Put, OptionStyle::European) => self.price_euro_put(option.instrument(), option.strike(), &normal),
             (_, OptionStyle::Binary(CashOrNothing)) => self.price_cash_or_nothing(option, &normal),
-            (_, OptionStyle::Binary(AssetOrNothing)) => {
-                self.price_asset_or_nothing(option, &normal)
-            }
-            //(OptionType::Call, OptionStyle::Rainbow(_)) => {
-            //    option.instrument().assets.iter().map(|asset| {
-            //        let option = option.clone().with_instrument(asset.clone());
-            //        self.price(option)
-            //    }).sum()
-            //}
+            (_, OptionStyle::Binary(AssetOrNothing)) => self.price_asset_or_nothing(option, &normal),
+            (OptionType::Call, OptionStyle::Rainbow(_)) => self.price_rainbow_call(option, &normal),
+            (OptionType::Put, OptionStyle::Rainbow(_)) => self.price_rainbow_put(option, &normal),
             _ => panic!("Unsupported option type or style"),
         }
     }
@@ -394,7 +394,7 @@ impl OptionPricing for BlackScholesModel {
 
 impl OptionGreeks for BlackScholesModel {
     fn delta<T: Option>(&self, option: &T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
+        let (d1, d2) = self.calculate_d1_d2(option.instrument(), option.strike());
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.style() {
             OptionStyle::European => match option.option_type() {
@@ -439,8 +439,8 @@ impl OptionGreeks for BlackScholesModel {
     }
 
     fn gamma<T: Option>(&self, option: &T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
-        let adjusted_spot = self.calculate_adjusted_spot(option);
+        let (d1, d2) = self.calculate_d1_d2(option.instrument(), option.strike());
+        let adjusted_spot = self.calculate_adjusted_spot(option.instrument());
         let normal = Normal::new(0.0, 1.0).unwrap();
 
         match option.style() {
@@ -477,12 +477,12 @@ impl OptionGreeks for BlackScholesModel {
     }
 
     fn theta<T: Option>(&self, option: &T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
+        let (d1, d2) = self.calculate_d1_d2(option.instrument(), option.strike());
         let normal = Normal::new(0.0, 1.0).unwrap();
         let nd1 = normal.cdf(d1);
         let nd2 = normal.cdf(d2);
         let pdf_d1 = normal.pdf(d1);
-        let adjusted_spot = self.calculate_adjusted_spot(option);
+        let adjusted_spot = self.calculate_adjusted_spot(option.instrument());
 
         match option.style() {
             OptionStyle::European => match option.option_type() {
@@ -582,9 +582,9 @@ impl OptionGreeks for BlackScholesModel {
     }
 
     fn vega<T: Option>(&self, option: &T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
+        let (d1, d2) = self.calculate_d1_d2(option.instrument(), option.strike());
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let adjusted_spot = self.calculate_adjusted_spot(option);
+        let adjusted_spot = self.calculate_adjusted_spot(option.instrument());
 
         match option.style() {
             OptionStyle::European => {
@@ -621,7 +621,7 @@ impl OptionGreeks for BlackScholesModel {
     }
 
     fn rho<T: Option>(&self, option: &T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(option);
+        let (d1, d2) = self.calculate_d1_d2(option.instrument(), option.strike());
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.style() {
             OptionStyle::European => match option.option_type() {

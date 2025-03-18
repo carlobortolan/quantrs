@@ -173,6 +173,15 @@ This document outlines the planned features and improvements for the `quantrs` l
   - [ ] Minimum variance
   - [ ] Maximum diversification
 
+### Rates Space
+- [ ] Yield curve modelling, parameterization, linear swap pricing/risk
+- [ ] Inflation modelling and swap/linker pricing
+- [ ] Vanilla swaptions, SABR, YCSO, mid-curve swaptions, CMS, Bermudans
+- [ ] Listed rates futures and options
+- [ ] Bond/Repo Pricing
+- [ ] MBS modelling and integration into OTC risk
+- [ ] Risk based PnL across Fixed Income assets
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.

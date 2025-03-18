@@ -1,6 +1,6 @@
 //! Module for Rainbow option type.
 
-use super::{OptionStyle, OptionType, RainbowType};
+use super::{OptionStyle, OptionType, RainbowType, RainbowType::*};
 use crate::options::{Instrument, Option};
 use std::any::Any;
 
@@ -35,32 +35,32 @@ impl RainbowOption {
 
     /// Create a new `BestOf` Rainbow option.
     pub fn best_of(instrument: Instrument, strike: f64) -> Self {
-        Self::new(instrument, strike, OptionType::Call, RainbowType::BestOf)
+        Self::new(instrument, strike, OptionType::Call, BestOf)
     }
 
     /// Create a new `WorstOf` Rainbow option.
     pub fn worst_of(instrument: Instrument, strike: f64) -> Self {
-        Self::new(instrument, strike, OptionType::Call, RainbowType::WorstOf)
+        Self::new(instrument, strike, OptionType::Call, WorstOf)
     }
 
     /// Create a new `CallOnMax` Rainbow option.
     pub fn call_on_max(instrument: Instrument, strike: f64) -> Self {
-        Self::new(instrument, strike, OptionType::Call, RainbowType::CallOnMax)
+        Self::new(instrument, strike, OptionType::Call, CallOnMax)
     }
 
     /// Create a new `CallOnMin` Rainbow option.
     pub fn call_on_min(instrument: Instrument, strike: f64) -> Self {
-        Self::new(instrument, strike, OptionType::Call, RainbowType::CallOnMin)
+        Self::new(instrument, strike, OptionType::Call, CallOnMin)
     }
 
     /// Create a new `PutOnMax` Rainbow option.
     pub fn put_on_max(instrument: Instrument, strike: f64) -> Self {
-        Self::new(instrument, strike, OptionType::Put, RainbowType::PutOnMax)
+        Self::new(instrument, strike, OptionType::Put, PutOnMax)
     }
 
     /// Create a new `PutOnMin` Rainbow option.
     pub fn put_on_min(instrument: Instrument, strike: f64) -> Self {
-        Self::new(instrument, strike, OptionType::Put, RainbowType::PutOnMin)
+        Self::new(instrument, strike, OptionType::Put, PutOnMin)
     }
 
     /// Get the Rainbow option type.
@@ -73,21 +73,14 @@ impl RainbowOption {
     }
 
     /// Calculate the payoff of the Rainbow option.
-    #[rustfmt::skip]
     pub fn payoff(&self) -> f64 {
-        let asset_prices: Vec<f64> = self
-            .instrument
-            .assets
-            .iter()
-            .map(|(asset, _)| asset.spot)
-            .collect();
         match self.rainbow_option_type() {
-            RainbowType::BestOf => asset_prices.iter().cloned().fold(self.strike, f64::max),
-            RainbowType::WorstOf => asset_prices.iter().cloned().fold(self.strike, f64::min),
-            RainbowType::CallOnMax => (asset_prices.iter().cloned().fold(f64::MIN, f64::max) - self.strike).max(0.0),
-            RainbowType::CallOnMin => (asset_prices.iter().cloned().fold(f64::MAX, f64::min) - self.strike).max(0.0),
-            RainbowType::PutOnMax => (self.strike - asset_prices.iter().cloned().fold(f64::MIN, f64::max)).max(0.0),
-            RainbowType::PutOnMin => (self.strike - asset_prices.iter().cloned().fold(f64::MAX, f64::min)).max(0.0),
+            BestOf => self.instrument().spot.max(self.strike),
+            WorstOf => self.strike - self.instrument().spot.min(self.strike),
+            CallOnMax => (self.instrument().spot - self.strike).max(0.0),
+            CallOnMin => (self.instrument().spot - self.strike).max(0.0),
+            PutOnMax => (self.strike - self.instrument().spot).max(0.0),
+            PutOnMin => (self.strike - self.instrument().spot).max(0.0),
         }
     }
 }
@@ -98,7 +91,10 @@ impl Option for RainbowOption {
     }
 
     fn instrument(&self) -> &Instrument {
-        &self.instrument
+        match self.rainbow_option_type() {
+            BestOf | CallOnMax | PutOnMax => self.instrument.best_performer(),
+            WorstOf | CallOnMin | PutOnMin => self.instrument.worst_performer(),
+        }
     }
 
     fn strike(&self) -> f64 {
@@ -130,18 +126,18 @@ impl Option for RainbowOption {
             .map(|(asset, _)| asset.spot)
             .collect();
         match self.rainbow_option_type() {
-            RainbowType::BestOf => asset_prices.iter().cloned().fold(self.strike, f64::max),
-            RainbowType::WorstOf => asset_prices.iter().cloned().fold(self.strike, f64::min),
-            RainbowType::CallOnMax => {
+            BestOf => asset_prices.iter().cloned().fold(self.strike, f64::max),
+            WorstOf => asset_prices.iter().cloned().fold(self.strike, f64::min),
+            CallOnMax => {
                 (asset_prices.iter().cloned().fold(f64::MIN, f64::max) - self.strike).max(0.0)
             }
-            RainbowType::CallOnMin => {
+            CallOnMin => {
                 (asset_prices.iter().cloned().fold(f64::MAX, f64::min) - self.strike).max(0.0)
             }
-            RainbowType::PutOnMax => {
+            PutOnMax => {
                 (self.strike - asset_prices.iter().cloned().fold(f64::MIN, f64::max)).max(0.0)
             }
-            RainbowType::PutOnMin => {
+            PutOnMin => {
                 (self.strike - asset_prices.iter().cloned().fold(f64::MAX, f64::min)).max(0.0)
             }
         }

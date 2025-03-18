@@ -191,7 +191,7 @@ impl MonteCarloModel {
     }
 
     fn price_rainbow<T: Option>(&self, option: &T) -> f64 {
-        unimplemented!()
+        self.simulate_price_paths(option)
     }
 
     fn price_barrier<T: Option>(&self, option: &T) -> f64 {

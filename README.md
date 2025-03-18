@@ -38,11 +38,11 @@ For now quantrs only supports options pricing of vanilla and exotic options with
 | American                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)  | ⏳            | ❌     |
 | Bermudan                    | ❌              | ❌       | ⏳           | ❌ (L. Sq.)  | ❌ (complex)  | ❌     |
 | ¹Basket                     | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
-| ¹Rainbow                    | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
+| ¹Rainbow                    | ✅ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
 | ²Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ⏳            | ⏳     |
 | ²Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ❌ (complex)  | ⏳     |
 | ²Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅ (flaky)   | ⏳            | ⏳     |
+| ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
 | ²Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
 | ²Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ✅           | ❌ (mod. PDE) | ⏳     |
