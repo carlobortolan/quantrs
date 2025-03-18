@@ -30,7 +30,7 @@ Please check out the documentation [here][docs-url].
 For now quantrs only supports options pricing of vanilla and exotic options with continuous dividends yields.
 
 <details>
-<summary><i>Click here to see supported models</i></summary>
+<summary><i>Click to see supported models</i></summary>
 
 |                             | Black-Scholes   | Black-76 | Lattice      | ³Monte-Carlo | Finite Diff   | Heston |
 | --------------------------- | --------------- | -------- | ------------ | ------------ | ------------- | ------ |
