@@ -9,12 +9,12 @@
 //! ## Example
 //!
 //! ```
-//! use quantrs::options::{EuropeanOption, BlackScholesModel, OptionGreeks, OptionType, Instrument};
+//! use quantrs::options::{EuropeanOption, BlackScholesModel, Greeks, OptionType, Instrument};
 //!
 //! let option = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
 //! let model = quantrs::options::BlackScholesModel::new(1.0, 0.05, 0.2);
 //!
-//! let greeks = OptionGreeks::calculate(&model, option);
+//! let greeks = Greeks::calculate(&model, option);
 //! println!("Delta: {}", greeks.delta);
 //! println!("Gamma: {}", greeks.gamma);
 //! println!("Theta: {}", greeks.theta);
@@ -22,12 +22,12 @@
 //! println!("Rho: {}", greeks.rho);
 //! ```
 
-use super::{Greeks, Option};
+use super::{Option, OptionGreeks};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 /// A struct representing the Greeks of an option.
 #[derive(Debug)]
-pub struct OptionGreeks {
+pub struct Greeks {
     // First-order Greeks
     /// Delta measures the rate of change of the option price with respect to changes in the price of the underlying asset.
     pub delta: f64,
@@ -69,7 +69,7 @@ pub struct OptionGreeks {
     pub parmicharma: f64,
 }
 
-impl OptionGreeks {
+impl Greeks {
     /// Calculate the Greeks for a given option.
     ///
     /// Arguments
@@ -81,27 +81,27 @@ impl OptionGreeks {
     ///
     /// The calculated Greeks.
     #[rustfmt::skip]
-    pub fn calculate<T: Greeks, S: Option>(model: &T, option: S) -> Self {
-        OptionGreeks {
-            delta: catch_unwind(AssertUnwindSafe(|| model.delta(option.clone()))).unwrap_or_default(),
-            vega: catch_unwind(AssertUnwindSafe(|| model.vega(option.clone()))).unwrap_or_default(),
-            theta: catch_unwind(AssertUnwindSafe(|| model.theta(option.clone()))).unwrap_or_default(),
-            rho: catch_unwind(AssertUnwindSafe(|| model.rho(option.clone()))).unwrap_or_default(),
-            lambda: catch_unwind(AssertUnwindSafe(|| model.lambda(option.clone()))).unwrap_or_default(),
-            epsilon: catch_unwind(AssertUnwindSafe(|| model.epsilon(option.clone()))).unwrap_or_default(),
+    pub fn calculate<T: OptionGreeks, S: Option>(model: &T, option: S) -> Self {
+        Greeks {
+            delta: catch_unwind(AssertUnwindSafe(|| model.delta(&option))).unwrap_or_default(),
+            vega: catch_unwind(AssertUnwindSafe(|| model.vega(&option))).unwrap_or_default(),
+            theta: catch_unwind(AssertUnwindSafe(|| model.theta(&option))).unwrap_or_default(),
+            rho: catch_unwind(AssertUnwindSafe(|| model.rho(&option))).unwrap_or_default(),
+            lambda: catch_unwind(AssertUnwindSafe(|| model.lambda(&option))).unwrap_or_default(),
+            epsilon: catch_unwind(AssertUnwindSafe(|| model.epsilon(&option))).unwrap_or_default(),
 
-            gamma: catch_unwind(AssertUnwindSafe(|| model.gamma(option.clone()))).unwrap_or_default(),
-            vanna: catch_unwind(AssertUnwindSafe(|| model.vanna(option.clone()))).unwrap_or_default(),
-            charm: catch_unwind(AssertUnwindSafe(|| model.charm(option.clone()))).unwrap_or_default(),
-            vomma: catch_unwind(AssertUnwindSafe(|| model.vomma(option.clone()))).unwrap_or_default(),
-            veta: catch_unwind(AssertUnwindSafe(|| model.veta(option.clone()))).unwrap_or_default(),
-            vera: catch_unwind(AssertUnwindSafe(|| model.vera(option.clone()))).unwrap_or_default(),
+            gamma: catch_unwind(AssertUnwindSafe(|| model.gamma(&option))).unwrap_or_default(),
+            vanna: catch_unwind(AssertUnwindSafe(|| model.vanna(&option))).unwrap_or_default(),
+            charm: catch_unwind(AssertUnwindSafe(|| model.charm(&option))).unwrap_or_default(),
+            vomma: catch_unwind(AssertUnwindSafe(|| model.vomma(&option))).unwrap_or_default(),
+            veta: catch_unwind(AssertUnwindSafe(|| model.veta(&option))).unwrap_or_default(),
+            vera: catch_unwind(AssertUnwindSafe(|| model.vera(&option))).unwrap_or_default(),
 
-            speed: catch_unwind(AssertUnwindSafe(|| model.speed(option.clone()))).unwrap_or_default(),
-            zomma: catch_unwind(AssertUnwindSafe(|| model.zomma(option.clone()))).unwrap_or_default(),
-            color: catch_unwind(AssertUnwindSafe(|| model.color(option.clone()))).unwrap_or_default(),
-            ultima: catch_unwind(AssertUnwindSafe(|| model.ultima(option.clone()))).unwrap_or_default(),
-            parmicharma: catch_unwind(AssertUnwindSafe(|| model.parmicharma(option.clone()))).unwrap_or_default(),
+            speed: catch_unwind(AssertUnwindSafe(|| model.speed(&option))).unwrap_or_default(),
+            zomma: catch_unwind(AssertUnwindSafe(|| model.zomma(&option))).unwrap_or_default(),
+            color: catch_unwind(AssertUnwindSafe(|| model.color(&option))).unwrap_or_default(),
+            ultima: catch_unwind(AssertUnwindSafe(|| model.ultima(&option))).unwrap_or_default(),
+            parmicharma: catch_unwind(AssertUnwindSafe(|| model.parmicharma(&option))).unwrap_or_default(),
         }
     }
 }
