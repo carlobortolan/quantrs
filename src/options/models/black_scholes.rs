@@ -332,7 +332,7 @@ impl OptionPricing for BlackScholesModel {
         let normal = Normal::new(0.0, 1.0).unwrap();
         for _ in 0..max_iterations {
             let price = self.price_with_volatility(option, sigma, &normal);
-            let vega = self.vega(option.clone());
+            let vega = self.vega(option);
             let diff = market_price - price;
             if diff.abs() < tolerance {
                 return sigma;
@@ -392,8 +392,8 @@ impl OptionPricing for BlackScholesModel {
 // }
 
 impl OptionGreeks for BlackScholesModel {
-    fn delta<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
+    fn delta<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.style() {
             OptionStyle::European => match option.option_type() {
@@ -437,9 +437,9 @@ impl OptionGreeks for BlackScholesModel {
         }
     }
 
-    fn gamma<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
-        let adjusted_spot = self.calculate_adjusted_spot(&option);
+    fn gamma<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
+        let adjusted_spot = self.calculate_adjusted_spot(option);
         let normal = Normal::new(0.0, 1.0).unwrap();
 
         match option.style() {
@@ -475,13 +475,13 @@ impl OptionGreeks for BlackScholesModel {
         }
     }
 
-    fn theta<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
+    fn theta<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
         let normal = Normal::new(0.0, 1.0).unwrap();
         let nd1 = normal.cdf(d1);
         let nd2 = normal.cdf(d2);
         let pdf_d1 = normal.pdf(d1);
-        let adjusted_spot = self.calculate_adjusted_spot(&option);
+        let adjusted_spot = self.calculate_adjusted_spot(option);
 
         match option.style() {
             OptionStyle::European => match option.option_type() {
@@ -580,10 +580,10 @@ impl OptionGreeks for BlackScholesModel {
         }
     }
 
-    fn vega<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
+    fn vega<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let adjusted_spot = self.calculate_adjusted_spot(&option);
+        let adjusted_spot = self.calculate_adjusted_spot(option);
 
         match option.style() {
             OptionStyle::European => {
@@ -619,8 +619,8 @@ impl OptionGreeks for BlackScholesModel {
         }
     }
 
-    fn rho<T: Option>(&self, option: T) -> f64 {
-        let (d1, d2) = self.calculate_d1_d2(&option);
+    fn rho<T: Option>(&self, option: &T) -> f64 {
+        let (d1, d2) = self.calculate_d1_d2(option);
         let normal = Normal::new(0.0, 1.0).unwrap();
         match option.style() {
             OptionStyle::European => match option.option_type() {

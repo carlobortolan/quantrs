@@ -151,23 +151,23 @@ impl OptionPricing for BinomialTreeModel {
 }
 
 impl OptionGreeks for BinomialTreeModel {
-    fn delta<T: Option>(&self, option: T) -> f64 {
+    fn delta<T: Option>(&self, option: &T) -> f64 {
         panic!("BinomialTreeModel does not support delta calculation yet");
     }
 
-    fn gamma<T: Option>(&self, option: T) -> f64 {
+    fn gamma<T: Option>(&self, option: &T) -> f64 {
         panic!("BinomialTreeModel does not support gamma calculation yet");
     }
 
-    fn theta<T: Option>(&self, option: T) -> f64 {
+    fn theta<T: Option>(&self, option: &T) -> f64 {
         panic!("BinomialTreeModel does not support theta calculation yet");
     }
 
-    fn vega<T: Option>(&self, option: T) -> f64 {
+    fn vega<T: Option>(&self, option: &T) -> f64 {
         panic!("BinomialTreeModel does not support vega calculation yet");
     }
 
-    fn rho<T: Option>(&self, option: T) -> f64 {
+    fn rho<T: Option>(&self, option: &T) -> f64 {
         panic!("BinomialTreeModel does not support rho calculation yet");
     }
 }

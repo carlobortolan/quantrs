@@ -62,11 +62,11 @@ fn example_greeks() {
     println!("Rho: {}", greeks.rho);
 
     // Greeks via function calls
-    println!("Delta: {}", model.delta(option.clone()));
-    println!("Gamma: {}", model.gamma(option.clone()));
-    println!("Theta: {}", model.theta(option.clone()));
-    println!("Vega: {}", model.vega(option.clone()));
-    println!("Rho: {}\n", model.rho(option.clone()));
+    println!("Delta: {}", model.delta(&option));
+    println!("Gamma: {}", model.gamma(&option));
+    println!("Theta: {}", model.theta(&option));
+    println!("Vega: {}", model.vega(&option));
+    println!("Rho: {}\n", model.rho(&option));
 }
 
 fn example_asian() {
