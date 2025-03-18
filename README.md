@@ -50,8 +50,6 @@ For now quantrs only supports options pricing of vanilla and exotic options with
 | Greeks (Δ, ν, Θ, ρ, Γ)      | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
 | Implied Volatility          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
 
-> [!note]
->
 > ¹ _"Exotic" options with standard exercise style; only differ in their payoff value_\
 > ² _Non-vanilla path-dependent "exotic" options_\
 > ³ _MC simulates underlying price paths based on geometric Brownian motion for Black-Scholes models and geometric average price paths for Asian and Lookback options_\
