@@ -71,8 +71,8 @@ Compared to other popular options pricing libraries, quantrs is _significantly_ 
 | ------------------------------------------------------ | ------------------------ | -------------------------- | ----------------------- | --------------------------- |
 | quantrs                                                | 0.0986                   | 0.0985                     | 0.0007                  | 10,142,000                  |
 | [QuantLib](https://www.quantlib.org) (cpp)             | n.a.                     | n.a.                       | n.a.                    | n.a.                        |
-| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551 (29x slower)      | 2.8630 (29x slower)        | 0.9391                  | 350,250                     |
-| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959 (111x slower)    | 10.8950 (110x slower)      | 1.1398                  | 90,943                      |
+| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551 (29x slower)      | 2.8630                     | 0.9391                  | 350,250                     |
+| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959 (111x slower)    | 10.8950                    | 1.1398                  | 90,943                      |
 | [Q-Fin](https://github.com/romanmichaelpaolucci/Q-Fin) | 0.2622 (2.6x slower)     | 0.2603                     | 0.0356                  | 3,813,700                   |
 | [RustQuant](https://github.com/avhz/RustQuant)         | 1.4777 (14x slower)      | 1.4750                     | 0.0237                  | 676,727                     |
 
