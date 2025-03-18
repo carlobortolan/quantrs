@@ -825,10 +825,44 @@ mod greeks_tests {
         let greeks = Greeks::calculate(&model, option);
 
         assert_abs_diff_eq!(greeks.delta, 0.6118, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.gamma, 0.0191, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.theta, 5.7696, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.vega, 37.7593, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.theta, 5.7696, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.rho, 51.3500, epsilon = 0.0001);
+
+        let _result = std::panic::catch_unwind(|| {
+            greeks.epsilon;
+        });
+
+        let _result = std::panic::catch_unwind(|| {
+            greeks.vanna;
+        });
+        let _result = std::panic::catch_unwind(|| {
+            greeks.charm;
+        });
+        greeks.vomma;
+        let _result = std::panic::catch_unwind(|| {
+            greeks.veta;
+        });
+        let _result = std::panic::catch_unwind(|| {
+            greeks.vera;
+        });
+        let _result = std::panic::catch_unwind(|| {
+            greeks.speed;
+        });
+        let _result = std::panic::catch_unwind(|| {
+            greeks.zomma;
+        });
+        let _result = std::panic::catch_unwind(|| {
+            greeks.color;
+        });
+        let _result = std::panic::catch_unwind(|| {
+            greeks.ultima;
+        });
+        let _result = std::panic::catch_unwind(|| {
+            greeks.parmicharma;
+        });
+
+        assert_abs_diff_eq!(greeks.gamma, 0.0191, epsilon = 0.0001);
     }
 }
 
