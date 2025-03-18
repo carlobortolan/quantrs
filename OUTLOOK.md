@@ -31,8 +31,6 @@ This document outlines the planned features and improvements for the `quantrs` l
 - [ ] Rainbow Options Price and Greeks
 - [ ] Barrier Options Price and Greeks
 - [ ] Double Barrier Options Price and Greeks
-- [ ] Binary Cash-or-Nothing Options Price and Greeks
-- [ ] Binary Asset-or-Nothing Options Price and Greeks
 
 ### Monte-Carlo
 
@@ -45,8 +43,6 @@ This document outlines the planned features and improvements for the `quantrs` l
 - [ ] Double Barrier Options Price and Greeks
 - [x] Asian Options Price and Greeks
 - [ ] Lookback Options Price and Greeks
-- [ ] Binary Cash-or-Nothing Options Price and Greeks
-- [ ] Binary Asset-or-Nothing Options Price and Greeks
 
 ### Finite Difference
 
@@ -176,10 +172,6 @@ This document outlines the planned features and improvements for the `quantrs` l
   - [ ] Risk parity
   - [ ] Minimum variance
   - [ ] Maximum diversification
-
-## Contributing
-
-We welcome contributions from the community! If you have any suggestions for new features or improvements, please open a new issue or submit a pull request.
 
 ## License
 
