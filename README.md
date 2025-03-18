@@ -62,19 +62,20 @@ For now quantrs only supports options pricing of vanilla and exotic options with
 Compared to other popular options pricing libraries, quantrs is _significantly_ faster:
 
 <!-- - **⏳x faster** `QuantLib` (C++ bindings) -->
+
 - **29x faster** than `QuantLib` (python bindings)
 - **113x faster** than `py_vollib`
 - **15x faster** than `RustQuant`
 - **2.7x faster** than `Q-Fin`
 
 | Library                                                | Mean Execution Time (μs) | Median Execution Time (μs) | Standard Deviation (μs) | Operations / Second (OPS) |
-| ------------------------------------------------------ | ------------------------ | -------------------------- | ----------------------- | --------------------------- |
-| quantrs                                                | 0.0971                   | 0.0970                     | 0.0007                  | 10,142,000                  |
-| [QuantLib](https://www.quantlib.org) (cpp)             | n.a.                     | n.a.                       | n.a.                    | n.a.                        |
-| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551 (29x slower)      | 2.8630 (29x slower)        | 0.9391                  | 350,250                     |
-| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959 (113x slower)    | 10.8950 (110x slower)      | 1.1398                  | 90,943                      |
-| [Q-Fin](https://github.com/romanmichaelpaolucci/Q-Fin) | 0.2622 (2.7x slower)     | 0.2603                     | 0.0356                  | 3,813,700                   |
-| [RustQuant](https://github.com/avhz/RustQuant)         | 1.4777 (15x slower)      | 1.4750                     | 0.0237                  | 676,727                     |
+| ------------------------------------------------------ | ------------------------ | -------------------------- | ----------------------- | ------------------------- |
+| quantrs                                                | 0.0971                   | 0.0970                     | 0.0007                  | 10,142,000                |
+| [QuantLib](https://www.quantlib.org) (cpp)             | n.a.                     | n.a.                       | n.a.                    | n.a.                      |
+| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551 (29x slower)      | 2.8630 (29x slower)        | 0.9391                  | 350,250                   |
+| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959 (113x slower)    | 10.8950 (110x slower)      | 1.1398                  | 90,943                    |
+| [Q-Fin](https://github.com/romanmichaelpaolucci/Q-Fin) | 0.2622 (2.7x slower)     | 0.2603                     | 0.0356                  | 3,813,700                 |
+| [RustQuant](https://github.com/avhz/RustQuant)         | 1.4777 (15x slower)      | 1.4750                     | 0.0237                  | 676,727                   |
 
 You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.dev/report/)
 
