@@ -73,7 +73,7 @@
 
 use crate::options::{
     types::BinaryType::{AssetOrNothing, CashOrNothing},
-    Instrument, Option, OptionGreeks, OptionPricing, OptionStyle, OptionType,
+    Instrument, Option, OptionGreeks, OptionPricing, OptionStyle, OptionType, RainbowType,
 };
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
@@ -246,11 +246,28 @@ impl BlackScholesModel {
 
     /// Calculate the price of a rainbow call using the Black-Scholes formula.
     pub fn price_rainbow_call<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
-        self.price_euro_call(option.instrument(), option.strike(), normal)
+        if option.style() == &OptionStyle::Rainbow(RainbowType::AllITM)
+            && option.payoff(None) <= 0.0
+        {
+            return 0.0;
+        }
+        let price = self.price_euro_call(option.instrument(), option.strike(), normal);
+
+        if option.style() == &OptionStyle::Rainbow(RainbowType::BestOf)
+            || option.style() == &OptionStyle::Rainbow(RainbowType::WorstOf)
+        {
+            panic!("BestOf/WorstOf options not supported by Black-Scholes model");
+        }
+        price
     }
 
     /// Calculate the price of a rainbow put using the Black-Scholes formula.
     pub fn price_rainbow_put<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
+        if option.style() == &OptionStyle::Rainbow(RainbowType::AllOTM)
+            && option.payoff(None) <= 0.0
+        {
+            return 0.0;
+        }
         self.price_euro_put(option.instrument(), option.strike(), normal)
     }
 

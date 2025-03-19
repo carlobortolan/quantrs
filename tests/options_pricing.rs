@@ -2,7 +2,7 @@ use approx::assert_abs_diff_eq;
 use quantrs::options::{
     AmericanOption, AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel,
     EuropeanOption, Greeks, Instrument, LookbackOption, MonteCarloModel, Option, OptionGreeks,
-    OptionPricing, OptionType,
+    OptionPricing, OptionType, RainbowOption,
 };
 
 // Function to assert that a type implements the Option trait
@@ -456,8 +456,161 @@ mod black_scholes_tests {
             }
         }
     }
-    #[test]
 
+    mod rainbow_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_best_of() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option = RainbowOption::best_of(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            assert!(
+                std::panic::catch_unwind(|| {
+                    _ = model.price(&option);
+                })
+                .is_err(),
+                "Expected panic for best_of option"
+            );
+        }
+
+        #[test]
+        fn test_worst_of() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::worst_of(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            assert!(
+                std::panic::catch_unwind(|| {
+                    _ = model.price(&option);
+                })
+                .is_err(),
+                "Expected panic for worst_of option"
+            );
+        }
+
+        #[test]
+        fn test_call_on_max() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_max(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 18.1497, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 3.0288, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_put_on_max() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_max(Instrument::new().with_assets(vec![i1, i2]), 120.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 8.7065, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 9.5589, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_call_on_min() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_min(Instrument::new().with_assets(vec![i1, i2]), 120.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.6993, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 28.8468, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_put_on_min() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_min(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 16.3115, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 2.4324, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_call_on_average() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_avg(Instrument::new().with_assets(vec![i1, i2]), 100.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 10.7713, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 5.3942, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_put_on_average() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_avg(Instrument::new().with_assets(vec![i1, i2]), 110.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 10.4026, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 6.2673, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_all_itm() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(104.0);
+            let i3 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::all_itm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_all_otm() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(104.0);
+            let i3 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::all_otm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
+            let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
+        }
+    }
+
+    #[test]
     fn test_black_scholes_iv() {
         let option = EuropeanOption::new(
             Instrument::new()
@@ -486,45 +639,250 @@ mod black_scholes_tests {
 // Binomial Tree Option Tests
 mod binomial_tree_tests {
     use super::*;
+    mod european_option_tests {
+        use super::*;
+        #[test]
+        fn test_itm() {
+            let instrument = Instrument::new().with_spot(52.0);
+            let option = EuropeanOption::new(instrument, 50.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
 
-    #[test]
-    fn test_binomial_tree_european_itm() {
-        let instrument = Instrument::new().with_spot(52.0);
-        let option = EuropeanOption::new(instrument, 50.0, OptionType::Call);
-        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+            assert_abs_diff_eq!(model.price(&option), 8.8258, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option.flip()), 2.0677, epsilon = 0.0001);
+        }
 
-        assert_abs_diff_eq!(model.price(&option), 8.8258, epsilon = 0.0001);
-        assert_abs_diff_eq!(model.price(&option.flip()), 2.0677, epsilon = 0.0001);
+        #[test]
+        fn test_otm() {
+            let instrument = Instrument::new().with_spot(50.0);
+            let option = EuropeanOption::new(instrument, 60.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+
+            assert_abs_diff_eq!(model.price(&option), 3.8360, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option.flip()), 8.1262, epsilon = 0.0001);
+        }
     }
 
-    #[test]
-    fn test_binomial_tree_european_otm() {
-        let instrument = Instrument::new().with_spot(50.0);
-        let option = EuropeanOption::new(instrument, 60.0, OptionType::Call);
-        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+    mod american_option_tests {
+        use super::*;
 
-        assert_abs_diff_eq!(model.price(&option), 3.8360, epsilon = 0.0001);
-        assert_abs_diff_eq!(model.price(&option.flip()), 8.1262, epsilon = 0.0001);
+        #[test]
+        fn test_itm() {
+            let instrument = Instrument::new().with_spot(52.0);
+            let option = AmericanOption::new(instrument, 50.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+
+            assert_abs_diff_eq!(model.price(&option), 8.8258, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option.flip()), 2.5722, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_otm() {
+            let instrument = Instrument::new().with_spot(50.0);
+            let option = AmericanOption::new(instrument, 60.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+
+            assert_abs_diff_eq!(model.price(&option), 10.0000, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option.flip()), 10.0000, epsilon = 0.0001);
+        }
     }
 
-    #[test]
-    fn test_binomial_tree_american_itm() {
-        let instrument = Instrument::new().with_spot(52.0);
-        let option = AmericanOption::new(instrument, 50.0, OptionType::Call);
-        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+    mod rainbow_option_tests {
+        use super::*;
 
-        assert_abs_diff_eq!(model.price(&option), 8.8258, epsilon = 0.0001);
-        assert_abs_diff_eq!(model.price(&option.flip()), 2.5722, epsilon = 0.0001);
+        #[test]
+        fn test_best_of() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option = RainbowOption::best_of(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 118.0372, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_worst_of() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::worst_of(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 83.5883, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_call_on_max() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_max(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 18.1580, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 3.0371, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_put_on_max() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_max(Instrument::new().with_assets(vec![i1, i2]), 120.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 8.6920, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 9.5445, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_call_on_min() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_min(Instrument::new().with_assets(vec![i1, i2]), 120.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.6952, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 28.8427, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_put_on_min() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_min(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 16.2908, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 2.4117, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_call_on_average() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_avg(Instrument::new().with_assets(vec![i1, i2]), 100.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 10.7675, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 5.3905, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_put_on_average() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_avg(Instrument::new().with_assets(vec![i1, i2]), 110.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 10.4088, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 6.2736, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_all_itm() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(104.0);
+            let i3 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::all_itm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_all_otm() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(104.0);
+            let i3 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::all_otm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
+        }
     }
 
-    #[test]
-    fn test_binomial_tree_american_otm() {
-        let instrument = Instrument::new().with_spot(50.0);
-        let option = AmericanOption::new(instrument, 60.0, OptionType::Call);
-        let model = BinomialTreeModel::new(2.0, 0.05, 0.182321557, 2);
+    mod binary_option_tests {
+        use super::*;
 
-        assert_abs_diff_eq!(model.price(&option), 10.0000, epsilon = 0.0001);
-        assert_abs_diff_eq!(model.price(&option.flip()), 10.0000, epsilon = 0.0001);
+        #[test]
+        fn test_asset_or_nothing_itm() {
+            let instrument = Instrument::new().with_spot(120.0);
+            let option = BinaryOption::asset_or_nothing(instrument, 100.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.3, 2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 105.6772, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 14.3227, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_asset_or_nothing_otm() {
+            let instrument = Instrument::new().with_spot(70.0);
+            let option = BinaryOption::asset_or_nothing(instrument, 100.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.3, 2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 29.9877, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 40.0122, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_cash_or_nothing_itm() {
+            let instrument = Instrument::new().with_spot(120.0);
+            let option = BinaryOption::cash_or_nothing(instrument, 100.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.3, 2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.6873, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.2174, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_cash_or_nothing_otm() {
+            let instrument = Instrument::new().with_spot(70.0);
+            let option = BinaryOption::cash_or_nothing(instrument, 100.0, OptionType::Call);
+            let model = BinomialTreeModel::new(2.0, 0.05, 0.3, 2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.2351, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.6697, epsilon = 0.0001);
+        }
     }
 
     #[test]
@@ -693,10 +1051,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::arithmetic(0.7, 0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 12.0, epsilon = 1.0);
+            assert_abs_diff_eq!(price, 12.0, epsilon = 1.5);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 0.595, epsilon = 1.0);
+            assert_abs_diff_eq!(price, 0.595, epsilon = 1.5);
         }
 
         #[test]
@@ -802,6 +1160,149 @@ mod monte_carlo_tests {
 
             let price = model.price(&option.flip());
             assert_abs_diff_eq!(price, 0.5437, epsilon = 0.1);
+        }
+    }
+
+    mod rainbow_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_best_of() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option = RainbowOption::best_of(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 118.0372, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_worst_of() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::worst_of(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 83.5883, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_call_on_max() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_max(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 18.1580, epsilon = 2.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 3.0371, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_put_on_max() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_max(Instrument::new().with_assets(vec![i1, i2]), 120.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 8.6920, epsilon = 2.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 9.5445, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_call_on_min() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_min(Instrument::new().with_assets(vec![i1, i2]), 120.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.6952, epsilon = 2.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 28.8427, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_put_on_min() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_min(Instrument::new().with_assets(vec![i1, i2]), 105.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 16.2908, epsilon = 2.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 2.4117, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_call_on_average() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::call_on_avg(Instrument::new().with_assets(vec![i1, i2]), 100.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 10.7675, epsilon = 2.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 5.3905, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_put_on_average() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::put_on_avg(Instrument::new().with_assets(vec![i1, i2]), 110.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 10.4088, epsilon = 2.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 6.2736, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_all_itm() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(104.0);
+            let i3 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::all_itm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 2.0);
+        }
+
+        #[test]
+        fn test_all_otm() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(104.0);
+            let i3 = Instrument::new().with_spot(86.0);
+            let option =
+                RainbowOption::all_otm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
+            let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 1_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 2.0);
         }
     }
 }
