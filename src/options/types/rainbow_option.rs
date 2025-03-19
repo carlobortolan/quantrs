@@ -22,14 +22,14 @@
 //! - [Investopedia - Rainbow option](https://www.investopedia.com/terms/r/rainbowoption.asp)
 //!
 //! ## Example
-//! 
+//!
 //! ```
 //! use quantrs::options::{Instrument, Option, RainbowOption, OptionType, RainbowType};
-//! 
+//!
 //! let asset1 = Instrument::new().with_spot(100.0);
 //! let asset2 = Instrument::new().with_spot(110.0);
 //! let asset3 = Instrument::new().with_spot(90.0);
-//! 
+//!
 //! let instrument = Instrument::new()
 //!    .with_assets(vec![(asset1.clone()), (asset2.clone()), (asset3.clone())]);
 //!    
@@ -43,7 +43,7 @@
 //! let call_on_min = RainbowOption::call_on_min(instrument.clone(), 80.0);
 //! let put_on_max = RainbowOption::put_on_max(instrument.clone(), 120.0);
 //! let put_on_min = RainbowOption::put_on_min(instrument.clone(), 105.0);
-//! 
+//!
 //! println!("Best-Of Payoff: {}", best_of.payoff(None)); // should be 115.0
 //! println!("Worst-Of Payoff: {}", worst_of.payoff(None)); // should be 86.0
 //! println!("Call-On-Avg Payoff: {}", call_on_avg.payoff(None)); // should be 1.6
