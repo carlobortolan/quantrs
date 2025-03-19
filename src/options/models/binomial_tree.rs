@@ -107,7 +107,11 @@ impl OptionPricing for BinomialTreeModel {
         let d = 1.0 / u;
 
         // Risk-neutral probability of an upward movement for a call option
-        let p = ((self.risk_free_rate * dt).exp() - d) / (u - d);
+        // let p = ((self.risk_free_rate * dt).exp() - d) / (u - d);
+        let p = (((self.risk_free_rate - option.instrument().continuous_dividend_yield) * dt)
+            .exp()
+            - d)
+            / (u - d);
 
         // Discount factor for each step
         let discount_factor = (-self.risk_free_rate * dt).exp();

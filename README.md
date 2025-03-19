@@ -6,6 +6,7 @@
 [![docs.rs][docsrs-badge]][docs-url]
 [![codecov-quantrs][codecov-badge]][codecov-url]
 ![Crates.io MSRV][crates-msrv-badge]
+![Crates.io downloads][crates-download-badge]
 
 [actions-test-badge]: https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml/badge.svg
 [crates-badge]: https://img.shields.io/crates/v/quantrs.svg
@@ -16,6 +17,7 @@
 [codecov-badge]: https://codecov.io/gh/carlobortolan/quantrs/graph/badge.svg?token=NJ4HW3OQFY
 [codecov-url]: https://codecov.io/gh/carlobortolan/quantrs
 [crates-msrv-badge]: https://img.shields.io/crates/msrv/quantrs
+[crates-download-badge]: https://img.shields.io/crates/d/quantrs
 
 Quantrs is a tiny quantitative finance library for Rust.
 It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading quantlib documentation.
@@ -27,7 +29,7 @@ Please check out the documentation [here][docs-url].
 
 ### Options Pricing
 
-For now quantrs only supports options pricing of vanilla and exotic options with continuous dividends yields.
+For now quantrs only supports options pricing of vanilla and various exotic options.
 
 <details>
 <summary><i>Click to see supported models</i></summary>
@@ -38,16 +40,16 @@ For now quantrs only supports options pricing of vanilla and exotic options with
 | American                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)  | ⏳            | ❌     |
 | Bermudan                    | ❌              | ❌       | ⏳           | ❌ (L. Sq.)  | ❌ (complex)  | ❌     |
 | ¹Basket                     | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
-| ¹Rainbow                    | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
+| ¹Rainbow                    | ✅ (∀component) | ❌       | ✅           | ✅           | ❌            | ❌     |
 | ²Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ⏳            | ⏳     |
 | ²Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ❌ (complex)  | ⏳     |
 | ²Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅ (flaky)   | ⏳            | ⏳     |
+| ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
 | ²Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
-| ²Binary Cash-or-Nothing     | ✅              | ⏳       | ⏳           | ✅           | ❌ (mod. PDE) | ⏳     |
-| ²Binary Asset-or-Nothing    | ✅              | ⏳       | ⏳           | ✅           | ❌ (mod. PDE) | ⏳     |
-| Greeks (Δ, ν, Θ, ρ, Γ)      | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
+| ²Binary Cash-or-Nothing     | ✅              | ⏳       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
+| ²Binary Asset-or-Nothing    | ✅              | ⏳       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
+| Greeks (Δ,ν,Θ,ρ,Γ)          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
 | Implied Volatility          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
 
 > ¹ _"Exotic" options with standard exercise style; only differ in their payoff value_\
@@ -72,8 +74,8 @@ Compared to other popular options pricing libraries, quantrs is _significantly_ 
 | ------------------------------------------------------ | ------------------------ | -------------------------- | ----------------------- | ------------------------- |
 | quantrs                                                | 0.0971                   | 0.0970                     | 0.0007                  | 10,142,000                |
 | [QuantLib](https://www.quantlib.org) (cpp)             | n.a.                     | n.a.                       | n.a.                    | n.a.                      |
-| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551                   | 2.8630 (29x slower)        | 0.9391                  | 350,250                   |
-| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959                  | 10.8950 (110x slower)      | 1.1398                  | 90,943                    |
+| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551                   | 2.8630                     | 0.9391                  | 350,250                   |
+| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959                  | 10.8950                    | 1.1398                  | 90,943                    |
 | [Q-Fin](https://github.com/romanmichaelpaolucci/Q-Fin) | 0.2622                   | 0.2603                     | 0.0356                  | 3,813,700                 |
 | [RustQuant](https://github.com/avhz/RustQuant)         | 1.4777                   | 1.4750                     | 0.0237                  | 676,727                   |
 
@@ -87,7 +89,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.3"
+quantrs = "0.1.4"
 ```
 
 Now if you want to e.g., model binary call options using the Black-Scholes model, you can:

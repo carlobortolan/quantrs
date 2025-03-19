@@ -933,10 +933,56 @@ mod instrument_tests {
 
         assert_abs_diff_eq!(price, 100.0, epsilon = 100.0 * 0.01 * 4.0);
     }
+
+    #[test]
+    fn test_assets() {
+        let asset1 = Instrument::new().with_spot(115.0);
+        let asset2 = Instrument::new().with_spot(104.0);
+        let asset3 = Instrument::new().with_spot(86.0);
+
+        let mut instrument = Instrument::new().with_assets(vec![
+            (asset1.clone()),
+            (asset2.clone()),
+            (asset3.clone()),
+        ]);
+
+        assert_abs_diff_eq!(instrument.spot, 101.6666, epsilon = 0.001);
+
+        assert_eq!(instrument.best_performer().spot, asset1.spot);
+        assert_eq!(instrument.worst_performer().spot, asset3.spot);
+        instrument.sort_assets_by_performance();
+        assert_eq!(instrument.assets[0].0.spot, asset1.spot);
+        assert_eq!(instrument.assets[1].0.spot, asset2.spot);
+        assert_eq!(instrument.assets[2].0.spot, asset3.spot);
+    }
+
+    #[test]
+    fn test_weighted_assets() {
+        let asset1 = Instrument::new().with_spot(115.0);
+        let asset2 = Instrument::new().with_spot(104.0);
+        let asset3 = Instrument::new().with_spot(86.0);
+
+        let mut instrument = Instrument::new().with_weighted_assets(vec![
+            (asset1.clone(), 0.5),
+            (asset2.clone(), 0.3),
+            (asset3.clone(), 0.2),
+        ]);
+
+        assert_abs_diff_eq!(instrument.spot, 105.9, epsilon = 0.001);
+
+        assert_eq!(instrument.best_performer().spot, asset1.spot);
+        assert_eq!(instrument.worst_performer().spot, asset3.spot);
+        instrument.sort_assets_by_performance();
+        assert_eq!(instrument.assets[0].0.spot, asset1.spot);
+        assert_eq!(instrument.assets[1].0.spot, asset2.spot);
+        assert_eq!(instrument.assets[2].0.spot, asset3.spot);
+    }
 }
 
 // Option Trait Tests
 mod option_trait_tests {
+    use quantrs::options::RainbowOption;
+
     use super::*;
 
     #[test]
@@ -968,6 +1014,40 @@ mod option_trait_tests {
             100.0,
             OptionType::Put,
         );
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::all_itm(
+            Instrument::new().with_spot(100.0).with_assets(vec![]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::all_otm(
+            Instrument::new()
+                .with_spot(100.0)
+                .with_weighted_assets(vec![]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt: RainbowOption = RainbowOption::call_on_avg(
+            Instrument::new()
+                .with_spot(100.0)
+                .with_assets(vec![Instrument::new().with_spot(100.0)]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt: RainbowOption = RainbowOption::put_on_avg(
+            Instrument::new()
+                .with_spot(100.0)
+                .with_weighted_assets(vec![(Instrument::new().with_spot(100.0), 1.0)]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::call_on_max(Instrument::new().with_spot(100.0), 100.0);
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::put_on_max(Instrument::new().with_spot(100.0), 100.0);
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::call_on_min(Instrument::new().with_spot(100.0), 100.0);
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::put_on_min(Instrument::new().with_spot(100.0), 100.0);
         assert_implements_option_trait(&opt);
 
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);

@@ -3,13 +3,19 @@
 //! The goal is to provide library for pricing options, calculating greeks, and performing basic risk analysis without the need to write complex code or have a PhD in reading quantlib documentation.
 //! The library is still in the early stages of development, and many features are not yet implemented.
 //!
-//! There are no benchmarks yet, but it is expected to be faster than FinancePy, optlib, QuantScale and easier to use than RustQuant or QuantLib.
+//! Compared to other popular options pricing libraries, quantrs is _significantly_ faster:
+//! - **29x faster** than `QuantLib` (python bindings)
+//! - **113x faster** than `py_vollib`
+//! - **15x faster** than `RustQuant`
+//! - **2.7x faster** than `Q-Fin`
+//!
+//! _You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.dev/report/)_.
 //!
 //! ## Options Pricing
 //!
 //! For now quantrs only supports options pricing. The following features are available:
 //!
-//! - Option types: European, American, Binary Cash-or-Nothing, Binary Asset-or-Nothing
+//! - Option types: European, American, Asian, Rainbow, Binary Cash-or-Nothing, Binary Asset-or-Nothing
 //! - Option pricing: Black-Scholes, Binomial Tree, Monte Carlo Simulation
 //! - Greeks: Delta, Gamma, Theta, Vega, Rho
 //! - Implied volatility
