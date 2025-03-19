@@ -2,6 +2,7 @@
 
 use super::{OptionStyle, OptionType, RainbowType, RainbowType::*};
 use crate::options::{Instrument, Option};
+use core::panic;
 use std::any::Any;
 
 /// A struct representing a Rainbow option.
@@ -63,24 +64,32 @@ impl RainbowOption {
         Self::new(instrument, strike, OptionType::Put, PutOnMin)
     }
 
+    /// Create a new `CallOnAvg` Rainbow option.
+    pub fn call_on_avg(instrument: Instrument, strike: f64) -> Self {
+        Self::new(instrument, strike, OptionType::Call, CallOnAvg)
+    }
+
+    /// Create a new `PutOnAvg` Rainbow option.
+    pub fn put_on_avg(instrument: Instrument, strike: f64) -> Self {
+        Self::new(instrument, strike, OptionType::Put, PutOnAvg)
+    }
+
+    /// Create a new `AllITM` Rainbow option.
+    pub fn all_itm(instrument: Instrument, strike: f64) -> Self {
+        Self::new(instrument, strike, OptionType::Call, AllITM)
+    }
+
+    /// Create a new `AllOTM` Rainbow option.
+    pub fn all_otm(instrument: Instrument, strike: f64) -> Self {
+        Self::new(instrument, strike, OptionType::Put, AllOTM)
+    }
+
     /// Get the Rainbow option type.
     pub fn rainbow_option_type(&self) -> &RainbowType {
         if let OptionStyle::Rainbow(ref rainbow_option_type) = self.option_style {
             rainbow_option_type
         } else {
             panic!("Not a rainbow option")
-        }
-    }
-
-    /// Calculate the payoff of the Rainbow option.
-    pub fn payoff(&self) -> f64 {
-        match self.rainbow_option_type() {
-            BestOf => self.instrument().spot.max(self.strike),
-            WorstOf => self.strike - self.instrument().spot.min(self.strike),
-            CallOnMax => (self.instrument().spot - self.strike).max(0.0),
-            CallOnMin => (self.instrument().spot - self.strike).max(0.0),
-            PutOnMax => (self.strike - self.instrument().spot).max(0.0),
-            PutOnMin => (self.strike - self.instrument().spot).max(0.0),
         }
     }
 }
@@ -94,6 +103,7 @@ impl Option for RainbowOption {
         match self.rainbow_option_type() {
             BestOf | CallOnMax | PutOnMax => self.instrument.best_performer(),
             WorstOf | CallOnMin | PutOnMin => self.instrument.worst_performer(),
+            _ => &self.instrument,
         }
     }
 
@@ -119,26 +129,30 @@ impl Option for RainbowOption {
     }
 
     fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
-        let asset_prices: Vec<f64> = self
-            .instrument
-            .assets
-            .iter()
-            .map(|(asset, _)| asset.spot)
-            .collect();
+        let spot_price: f64 = spot.unwrap_or_else(|| self.instrument().spot);
+
         match self.rainbow_option_type() {
-            BestOf => asset_prices.iter().cloned().fold(self.strike, f64::max),
-            WorstOf => asset_prices.iter().cloned().fold(self.strike, f64::min),
-            CallOnMax => {
-                (asset_prices.iter().cloned().fold(f64::MIN, f64::max) - self.strike).max(0.0)
+            BestOf => spot_price.max(self.strike),
+            WorstOf => spot_price.min(self.strike),
+            CallOnMax => (spot_price - self.strike).max(0.0),
+            CallOnMin => (spot_price - self.strike).max(0.0),
+            PutOnMax => (self.strike - spot_price).max(0.0),
+            PutOnMin => (self.strike - spot_price).max(0.0),
+            CallOnAvg => (spot_price - self.strike).max(0.0),
+            PutOnAvg => (self.strike - spot_price).max(0.0),
+            AllITM => {
+                if self.instrument().worst_performer().spot > self.strike {
+                    return spot_price;
+                } else {
+                    return 0.0;
+                }
             }
-            CallOnMin => {
-                (asset_prices.iter().cloned().fold(f64::MAX, f64::min) - self.strike).max(0.0)
-            }
-            PutOnMax => {
-                (self.strike - asset_prices.iter().cloned().fold(f64::MIN, f64::max)).max(0.0)
-            }
-            PutOnMin => {
-                (self.strike - asset_prices.iter().cloned().fold(f64::MAX, f64::min)).max(0.0)
+            AllOTM => {
+                if self.instrument().best_performer().spot < self.strike {
+                    return spot_price;
+                } else {
+                    return 0.0;
+                }
             }
         }
     }

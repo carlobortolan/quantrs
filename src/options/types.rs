@@ -3,6 +3,7 @@
 //! ## References
 //!
 //! - [Wikipedia: Option Style](https://en.wikipedia.org/wiki/Option_style)
+
 pub mod american_option;
 pub mod asian_option;
 pub mod binary_option;
@@ -61,6 +62,10 @@ pub enum RainbowType {
     CallOnMin,
     PutOnMax,
     PutOnMin,
+    CallOnAvg,
+    PutOnAvg,
+    AllITM,
+    AllOTM,
 }
 
 /// Enum representing the type of a Binary option.

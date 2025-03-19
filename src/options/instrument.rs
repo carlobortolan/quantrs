@@ -82,6 +82,9 @@ impl Instrument {
     /// Set the continuous dividend yield of the instrument.
     pub fn with_continuous_dividend_yield(mut self, yield_: f64) -> Self {
         self.continuous_dividend_yield = yield_;
+        self.assets.iter_mut().for_each(|(a, _)| {
+            a.continuous_dividend_yield = yield_;
+        });
         self
     }
 
@@ -101,6 +104,7 @@ impl Instrument {
     pub fn with_assets(mut self, assets: Vec<Instrument>) -> Self {
         let weight = 1.0 / assets.len() as f64;
         self.assets = assets.iter().map(|asset| (asset.clone(), weight)).collect();
+        self.spot = self.assets.iter().map(|(a, w)| a.spot * w).sum::<f64>();
         self.sort_assets_by_performance();
         self
     }
@@ -116,6 +120,7 @@ impl Instrument {
     pub fn sort_assets_by_performance(&mut self) {
         self.assets
             .sort_by(|a, b| b.0.spot.partial_cmp(&a.0.spot).unwrap());
+        self.spot = self.assets.iter().map(|(a, w)| a.spot * w).sum::<f64>();
         self.sorted = true;
     }
 

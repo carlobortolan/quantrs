@@ -167,53 +167,72 @@ fn rainbow_option_example() {
     let put_on_max = RainbowOption::put_on_max(instrument.clone(), 120.0);
     let put_on_min = RainbowOption::put_on_min(instrument.clone(), 105.0);
 
-    println!("Best-Of Payoff: {}", best_of.payoff());
-    println!("Worst-Of Payoff: {}", worst_of.payoff()); // should be 86.0
-    println!("Call-On-Max Payoff: {}", call_on_max.payoff()); // should be 10.0
-    println!("Call-On-Min Payoff: {}", call_on_min.payoff()); // should be 6.0
-    println!("Put-On-Max Payoff: {}", put_on_max.payoff()); // should be 5.0
-    println!("Put-On-Min Payoff: {}", put_on_min.payoff()); // should be 19.0
+    println!(
+        "Best-Of Payoff: {}, {:?}",
+        best_of.payoff(None),
+        best_of.instrument()
+    ); // should be 115.0
+    println!(
+        "Worst-Of Payoff: {}, {:?}",
+        worst_of.payoff(None),
+        worst_of.instrument()
+    ); // should be 86.0
+       //    println!("Call-On-Max Payoff: {}", call_on_max.payoff(None)); // should be 10.0
+       //    println!("Call-On-Min Payoff: {}", call_on_min.payoff(None)); // should be 6.0
+       //    println!("Put-On-Max Payoff: {}", put_on_max.payoff(None)); // should be 5.0
+       //    println!("Put-On-Min Payoff: {}", put_on_min.payoff(None)); // should be 19.0
 
     let bin_max = BinaryOption::asset_or_nothing(asset1.clone(), 105.0, OptionType::Call);
-    let bin_min = BinaryOption::asset_or_nothing(asset1.clone(), 105.0, OptionType::Put);
+    let bin_min = BinaryOption::asset_or_nothing(asset3.clone(), 105.0, OptionType::Put);
     let eur_call_max = EuropeanOption::new(asset1.clone(), 105.0, OptionType::Call);
     let eur_call_min = EuropeanOption::new(asset3.clone(), 80.0, OptionType::Call);
     let eur_put_max = EuropeanOption::new(asset1.clone(), 120.0, OptionType::Put);
     let eur_put_min = EuropeanOption::new(asset3.clone(), 105.0, OptionType::Put);
 
-    let model = MonteCarloModel::arithmetic(1.0, 0.05, 0.2, 10_000, 252);
-    // let model = BlackScholesModel::new(1.0, 0.05, 0.2);
-    // println!(
-    //     "Best-Of Price: {}, should be: {}",
-    //     model.price(&best_of),
-    //     model.price(&bin_max)
-    // );
-    // println!(
-    //     "Worst-Of Price: {}, should be: {}",
-    //     model.price(&worst_of),
-    //     model.price(&bin_min)
-    // );
     println!(
-        "Call-On-Max Price: {}, should be: {}",
-        model.price(&call_on_max),
-        model.price(&eur_call_max)
-    );
+        "Bin-Max Payoff: {}, {:?}",
+        bin_max.payoff(None),
+        bin_max.instrument()
+    ); // should be 10.0
     println!(
-        "Call-On-Min Price: {}, should be: {}",
-        model.price(&call_on_min),
-        model.price(&eur_call_min)
-    );
-    println!(
-        "Put-On-Max Price: {}, should be: {}",
-        model.price(&put_on_max),
-        model.price(&eur_put_max)
-    );
-    println!(
-        "Put-On-Min Price: {}, should be: {}",
-        model.price(&put_on_min),
-        model.price(&eur_put_min)
-    );
+        "Bin-Min Payoff: {}, {:?}",
+        bin_min.payoff(None),
+        bin_min.instrument()
+    ); // should be 6.0
 
+    let model = MonteCarloModel::arithmetic(1.0, 0.05, 0.2, 10, 252);
+    //let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+    println!(
+        "Best-Of Price: {}, should be: {}",
+        model.price(&best_of),
+        model.price(&bin_max)
+    );
+    println!(
+        "Worst-Of Price: {}, should be: {}",
+        model.price(&worst_of),
+        model.price(&bin_min)
+    );
+    //println!(
+    //    "Call-On-Max Price: {}, should be: {}",
+    //    model.price(&call_on_max),
+    //    model.price(&eur_call_max)
+    //);
+    //println!(
+    //    "Call-On-Min Price: {}, should be: {}",
+    //    model.price(&call_on_min),
+    //    model.price(&eur_call_min)
+    //);
+    //println!(
+    //    "Put-On-Max Price: {}, should be: {}",
+    //    model.price(&put_on_max),
+    //    model.price(&eur_put_max)
+    //);
+    //println!(
+    //    "Put-On-Min Price: {}, should be: {}",
+    //    model.price(&put_on_min),
+    //    model.price(&eur_put_min)
+    //);
+    //
     // Call-On-Max Price: 18.149769825601027, should be: 18.149769825601027
     // Call-On-Min Price: 12.572331070072991, should be: 12.572331070072991
     // Put-On-Max Price: 8.706509687477691, should be: 8.706509687477691
