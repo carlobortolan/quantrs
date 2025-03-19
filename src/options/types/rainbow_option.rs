@@ -142,16 +142,16 @@ impl Option for RainbowOption {
             PutOnAvg => (self.strike - spot_price).max(0.0),
             AllITM => {
                 if self.instrument().worst_performer().spot > self.strike {
-                    return spot_price;
+                    spot_price
                 } else {
-                    return 0.0;
+                    0.0
                 }
             }
             AllOTM => {
                 if self.instrument().best_performer().spot < self.strike {
-                    return spot_price;
+                    spot_price
                 } else {
-                    return 0.0;
+                    0.0
                 }
             }
         }
