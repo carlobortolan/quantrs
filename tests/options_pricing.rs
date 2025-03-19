@@ -937,6 +937,8 @@ mod instrument_tests {
 
 // Option Trait Tests
 mod option_trait_tests {
+    use quantrs::options::RainbowOption;
+
     use super::*;
 
     #[test]
@@ -968,6 +970,40 @@ mod option_trait_tests {
             100.0,
             OptionType::Put,
         );
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::all_itm(
+            Instrument::new().with_spot(100.0).with_assets(vec![]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::all_otm(
+            Instrument::new()
+                .with_spot(100.0)
+                .with_weighted_assets(vec![]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt: RainbowOption = RainbowOption::call_on_avg(
+            Instrument::new()
+                .with_spot(100.0)
+                .with_assets(vec![Instrument::new().with_spot(100.0)]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt: RainbowOption = RainbowOption::put_on_avg(
+            Instrument::new()
+                .with_spot(100.0)
+                .with_weighted_assets(vec![(Instrument::new().with_spot(100.0), 1.0)]),
+            100.0,
+        );
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::call_on_max(Instrument::new().with_spot(100.0), 100.0);
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::put_on_max(Instrument::new().with_spot(100.0), 100.0);
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::call_on_min(Instrument::new().with_spot(100.0), 100.0);
+        assert_implements_option_trait(&opt);
+        let opt = RainbowOption::put_on_min(Instrument::new().with_spot(100.0), 100.0);
         assert_implements_option_trait(&opt);
 
         let model = BlackScholesModel::new(1.0, 0.05, 0.2);

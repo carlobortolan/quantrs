@@ -102,6 +102,10 @@ impl Instrument {
 
     /// Set the assets of the instrument.
     pub fn with_assets(mut self, assets: Vec<Instrument>) -> Self {
+        if assets.is_empty() {
+            return self;
+        }
+
         let weight = 1.0 / assets.len() as f64;
         self.assets = assets.iter().map(|asset| (asset.clone(), weight)).collect();
         self.spot = self.assets.iter().map(|(a, w)| a.spot * w).sum::<f64>();
@@ -111,6 +115,10 @@ impl Instrument {
 
     /// Set the assets and their weights of the instrument.
     pub fn with_weighted_assets(mut self, assets: Vec<(Instrument, f64)>) -> Self {
+        if assets.is_empty() {
+            return self;
+        }
+
         self.assets = assets;
         self.sort_assets_by_performance();
         self
@@ -126,6 +134,9 @@ impl Instrument {
 
     /// Get best performing asset.
     pub fn best_performer(&self) -> &Instrument {
+        if self.assets.is_empty() {
+            return self;
+        }
         if !self.sorted {
             panic!("Assets are not sorted");
         }
@@ -134,6 +145,10 @@ impl Instrument {
 
     /// Get worst performing asset.
     pub fn worst_performer(&self) -> &Instrument {
+        if self.assets.is_empty() {
+            return self;
+        }
+
         if !self.sorted {
             panic!("Assets are not sorted");
         }
