@@ -27,7 +27,7 @@ Please check out the documentation [here][docs-url].
 
 ### Options Pricing
 
-For now quantrs only supports options pricing of vanilla and exotic options with continuous dividends yields.
+For now quantrs only supports options pricing of vanilla and various exotic options.
 
 <details>
 <summary><i>Click to see supported models</i></summary>
