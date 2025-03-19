@@ -1,9 +1,8 @@
 // Run:  cargo run --release --example options_pricing
 
 use quantrs::options::{
-    types::RainbowOption, AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel,
-    EuropeanOption, Greeks, Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing,
-    OptionType,
+    AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks,
+    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionType, RainbowOption,
 };
 
 fn main() {

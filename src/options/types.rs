@@ -4,19 +4,19 @@
 //!
 //! - [Wikipedia: Option Style](https://en.wikipedia.org/wiki/Option_style)
 
-pub mod american_option;
-pub mod asian_option;
-pub mod binary_option;
-pub mod european_option;
-pub mod lookback_option;
-pub mod rainbow_option;
-
 pub use american_option::AmericanOption;
 pub use asian_option::AsianOption;
 pub use binary_option::BinaryOption;
 pub use european_option::EuropeanOption;
 pub use lookback_option::LookbackOption;
 pub use rainbow_option::RainbowOption;
+
+mod american_option;
+mod asian_option;
+mod binary_option;
+mod european_option;
+mod lookback_option;
+mod rainbow_option;
 
 /// Enum representing the type of option.
 #[derive(Clone, Copy, Debug)]

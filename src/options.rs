@@ -11,17 +11,16 @@
 //! This module also provides implementations of the Greeks for each option pricing model.
 //! See the [Greeks](trait.Greeks.html) trait for more information.
 
-pub mod greeks;
-pub mod instrument;
-pub mod models;
-pub mod types;
-
-use std::any::Any;
-
+pub use self::types::*;
 pub use greeks::*;
 pub use instrument::*;
 pub use models::*;
-pub use types::*;
+use std::any::Any;
+
+mod greeks;
+mod instrument;
+mod models;
+mod types;
 
 /// Supertrait that combines OptionPricing and Greeks.
 pub trait Option: Clone + Send + Sync {

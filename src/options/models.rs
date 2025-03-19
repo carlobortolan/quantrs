@@ -11,16 +11,16 @@
 //! This module also provides implementations of the Greeks for each option pricing model.
 //! See the [Greeks](options/trait.Greeks.html) trait for more information.
 
-pub mod binomial_tree;
-pub mod black_76;
-pub mod black_scholes;
-pub mod finite_diff;
-pub mod heston;
-pub mod monte_carlo;
-
 pub use binomial_tree::BinomialTreeModel;
 pub use black_76::Black76Model;
 pub use black_scholes::BlackScholesModel;
 pub use finite_diff::FiniteDiffModel;
 pub use heston::HestonModel;
 pub use monte_carlo::MonteCarloModel;
+
+mod binomial_tree;
+mod black_76;
+mod black_scholes;
+mod finite_diff;
+mod heston;
+mod monte_carlo;
