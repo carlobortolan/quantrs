@@ -113,12 +113,10 @@ fn main() {
     let model = BlackScholesModel::new(0.78, 0.05, 0.2);
 
     // Calculate the price of the binary call option using the Black-Scholes model
-    let price = model.price(&option);
-    println!("Price: {}", price);
+    println!("Price: {}", model.price(&option));
 
     // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-    let greeks = Greeks::calculate(&model, option);
-    println!("Greeks: {:?}\n", greeks);
+    println!("Greeks: {:?}", Greeks::calculate(&model, option));
 }
 ```
 
