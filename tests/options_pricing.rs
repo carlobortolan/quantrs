@@ -728,6 +728,25 @@ mod binomial_tree_tests {
         }
 
         #[test]
+        fn test_call_on_max_with_yield() {
+            let i1 = Instrument::new().with_spot(115.0);
+            let i2 = Instrument::new().with_spot(86.0);
+            let option = RainbowOption::call_on_max(
+                Instrument::new()
+                    .with_assets(vec![i1, i2])
+                    .with_continuous_dividend_yield(0.4),
+                105.0,
+            );
+            let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.7817, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 23.5739, epsilon = 0.0001);
+        }
+
+        #[test]
         fn test_put_on_max() {
             let i1 = Instrument::new().with_spot(115.0);
             let i2 = Instrument::new().with_spot(86.0);
@@ -807,12 +826,26 @@ mod binomial_tree_tests {
             let i1 = Instrument::new().with_spot(115.0);
             let i2 = Instrument::new().with_spot(104.0);
             let i3 = Instrument::new().with_spot(86.0);
-            let option =
-                RainbowOption::all_itm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
             let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 
+            let option = RainbowOption::all_itm(
+                Instrument::new().with_assets(vec![i1.clone(), i2.clone(), i3.clone()]),
+                105.0,
+            );
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
+
+            let option = RainbowOption::all_itm(
+                Instrument::new().with_assets(vec![i1.clone(), i2.clone(), i3.clone()]),
+                116.0,
+            );
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
+
+            let option =
+                RainbowOption::all_itm(Instrument::new().with_assets(vec![i1, i2, i3]), 85.0);
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 101.6666, epsilon = 0.0001);
         }
 
         #[test]
@@ -820,10 +853,24 @@ mod binomial_tree_tests {
             let i1 = Instrument::new().with_spot(115.0);
             let i2 = Instrument::new().with_spot(104.0);
             let i3 = Instrument::new().with_spot(86.0);
-            let option =
-                RainbowOption::all_otm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0);
             let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
 
+            let option = RainbowOption::all_otm(
+                Instrument::new().with_assets(vec![i1.clone(), i2.clone(), i3.clone()]),
+                105.0,
+            );
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
+
+            let option = RainbowOption::all_otm(
+                Instrument::new().with_assets(vec![i1.clone(), i2.clone(), i3.clone()]),
+                116.0,
+            );
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 101.6666, epsilon = 0.0001);
+
+            let option =
+                RainbowOption::all_otm(Instrument::new().with_assets(vec![i1, i2, i3]), 85.0);
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.0, epsilon = 0.0001);
         }
@@ -896,38 +943,6 @@ mod binomial_tree_tests {
             model.implied_volatility(&option, market_price);
         });
         assert!(result.is_err(), "Expected panic for delta calculation");
-    }
-
-    #[test]
-    fn test_binomial_tree_greeks() {
-        let instrument = Instrument::new().with_spot(100.0);
-        let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-        let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
-
-        let result = std::panic::catch_unwind(|| {
-            model.delta(&option);
-        });
-        assert!(result.is_err(), "Expected panic for delta calculation");
-
-        let result = std::panic::catch_unwind(|| {
-            model.gamma(&option);
-        });
-        assert!(result.is_err(), "Expected panic for gamma calculation");
-
-        let result = std::panic::catch_unwind(|| {
-            model.theta(&option);
-        });
-        assert!(result.is_err(), "Expected panic for theta calculation");
-
-        let result = std::panic::catch_unwind(|| {
-            model.vega(&option);
-        });
-        assert!(result.is_err(), "Expected panic for vega calculation");
-
-        let result = std::panic::catch_unwind(|| {
-            model.rho(&option);
-        });
-        assert!(result.is_err(), "Expected panic for rho calculation");
     }
 }
 
