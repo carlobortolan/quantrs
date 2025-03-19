@@ -176,11 +176,25 @@ impl Option for RainbowOption {
             OptionType::Call => OptionType::Put,
             OptionType::Put => OptionType::Call,
         };
+
+        let flipped_option_style = match self.rainbow_option_type() {
+            BestOf => BestOf,
+            WorstOf => WorstOf,
+            CallOnMax => PutOnMax,
+            CallOnMin => PutOnMin,
+            PutOnMax => CallOnMax,
+            PutOnMin => CallOnMin,
+            CallOnAvg => PutOnAvg,
+            PutOnAvg => CallOnAvg,
+            AllITM => AllOTM,
+            AllOTM => AllITM,
+        };
+
         RainbowOption::new(
             self.instrument.clone(),
             self.strike,
             flipped_option_type,
-            *self.rainbow_option_type(),
+            flipped_option_style,
         )
     }
 
