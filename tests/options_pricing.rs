@@ -933,6 +933,50 @@ mod instrument_tests {
 
         assert_abs_diff_eq!(price, 100.0, epsilon = 100.0 * 0.01 * 4.0);
     }
+
+    #[test]
+    fn test_assets() {
+        let asset1 = Instrument::new().with_spot(115.0);
+        let asset2 = Instrument::new().with_spot(104.0);
+        let asset3 = Instrument::new().with_spot(86.0);
+
+        let mut instrument = Instrument::new().with_assets(vec![
+            (asset1.clone()),
+            (asset2.clone()),
+            (asset3.clone()),
+        ]);
+
+        assert_abs_diff_eq!(instrument.spot, 101.6666, epsilon = 0.001);
+
+        assert_eq!(instrument.best_performer().spot, asset1.spot);
+        assert_eq!(instrument.worst_performer().spot, asset3.spot);
+        instrument.sort_assets_by_performance();
+        assert_eq!(instrument.assets[0].0.spot, asset1.spot);
+        assert_eq!(instrument.assets[1].0.spot, asset2.spot);
+        assert_eq!(instrument.assets[2].0.spot, asset3.spot);
+    }
+
+    #[test]
+    fn test_weighted_assets() {
+        let asset1 = Instrument::new().with_spot(115.0);
+        let asset2 = Instrument::new().with_spot(104.0);
+        let asset3 = Instrument::new().with_spot(86.0);
+
+        let mut instrument = Instrument::new().with_weighted_assets(vec![
+            (asset1.clone(), 0.5),
+            (asset2.clone(), 0.3),
+            (asset3.clone(), 0.2),
+        ]);
+
+        assert_abs_diff_eq!(instrument.spot, 105.9, epsilon = 0.001);
+
+        assert_eq!(instrument.best_performer().spot, asset1.spot);
+        assert_eq!(instrument.worst_performer().spot, asset3.spot);
+        instrument.sort_assets_by_performance();
+        assert_eq!(instrument.assets[0].0.spot, asset1.spot);
+        assert_eq!(instrument.assets[1].0.spot, asset2.spot);
+        assert_eq!(instrument.assets[2].0.spot, asset3.spot);
+    }
 }
 
 // Option Trait Tests
