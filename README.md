@@ -72,8 +72,8 @@ Compared to other popular options pricing libraries, quantrs is _significantly_ 
 | ------------------------------------------------------ | ------------------------ | -------------------------- | ----------------------- | ------------------------- |
 | quantrs                                                | 0.0971                   | 0.0970                     | 0.0007                  | 10,142,000                |
 | [QuantLib](https://www.quantlib.org) (cpp)             | n.a.                     | n.a.                       | n.a.                    | n.a.                      |
-| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551                   | 2.8630 (29x slower)        | 0.9391                  | 350,250                   |
-| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959                  | 10.8950 (110x slower)      | 1.1398                  | 90,943                    |
+| [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551                   | 2.8630                     | 0.9391                  | 350,250                   |
+| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959                  | 10.8950                    | 1.1398                  | 90,943                    |
 | [Q-Fin](https://github.com/romanmichaelpaolucci/Q-Fin) | 0.2622                   | 0.2603                     | 0.0356                  | 3,813,700                 |
 | [RustQuant](https://github.com/avhz/RustQuant)         | 1.4777                   | 1.4750                     | 0.0237                  | 676,727                   |
 
@@ -87,7 +87,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.3"
+quantrs = "0.1.4"
 ```
 
 Now if you want to e.g., model binary call options using the Black-Scholes model, you can:
