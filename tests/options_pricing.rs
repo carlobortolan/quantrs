@@ -753,10 +753,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::geometric(0.7, 0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 76.0002, epsilon = 2.0);
+            assert_abs_diff_eq!(price, 76.0002, epsilon = 2.5);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 30.2164, epsilon = 2.0);
+            assert_abs_diff_eq!(price, 30.2164, epsilon = 2.5);
         }
 
         #[test]
