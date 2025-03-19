@@ -6,6 +6,7 @@
 [![docs.rs][docsrs-badge]][docs-url]
 [![codecov-quantrs][codecov-badge]][codecov-url]
 ![Crates.io MSRV][crates-msrv-badge]
+![Crates.io downloads][crates-download-badge]
 
 [actions-test-badge]: https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml/badge.svg
 [crates-badge]: https://img.shields.io/crates/v/quantrs.svg
@@ -16,6 +17,7 @@
 [codecov-badge]: https://codecov.io/gh/carlobortolan/quantrs/graph/badge.svg?token=NJ4HW3OQFY
 [codecov-url]: https://codecov.io/gh/carlobortolan/quantrs
 [crates-msrv-badge]: https://img.shields.io/crates/msrv/quantrs
+[crates-download-badge]: https://img.shields.io/crates/d/quantrs
 
 Quantrs is a tiny quantitative finance library for Rust.
 It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading quantlib documentation.
