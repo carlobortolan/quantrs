@@ -1,4 +1,60 @@
 //! Module for Rainbow option type.
+//!
+//! A Rainbow option is a type of option whose payoff depends on the performance of multiple underlying assets.
+//! The payoff of a Rainbow option can be based on the best or worst performing asset, the average performance of the assets, or other combinations.
+//!
+//! ## Rainbow Types
+//! - `BestOf`: Pays the maximum return of the underlying assets.
+//! - `WorstOf`: Pays the minimum return of the underlying assets.
+//! - `CallOnMax`: Pays the difference between the maximum return and the strike price.
+//! - `CallOnMin`: Pays the difference between the minimum return and the strike price.
+//! - `PutOnMax`: Pays the difference between the strike price and the maximum return.
+//! - `PutOnMin`: Pays the difference between the strike price and the minimum return.
+//! - `CallOnAvg`: Pays the difference between the average return and the strike price.
+//! - `PutOnAvg`: Pays the difference between the strike price and the average return.
+//! - `AllITM`: Pays the sum of the returns if all assets are in-the-money.
+//! - `AllOTM`: Pays the sum of the returns if all assets are out-of-the-money.
+//!
+//! ## References
+//!
+//! - [Wikipedia - Rainbow option](https://en.wikipedia.org/wiki/Rainbow_option)
+//! - [FiNcyclopedia](https://fincyclopedia.net/derivatives/r/rainbow-option)
+//! - [Investopedia - Rainbow option](https://www.investopedia.com/terms/r/rainbowoption.asp)
+//!
+//! ## Example
+//! 
+//! ```
+//! use quantrs::options::{Instrument, Option, RainbowOption, OptionType, RainbowType};
+//! 
+//! let asset1 = Instrument::new().with_spot(100.0);
+//! let asset2 = Instrument::new().with_spot(110.0);
+//! let asset3 = Instrument::new().with_spot(90.0);
+//! 
+//! let instrument = Instrument::new()
+//!    .with_assets(vec![(asset1.clone()), (asset2.clone()), (asset3.clone())]);
+//!    
+//! let best_of = RainbowOption::best_of(instrument.clone(), 105.0);
+//! let worst_of = RainbowOption::worst_of(instrument.clone(), 105.0);
+//! let call_on_avg = RainbowOption::call_on_avg(instrument.clone(), 100.0);
+//! let put_on_avg = RainbowOption::put_on_avg(instrument.clone(), 110.0);
+//! let all_itm = RainbowOption::all_itm(instrument.clone(), 105.0);
+//! let all_otm = RainbowOption::all_otm(instrument.clone(), 105.0);
+//! let call_on_max = RainbowOption::call_on_max(instrument.clone(), 105.0);
+//! let call_on_min = RainbowOption::call_on_min(instrument.clone(), 80.0);
+//! let put_on_max = RainbowOption::put_on_max(instrument.clone(), 120.0);
+//! let put_on_min = RainbowOption::put_on_min(instrument.clone(), 105.0);
+//! 
+//! println!("Best-Of Payoff: {}", best_of.payoff(None)); // should be 115.0
+//! println!("Worst-Of Payoff: {}", worst_of.payoff(None)); // should be 86.0
+//! println!("Call-On-Avg Payoff: {}", call_on_avg.payoff(None)); // should be 1.6
+//! println!("Put-On-Avg Payoff: {}", put_on_avg.payoff(None)); // should be 8.3
+//! println!("All ITM Payoff: {}", all_itm.payoff(None)); // should be 0.0
+//! println!("All OTM Payoff: {}", all_otm.payoff(None)); // should be 0.0
+//! println!("Call-On-Max Payoff: {}", call_on_max.payoff(None)); // should be 10.0
+//! println!("Call-On-Min Payoff: {}", call_on_min.payoff(None)); // should be 6.0
+//! println!("Put-On-Max Payoff: {}", put_on_max.payoff(None)); // should be 5.0
+//! println!("Put-On-Min Payoff: {}", put_on_min.payoff(None)); // should be 19.0
+//! ```
 
 use super::{OptionStyle, OptionType, RainbowType, RainbowType::*};
 use crate::options::{Instrument, Option};

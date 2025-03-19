@@ -7,13 +7,13 @@ use quantrs::options::{
 };
 
 fn main() {
-    // example_from_readme();
-    // example_black_scholes();
-    // example_binomial_tree();
-    // example_greeks();
-    // example_monte_carlo();
+    example_from_readme();
+    example_black_scholes();
+    example_binomial_tree();
+    example_greeks();
+    example_monte_carlo();
     rainbow_option_example();
-    // example_asian();
+    example_asian();
 }
 
 fn example_black_scholes() {
