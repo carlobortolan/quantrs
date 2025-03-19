@@ -27,8 +27,6 @@ fn assert_implements_model_trait<T: OptionPricing>(model: &T) {
 
 // Black-Scholes Option Tests
 mod black_scholes_tests {
-    use quantrs::options::types::BinaryOption;
-
     use super::*;
 
     mod european_option_tests {
@@ -487,8 +485,6 @@ mod black_scholes_tests {
 
 // Binomial Tree Option Tests
 mod binomial_tree_tests {
-    use quantrs::options::AmericanOption;
-
     use super::*;
 
     #[test]
