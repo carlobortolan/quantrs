@@ -47,7 +47,7 @@ For now quantrs only supports options pricing of vanilla and various exotic opti
 | ²Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
 | ²Binary Cash-or-Nothing     | ✅              | ⏳       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
 | ²Binary Asset-or-Nothing    | ✅              | ⏳       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
-| Greeks (Δ, ν, Θ, ρ, Γ)      | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
+| Greeks (Δ,ν,Θ,ρ,Γ)          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
 | Implied Volatility          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
 
 > ¹ _"Exotic" options with standard exercise style; only differ in their payoff value_\
