@@ -152,7 +152,7 @@ impl Instrument {
         if !self.sorted {
             panic!("Assets are not sorted");
         }
-        &self.assets.get(self.assets.len() - 1).unwrap().0
+        &self.assets.last().unwrap().0
     }
 
     /// Simulate random asset prices (Euler method)
