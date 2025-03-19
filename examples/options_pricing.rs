@@ -17,8 +17,8 @@ fn main() {
 
 fn example_black_scholes() {
     let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-    let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+    let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
+    let model = BlackScholesModel::new(0.05, 0.2);
 
     let call_price = model.price(&option);
     println!("Black-Scholes Call Price: {}", call_price);
@@ -33,8 +33,8 @@ fn example_black_scholes() {
 
 fn example_binomial_tree() {
     let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-    let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+    let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
+    let model = BinomialTreeModel::new(0.05, 0.2, 100);
 
     let call_price = model.price(&option);
     println!("Binomial Tree Call Price: {}", call_price);
@@ -49,8 +49,8 @@ fn example_binomial_tree() {
 
 fn example_greeks() {
     let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-    let model = BlackScholesModel::new(1.0, 0.05, 0.2);
+    let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
+    let model = BlackScholesModel::new(0.05, 0.2);
 
     let greeks = Greeks::calculate(&model, option.clone());
 
@@ -72,9 +72,9 @@ fn example_asian() {
     let instrument = Instrument::new()
         .with_spot(110.0)
         .with_continuous_dividend_yield(0.0);
-    let option = AsianOption::floating(instrument.clone(), OptionType::Call);
-    let arithmetic_model = MonteCarloModel::arithmetic(1.0, 0.03, 0.2, 4_000, 20);
-    let geometric_model = MonteCarloModel::geometric(1.0, 0.03, 0.2, 4_000, 20);
+    let option = AsianOption::floating(instrument.clone(), 1.0, OptionType::Call);
+    let arithmetic_model = MonteCarloModel::arithmetic(0.03, 0.2, 4_000, 20);
+    let geometric_model = MonteCarloModel::geometric(0.03, 0.2, 4_000, 20);
 
     let price = arithmetic_model.price(&option);
     println!("Arithmetic Call Price: {}", price);
@@ -91,9 +91,9 @@ fn example_asian() {
 
 fn example_monte_carlo() {
     let instrument = Instrument::new().with_spot(100.0);
-    let model = MonteCarloModel::arithmetic(1.0, 0.01, 0.3, 1_000, 52);
+    let model = MonteCarloModel::arithmetic(0.01, 0.3, 1_000, 52);
 
-    let european_option = EuropeanOption::new(instrument.clone(), 100.0, OptionType::Call);
+    let european_option = EuropeanOption::new(instrument.clone(), 100.0, 1.0, OptionType::Call);
     println!(
         "[Monte Carlo] European Call: {}",
         model.price(&european_option)
@@ -103,7 +103,8 @@ fn example_monte_carlo() {
         model.price(&european_option.flip())
     );
 
-    let binary_option = BinaryOption::cash_or_nothing(instrument.clone(), 100.0, OptionType::Call);
+    let binary_option =
+        BinaryOption::cash_or_nothing(instrument.clone(), 100.0, 1.0, OptionType::Call);
     println!("[Monte Carlo] Binary Call: {}", model.price(&binary_option));
     println!(
         "[Monte Carlo] Binary Put: {}",
@@ -116,7 +117,7 @@ fn example_monte_carlo() {
     // => 4.895841997908933
     // => 12.15233976468229
 
-    let asian_option = AsianOption::fixed(instrument.clone(), 100.0, OptionType::Call);
+    let asian_option = AsianOption::fixed(instrument.clone(), 100.0, 1.0, OptionType::Call);
     println!("[Monte Carlo] Asian Call: {}", model.price(&asian_option));
     println!(
         "[Monte Carlo] Asian Put: {}",
@@ -131,13 +132,13 @@ fn example_from_readme() {
         .with_continuous_dividend_yield(0.02);
 
     // Create a new Cash-or-Nothing binary call option with a strike price of 85
-    let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
+    let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, OptionType::Call);
 
     // Create a new Black-Scholes model with:
     // - Time to maturity (T) = 0.78 years
     // - Risk-free interest rate (r) = 5%
     // - Volatility (σ) = 20%
-    let model = BlackScholesModel::new(0.78, 0.05, 0.2);
+    let model = BlackScholesModel::new(0.05, 0.2);
 
     // Calculate the price of the binary call option using the Black-Scholes model
     let price = model.price(&option);
@@ -168,16 +169,16 @@ fn rainbow_option_example() {
         .with_assets(vec![(asset1.clone()), (asset2.clone()), (asset3.clone())])
         .with_continuous_dividend_yield(q);
 
-    let best_of = RainbowOption::best_of(instrument.clone(), 105.0);
-    let worst_of = RainbowOption::worst_of(instrument.clone(), 105.0);
-    let call_on_avg = RainbowOption::call_on_avg(instrument.clone(), 100.0);
-    let put_on_avg = RainbowOption::put_on_avg(instrument.clone(), 110.0);
-    let all_itm = RainbowOption::all_itm(instrument.clone(), 105.0);
-    let all_otm = RainbowOption::all_otm(instrument.clone(), 105.0);
-    let call_on_max = RainbowOption::call_on_max(instrument.clone(), 105.0);
-    let call_on_min = RainbowOption::call_on_min(instrument.clone(), 80.0);
-    let put_on_max = RainbowOption::put_on_max(instrument.clone(), 120.0);
-    let put_on_min = RainbowOption::put_on_min(instrument.clone(), 105.0);
+    let best_of = RainbowOption::best_of(instrument.clone(), 105.0, 1.0);
+    let worst_of = RainbowOption::worst_of(instrument.clone(), 105.0, 1.0);
+    let call_on_avg = RainbowOption::call_on_avg(instrument.clone(), 100.0, 1.0);
+    let put_on_avg = RainbowOption::put_on_avg(instrument.clone(), 110.0, 1.0);
+    let all_itm = RainbowOption::all_itm(instrument.clone(), 105.0, 1.0);
+    let all_otm = RainbowOption::all_otm(instrument.clone(), 105.0, 1.0);
+    let call_on_max = RainbowOption::call_on_max(instrument.clone(), 105.0, 1.0);
+    let call_on_min = RainbowOption::call_on_min(instrument.clone(), 80.0, 1.0);
+    let put_on_max = RainbowOption::put_on_max(instrument.clone(), 120.0, 1.0);
+    let put_on_min = RainbowOption::put_on_min(instrument.clone(), 105.0, 1.0);
 
     println!("Best-Of Payoff: {}", best_of.payoff(None)); // should be 115.0
     println!("Worst-Of Payoff: {}", worst_of.payoff(None)); // should be 86.0
@@ -190,13 +191,13 @@ fn rainbow_option_example() {
     println!("Put-On-Max Payoff: {}", put_on_max.payoff(None)); // should be 5.0
     println!("Put-On-Min Payoff: {}", put_on_min.payoff(None)); // should be 19.0
 
-    let eur_call_max = EuropeanOption::new(asset1.clone(), 105.0, OptionType::Call);
-    let eur_call_min = EuropeanOption::new(asset3.clone(), 80.0, OptionType::Call);
-    let eur_put_max = EuropeanOption::new(asset1.clone(), 120.0, OptionType::Put);
-    let eur_put_min = EuropeanOption::new(asset3.clone(), 105.0, OptionType::Put);
+    let eur_call_max = EuropeanOption::new(asset1.clone(), 105.0, 1.0, OptionType::Call);
+    let eur_call_min = EuropeanOption::new(asset3.clone(), 80.0, 1.0, OptionType::Call);
+    let eur_put_max = EuropeanOption::new(asset1.clone(), 120.0, 1.0, OptionType::Put);
+    let eur_put_min = EuropeanOption::new(asset3.clone(), 105.0, 1.0, OptionType::Put);
 
     // let model = MonteCarloModel::arithmetic(1.0, 0.05, 0.2, 1_000, 252);
-    let model = BinomialTreeModel::new(1.0, 0.05, 0.2, 100);
+    let model = BinomialTreeModel::new(0.05, 0.2, 100);
     // let model = BlackScholesModel::new(1.0, 0.05, 0.2);
 
     println!(

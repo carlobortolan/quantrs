@@ -11,8 +11,8 @@
 //! ```
 //! use quantrs::options::{EuropeanOption, BlackScholesModel, Greeks, OptionType, Instrument};
 //!
-//! let option = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, OptionType::Call);
-//! let model = quantrs::options::BlackScholesModel::new(1.0, 0.05, 0.2);
+//! let option = EuropeanOption::new(Instrument::new().with_spot(100.0), 100.0, 1.0, OptionType::Call);
+//! let model = quantrs::options::BlackScholesModel::new(0.05, 0.2);
 //!
 //! let greeks = Greeks::calculate(&model, option);
 //! println!("Delta: {}", greeks.delta);

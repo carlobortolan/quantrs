@@ -5,8 +5,6 @@ use crate::options::{Option, OptionPricing};
 /// Heston option pricing model.
 #[derive(Debug, Default)]
 pub struct HestonModel {
-    /// Time horizon (in years).
-    pub time_to_maturity: f64,
     /// Risk-free interest rate (e.g., 0.05 for 5%).
     pub risk_free_rate: f64,
     /// Volatility of the underlying asset (e.g., 0.2 for 20%).
@@ -17,9 +15,8 @@ pub struct HestonModel {
 
 impl HestonModel {
     /// Create a new `HestonModel`.
-    pub fn new(time_to_maturity: f64, risk_free_rate: f64, volatility: f64, steps: usize) -> Self {
+    pub fn new(risk_free_rate: f64, volatility: f64, steps: usize) -> Self {
         Self {
-            time_to_maturity,
             risk_free_rate,
             volatility,
             steps,

@@ -16,7 +16,7 @@
 //! use quantrs::options::{Option, BinaryOption, Instrument, OptionType};
 //!
 //! let instrument = Instrument::new().with_spot(100.0);
-//! let option = BinaryOption::cash_or_nothing(instrument, 100.0, OptionType::Call);
+//! let option = BinaryOption::cash_or_nothing(instrument, 100.0, 1.0, OptionType::Call);
 //!
 //! println!("Option type: {:?}", option.option_type());
 //! println!("Strike price: {}", option.strike());
@@ -36,6 +36,8 @@ pub struct BinaryOption {
     pub instrument: Instrument,
     /// Strike price of the option (aka exercise price).
     pub strike: f64,
+    /// The time horizon (in years).
+    pub time_to_maturity: f64,
     /// Type of the option (Call or Put).
     pub option_type: OptionType,
     /// Style of the option (Binary with specific type).
@@ -47,25 +49,49 @@ impl BinaryOption {
     pub fn new(
         instrument: Instrument,
         strike: f64,
+        time_to_maturity: f64,
         option_type: OptionType,
         binary_option_type: BinaryType,
     ) -> Self {
         Self {
             instrument,
             strike,
+            time_to_maturity,
             option_type,
             option_style: OptionStyle::Binary(binary_option_type),
         }
     }
 
     /// Create a new `CashOrNothing` binary option.
-    pub fn cash_or_nothing(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
-        Self::new(instrument, strike, option_type, BinaryType::CashOrNothing)
+    pub fn cash_or_nothing(
+        instrument: Instrument,
+        strike: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            strike,
+            time_to_maturity,
+            option_type,
+            BinaryType::CashOrNothing,
+        )
     }
 
     /// Create a new `AssetOrNothing` binary option.
-    pub fn asset_or_nothing(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
-        Self::new(instrument, strike, option_type, BinaryType::AssetOrNothing)
+    pub fn asset_or_nothing(
+        instrument: Instrument,
+        strike: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            strike,
+            time_to_maturity,
+            option_type,
+            BinaryType::AssetOrNothing,
+        )
     }
 
     /// Get the binary option type.
@@ -79,10 +105,6 @@ impl BinaryOption {
 }
 
 impl Option for BinaryOption {
-    fn style(&self) -> &OptionStyle {
-        &self.option_style
-    }
-
     fn instrument(&self) -> &Instrument {
         &self.instrument
     }
@@ -91,8 +113,16 @@ impl Option for BinaryOption {
         self.strike
     }
 
+    fn time_to_maturity(&self) -> f64 {
+        self.time_to_maturity
+    }
+
     fn option_type(&self) -> OptionType {
         self.option_type
+    }
+
+    fn style(&self) -> &OptionStyle {
+        &self.option_style
     }
 
     fn flip(&self) -> Self {
@@ -103,6 +133,7 @@ impl Option for BinaryOption {
         BinaryOption::new(
             self.instrument.clone(),
             self.strike,
+            self.time_to_maturity,
             flipped_option_type,
             *self.binary_option_type(),
         )

@@ -16,7 +16,7 @@
 //! use quantrs::options::{Option, AsianOption, Instrument, OptionType, Permutation};
 //!
 //! let instrument = Instrument::new().with_spot(100.0);
-//! let option = AsianOption::new(instrument, 100.0, OptionType::Call, Permutation::Fixed);
+//! let option = AsianOption::new(instrument, 100.0, 1.0, OptionType::Call, Permutation::Fixed);
 //!
 //! println!("Option type: {:?}", option.option_type());
 //! println!("Strike price: {}", option.strike());
@@ -27,10 +27,17 @@ use crate::options::{types::Permutation, Instrument, Option, OptionStyle, Option
 /// A struct representing an Asian option.
 #[derive(Clone, Debug)]
 pub struct AsianOption {
+    /// The underlying instrument.
     pub instrument: Instrument,
+    /// Strike price of the option (aka exercise price).
     pub strike: f64,
+    /// The time horizon (in years).
+    pub time_to_maturity: f64,
+    /// Type of the option (Call or Put).
     pub option_type: OptionType,
+    /// The style of the option (Asian).
     pub option_style: OptionStyle,
+    /// The type of the Asian option (Fixed or Floating).
     pub asian_type: Permutation,
 }
 
@@ -39,12 +46,14 @@ impl AsianOption {
     pub fn new(
         instrument: Instrument,
         strike: f64,
+        time_to_maturity: f64,
         option_type: OptionType,
         asian_type: Permutation,
     ) -> Self {
         Self {
             instrument,
             strike,
+            time_to_maturity,
             option_type,
             option_style: OptionStyle::Asian(asian_type),
             asian_type,
@@ -52,21 +61,38 @@ impl AsianOption {
     }
 
     /// Create a new `Fixed` Asian option.
-    pub fn fixed(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
-        Self::new(instrument, strike, option_type, Permutation::Fixed)
+    pub fn fixed(
+        instrument: Instrument,
+        strike: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            strike,
+            time_to_maturity,
+            option_type,
+            Permutation::Fixed,
+        )
     }
 
     /// Create a new `Floating` Asian option.
-    pub fn floating(instrument: Instrument, option_type: OptionType) -> Self {
-        Self::new(instrument, 0.0, option_type, Permutation::Floating) // strike is not used for floating
+    pub fn floating(
+        instrument: Instrument,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            0.0,
+            time_to_maturity,
+            option_type,
+            Permutation::Floating,
+        ) // strike is not used for floating
     }
 }
 
 impl Option for AsianOption {
-    fn style(&self) -> &OptionStyle {
-        &self.option_style
-    }
-
     fn instrument(&self) -> &Instrument {
         &self.instrument
     }
@@ -75,8 +101,16 @@ impl Option for AsianOption {
         self.strike
     }
 
+    fn time_to_maturity(&self) -> f64 {
+        self.time_to_maturity
+    }
+
     fn option_type(&self) -> OptionType {
         self.option_type
+    }
+
+    fn style(&self) -> &OptionStyle {
+        &self.option_style
     }
 
     fn payoff(&self, avg_price: std::option::Option<f64>) -> f64 {
@@ -102,6 +136,7 @@ impl Option for AsianOption {
         AsianOption::new(
             self.instrument.clone(),
             self.strike,
+            self.time_to_maturity,
             flipped_option_type,
             self.asian_type,
         )

@@ -24,6 +24,13 @@ mod types;
 
 /// Supertrait that combines OptionPricing and Greeks.
 pub trait Option: Clone + Send + Sync {
+    /// Time horizon (in years).
+    ///
+    /// # Returns
+    /// 
+    /// The time horizon (in years).
+    fn time_to_maturity(&self) -> f64;
+
     /// Get the style of the option.
     ///
     /// # Returns

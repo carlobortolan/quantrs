@@ -15,7 +15,7 @@
 //! use quantrs::options::{Option, AmericanOption, Instrument, OptionType};
 //!
 //! let instrument = Instrument::new().with_spot(100.0);
-//! let option = AmericanOption::new(instrument, 100.0, OptionType::Call);
+//! let option = AmericanOption::new(instrument, 100.0, 1.0, OptionType::Call);
 //!
 //! println!("Option type: {:?}", option.option_type());
 //! println!("Strike price: {}", option.strike());
@@ -35,25 +35,29 @@ pub struct AmericanOption {
     /// Strike price of the option (aka exercise price).
     pub strike: f64,
     /// Type of the option (Call or Put).
+    /// The time horizon (in years).
+    pub time_to_maturity: f64,
     pub option_type: OptionType,
 }
 
 impl AmericanOption {
     /// Create a new `AmericanOption`.
-    pub fn new(instrument: Instrument, strike: f64, option_type: OptionType) -> Self {
+    pub fn new(
+        instrument: Instrument,
+        strike: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
         Self {
             instrument,
             strike,
+            time_to_maturity,
             option_type,
         }
     }
 }
 
 impl Option for AmericanOption {
-    fn style(&self) -> &OptionStyle {
-        &OptionStyle::American
-    }
-
     fn instrument(&self) -> &Instrument {
         &self.instrument
     }
@@ -62,8 +66,16 @@ impl Option for AmericanOption {
         self.strike
     }
 
+    fn time_to_maturity(&self) -> f64 {
+        self.time_to_maturity
+    }
+
     fn option_type(&self) -> OptionType {
         self.option_type
+    }
+
+    fn style(&self) -> &OptionStyle {
+        &OptionStyle::American
     }
 
     fn flip(&self) -> Self {
@@ -71,7 +83,12 @@ impl Option for AmericanOption {
             OptionType::Call => OptionType::Put,
             OptionType::Put => OptionType::Call,
         };
-        AmericanOption::new(self.instrument.clone(), self.strike, flipped_option_type)
+        AmericanOption::new(
+            self.instrument.clone(),
+            self.strike,
+            self.time_to_maturity,
+            flipped_option_type,
+        )
     }
 
     fn as_any(&self) -> &dyn Any {
