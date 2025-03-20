@@ -170,7 +170,7 @@ impl MonteCarloModel {
             // Calculate each payoff
             sum += (-(self.risk_free_rate - option.instrument().continuous_dividend_yield)
                 * option.time_to_maturity())
-                .exp()
+            .exp()
                 * option.payoff(Some(avg_price));
         }
 
