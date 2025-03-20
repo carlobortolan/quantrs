@@ -117,7 +117,10 @@ fn main() {
     println!("Price: {}", model.price(&option));
 
     // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-    println!("Greeks: {:?}", Greeks::calculate(&model, option));
+    println!("Greeks: {:?}", Greeks::calculate(&model, &option));
+
+    // Create new option strategies, e.g., a straddle
+    println!("Straddle price: {}", model.straddle(&option));
 }
 ```
 

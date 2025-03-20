@@ -2,7 +2,8 @@
 
 use quantrs::options::{
     AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks,
-    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionType, RainbowOption,
+    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionStrategy, OptionType,
+    RainbowOption,
 };
 
 fn main() {
@@ -52,7 +53,7 @@ fn example_greeks() {
     let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
     let model = BlackScholesModel::new(0.05, 0.2);
 
-    let greeks = Greeks::calculate(&model, option.clone());
+    let greeks = Greeks::calculate(&model, &option);
 
     println!("Delta: {}", greeks.delta);
     println!("Gamma: {}", greeks.gamma);
@@ -131,22 +132,24 @@ fn example_from_readme() {
         .with_spot(100.0)
         .with_continuous_dividend_yield(0.02);
 
-    // Create a new Cash-or-Nothing binary call option with a strike price of 85
+    // Create a new Cash-or-Nothing binary call option with:
+    // - Strike price (K) = 85
+    // - Time to maturity (T) = 0.78 years
     let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, OptionType::Call);
 
     // Create a new Black-Scholes model with:
-    // - Time to maturity (T) = 0.78 years
     // - Risk-free interest rate (r) = 5%
     // - Volatility (σ) = 20%
     let model = BlackScholesModel::new(0.05, 0.2);
 
     // Calculate the price of the binary call option using the Black-Scholes model
-    let price = model.price(&option);
-    println!("Price: {}", price);
+    println!("Price: {}", model.price(&option));
 
     // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-    let greeks = Greeks::calculate(&model, option);
-    println!("Greeks: {:?}\n", greeks);
+    println!("Greeks: {:?}", Greeks::calculate(&model, &option));
+
+    // Create new option strategies, e.g., a straddle
+    println!("Straddle price: {}", model.straddle(&option));
 }
 
 fn rainbow_option_example() {

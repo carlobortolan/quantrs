@@ -73,7 +73,8 @@
 
 use crate::options::{
     types::BinaryType::{AssetOrNothing, CashOrNothing},
-    Instrument, Option, OptionGreeks, OptionPricing, OptionStyle, OptionType, RainbowType,
+    Instrument, Option, OptionGreeks, OptionPricing, OptionStrategy, OptionStyle, OptionType,
+    RainbowType,
 };
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
@@ -755,3 +756,5 @@ impl OptionGreeks for BlackScholesModel {
         }
     }
 }
+
+impl OptionStrategy for BlackScholesModel {}
