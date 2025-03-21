@@ -53,14 +53,14 @@ pub trait OptionStrategy: OptionPricing {
 
         let (min_y, max_y) = Self::calculate_y_bounds(&payoffs, &prices, &p_l);
 
-        let mut root = BitMapBackend::new(file_name, (1200, 800))
+        let mut root = BitMapBackend::new(file_name, (2400, 1600))
             .into_drawing_area()
             .titled(&format!("{} Strategy", strategy_name), ("sans-serif", 60))?;
 
         // Split into a grid (1 large chart + smaller individual option plots) if options are provided
         let (upper, lower) = if let Some(options) = options {
             let num_options = options.len();
-            // With 3 options per line, each option should have a 400x400 grid cell
+            // With 3 options per line, each option should have a 800x800 grid cell
             // Calculate the number of columns
             let num_columns = if num_options % 4 == 0 {
                 4
@@ -75,13 +75,13 @@ pub trait OptionStrategy: OptionPricing {
             root = BitMapBackend::new(
                 file_name,
                 (
-                    1400,
-                    (800.0 + ((num_options as f64) / (num_columns as f64)).ceil() * 400.0) as u32,
+                    2800,
+                    (1600.0 + ((num_options as f64) / (num_columns as f64)).ceil() * 800.0) as u32,
                 ),
             )
             .into_drawing_area()
             .titled(&format!("{} Strategy", strategy_name), ("sans-serif", 60))?;
-            root.split_vertically(800)
+            root.split_vertically(1600)
         } else {
             (root.clone(), root)
         };
@@ -151,51 +151,62 @@ pub trait OptionStrategy: OptionPricing {
 
                 // Plot the individual option graph (payoff vs. price)
                 let mut chart = ChartBuilder::on(option_plot_area)
-                    .margin(10)
-                    .x_label_area_size(30)
-                    .y_label_area_size(30)
+                    .margin(30)
+                    .x_label_area_size(100)
+                    .y_label_area_size(100)
                     .build_cartesian_2d(range.start..range.end, min_y..max_y)?;
 
-                // Set the background to dark and configure the mesh for a Bloomberg-style chart
-                chart
-                    .configure_mesh()
-                    .disable_mesh() // Disable the default mesh
-                    .x_desc("Underlying Price ($)")
-                    .y_desc("Value ($)")
-                    .x_label_style(("Arial", 14).into_font().color(&WHITE))
-                    .y_label_style(("Arial", 14).into_font().color(&WHITE))
-                    .axis_style(&WHITE.mix(0.8)) // White axis lines
-                    .light_line_style(&WHITE.mix(0.2)) // Light grid lines
-                    .bold_line_style(&WHITE.mix(0.5)) // Bold grid lines
-                    .draw()?;
-
-                // Set the chart background to dark
+                // Set the background to dark
                 chart.plotting_area().fill(&BLACK)?;
 
+                // Configure the mesh/grid for a Bloomberg-style chart
+                chart
+                    .configure_mesh()
+                    .x_desc("Underlying Price ($)")
+                    .y_desc("Value ($)")
+                    .x_label_style(("Inter", 40).into_font().color(&WHITE))
+                    .y_label_style(("Inter", 40).into_font().color(&WHITE))
+                    .axis_style(&WHITE.mix(0.8)) // White axis lines
+                    .light_line_style(&WHITE.mix(0.2)) // Light but visible grid lines
+                    .bold_line_style(&WHITE.mix(0.7)) // Bolder grid lines for better visibility
+                    .draw()?;
+
+                // Draw payoff curve (cyan)
+                // Draw payoff curve (cyan)
+                // Draw payoff curve (cyan)
                 chart
                     .draw_series(LineSeries::new(
                         spots
                             .iter()
                             .zip(option_payoffs.iter())
                             .map(|(&x, &y)| (x, y)),
-                        &RGBColor(0, 255, 255), // Cyan for payoff curve
+                        ShapeStyle {
+                            color: RGBColor(0, 255, 255).to_rgba(), // Cyan for payoff curve
+                            filled: true,
+                            stroke_width: 5,
+                        },
                     ))?
                     .label("Payoff Curve")
                     .legend(|(x, y)| {
-                        PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(0, 255, 255))
+                        PathElement::new(vec![(x, y), (x + 40, y)], &RGBColor(0, 255, 255))
                     });
 
+                // Draw price curve (orange)
                 chart
                     .draw_series(LineSeries::new(
                         spots
                             .iter()
                             .zip(option_prices.iter())
                             .map(|(&x, &y)| (x, y)),
-                        &RGBColor(255, 140, 0), // Orange for price curve
+                        ShapeStyle {
+                            color: RGBColor(255, 140, 0).to_rgba(), // Orange for price curve
+                            filled: true,
+                            stroke_width: 5,
+                        },
                     ))?
                     .label("Price Curve")
                     .legend(|(x, y)| {
-                        PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(255, 140, 0))
+                        PathElement::new(vec![(x, y), (x + 40, y)], &RGBColor(255, 140, 0))
                     });
 
                 // Configure the legend for Bloomberg-style
@@ -203,7 +214,7 @@ pub trait OptionStrategy: OptionPricing {
                     .configure_series_labels()
                     .background_style(&BLACK.mix(0.8)) // Dark background for the legend
                     .border_style(&WHITE.mix(0.8)) // White border
-                    .label_font(("Arial", 12).into_font().color(&WHITE)) // White text
+                    .label_font(("Inter", 40).into_font().color(&WHITE)) // White text
                     .draw()?;
             }
         }
@@ -251,7 +262,7 @@ pub trait OptionStrategy: OptionPricing {
             .fold(f64::NEG_INFINITY, f64::max)
             .max(0.0);
 
-        (min_y, max_y)
+        (min_y - 1.0, max_y + 1.0)
     }
 
     fn plot_strategy_main_chart(
@@ -268,24 +279,23 @@ pub trait OptionStrategy: OptionPricing {
         let mut chart = ChartBuilder::on(upper)
             .caption(
                 format!("{} Strategy - Payoff & P/L", strategy_name),
-                ("Arial", 22, FontStyle::Bold).into_font().color(&WHITE),
+                ("Inter", 60, FontStyle::Bold).into_font().color(&WHITE),
             )
-            .margin(30)
-            .x_label_area_size(50)
-            .y_label_area_size(50)
+            .margin(40)
+            .x_label_area_size(100)
+            .y_label_area_size(100)
             .build_cartesian_2d(range.start..range.end, min_y..max_y)?;
 
         // Configure chart appearance with a dark background and grid lines
         chart
             .configure_mesh()
-            .disable_mesh() // Disable the default mesh lines
             .x_desc("Underlying Price ($)")
             .y_desc("Value ($)")
-            .x_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
-            .y_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
+            .x_label_style(("Inter", 48, FontStyle::Bold).into_font().color(&WHITE))
+            .y_label_style(("Inter", 48, FontStyle::Bold).into_font().color(&WHITE))
             .axis_style(&WHITE.mix(0.6)) // Configure axis lines
             .light_line_style(ShapeStyle {
-                color: WHITE.mix(0.2).to_rgba(), // Light grid lines
+                color: WHITE.mix(0.4).to_rgba(), // Light grid lines
                 filled: false,
                 stroke_width: 1,
             })
@@ -324,8 +334,8 @@ pub trait OptionStrategy: OptionPricing {
             (range.start as u32..=range.end as u32)
                 .map(|x| x as f64)
                 .map(|x| (x, 0.0)),
-            5,
-            5,
+            10,
+            10,
             ShapeStyle {
                 color: WHITE.to_rgba(),
                 filled: false,
@@ -337,7 +347,7 @@ pub trait OptionStrategy: OptionPricing {
         chart
             .configure_series_labels()
             .border_style(&WHITE)
-            .label_font(("Arial", 12).into_font().color(&WHITE)) // White text
+            .label_font(("Inter", 48).into_font().color(&WHITE)) // White text
             .background_style(ShapeStyle {
                 color: BLACK.mix(0.8).to_rgba(),
                 filled: true,
@@ -358,12 +368,19 @@ pub trait OptionStrategy: OptionPricing {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let owned_color = RGBColor(color.0, color.1, color.2);
         chart
-            .draw_series(LineSeries::new(
-                spots.iter().cloned().zip(values.iter().cloned()),
-                color,
-            ))?
+            .draw_series(
+                LineSeries::new(
+                    spots.iter().cloned().zip(values.iter().cloned()),
+                    ShapeStyle {
+                        color: color.to_rgba(),
+                        filled: false,
+                        stroke_width: 5,
+                    },
+                )
+                .point_size(12),
+            )?
             .label(label)
-            .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], owned_color));
+            .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 40, y)], owned_color));
 
         Ok(())
     }
