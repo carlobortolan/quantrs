@@ -252,7 +252,7 @@ pub trait OptionStrategy: OptionPricing {
             .draw()?;
 
         for (i, option) in options.iter().enumerate() {
-            self.plot_option_data(&mut option_chart, spots, i, option)?;
+            self.plot_option_data(&mut option_chart, spots, i, option, None, None)?;
         }
 
         option_chart
@@ -272,19 +272,25 @@ pub trait OptionStrategy: OptionPricing {
         spots: &[f64],
         option_index: usize,
         option: &T,
+        time_series: std::option::Option<&[f64]>, // Optional time series to show price development over time
+        time_price: std::option::Option<&[f64]>,  // Optional price data over time
     ) -> Result<(), Box<dyn std::error::Error>>
     where
-        T: Option,
+        T: Option, // T must implement OptionTrait (e.g., has `payoff` method)
     {
         let option_payoffs: Vec<f64> = spots
             .iter()
             .map(|&spot| option.payoff(Some(spot)))
             .collect();
+
         let option_prices: Vec<f64> = spots.iter().map(|&spot| self.price(option)).collect();
 
-        let color_payoff = Palette99::pick(option_index).to_rgba();
-        let color_price = Palette99::pick(option_index + 1).to_rgba();
+        // Use Bloomberg-like color scheme
+        let color_payoff = RGBColor(0, 204, 0).to_rgba(); // Green for Payoff
+        let color_price = RGBColor(0, 120, 215).to_rgba(); // Blue for Price
+        let color_time_price = RGBColor(255, 140, 0).to_rgba(); // Orange for time-based price movement
 
+        // Plot the payoff curve
         Self::plot_curve(
             option_chart,
             spots,
@@ -293,6 +299,7 @@ pub trait OptionStrategy: OptionPricing {
             &format!("Option {} Payoff", option_index + 1),
         )?;
 
+        // Plot the price curve
         Self::plot_curve(
             option_chart,
             spots,
@@ -300,6 +307,54 @@ pub trait OptionStrategy: OptionPricing {
             &color_price,
             &format!("Option {} Price", option_index + 1),
         )?;
+
+        // If a time series is provided, plot the price development over time
+        if let Some(time_series) = time_series {
+            if let Some(time_price) = time_price {
+                Self::plot_time_based_price(
+                    option_chart,
+                    time_series,
+                    time_price,
+                    color_time_price,
+                    "Price Development Over Time",
+                )?;
+            }
+        }
+
+        // Annotate with strike price or important levels (e.g., breakeven)
+        let strike_price = option.strike();
+        option_chart
+            .draw_series(LineSeries::new(
+                vec![
+                    (strike_price, 0.0),
+                    (strike_price, *option_payoffs.last().unwrap()),
+                ],
+                &RGBColor(255, 0, 0), // Red color for the line
+            ))?
+            .label("Strike Price")
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(255, 0, 0)));
+
+        Ok(())
+    }
+
+    /// Plot the price development over time (additional line chart).
+    fn plot_time_based_price(
+        option_chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
+        time_series: &[f64],
+        time_price: &[f64],
+        color: RGBAColor,
+        label: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        option_chart
+            .draw_series(LineSeries::new(
+                time_series
+                    .iter()
+                    .zip(time_price.iter())
+                    .map(|(&x, &y)| (x, y)),
+                &color,
+            ))?
+            .label(label)
+            .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &color));
 
         Ok(())
     }
