@@ -124,7 +124,7 @@ pub trait OptionStrategy: OptionPricing {
                     .y_desc("Value ($)")
                     .x_label_style(("Inter", 40).into_font().color(&WHITE))
                     .y_label_style(("Inter", 40).into_font().color(&WHITE))
-                    .axis_style(&WHITE.mix(0.8))
+                    .axis_style(WHITE.mix(0.8))
                     .light_line_style(WHITE.mix(0.2).stroke_width(1))
                     .bold_line_style(WHITE.mix(0.7).stroke_width(1))
                     .draw()?;
@@ -152,7 +152,7 @@ pub trait OptionStrategy: OptionPricing {
                 chart
                     .configure_series_labels()
                     .background_style(BLACK.mix(0.8).filled())
-                    .border_style(&WHITE.mix(0.8))
+                    .border_style(WHITE.mix(0.8))
                     .label_font(("Inter", 40).into_font().color(&WHITE))
                     .draw()?;
             }
@@ -201,6 +201,7 @@ pub trait OptionStrategy: OptionPricing {
         (min_y - 1.0, max_y + 1.0)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn plot_strategy_main_chart(
         upper: &DrawingArea<BitMapBackend, Shift>,
         spots: &[f64],
@@ -229,7 +230,7 @@ pub trait OptionStrategy: OptionPricing {
             .y_desc("Value ($)")
             .x_label_style(("Inter", 48, FontStyle::Bold).into_font().color(&WHITE))
             .y_label_style(("Inter", 48, FontStyle::Bold).into_font().color(&WHITE))
-            .axis_style(&WHITE.mix(0.6))
+            .axis_style(WHITE.mix(0.6))
             .light_line_style(WHITE.mix(0.4).stroke_width(1))
             .bold_line_style(WHITE.mix(0.5).stroke_width(2))
             .draw()?;
@@ -256,7 +257,7 @@ pub trait OptionStrategy: OptionPricing {
         // Configure legend
         chart
             .configure_series_labels()
-            .border_style(&WHITE)
+            .border_style(WHITE)
             .label_font(("Inter", 48).into_font().color(&WHITE))
             .background_style(BLACK.mix(0.8).filled())
             .draw()?;
@@ -265,7 +266,7 @@ pub trait OptionStrategy: OptionPricing {
     }
 
     /// Plot a single curve (e.g., Payoff, Price, or P/L) on the chart.
-    fn plot_curve<'a, 'b>(
+    fn plot_curve(
         chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
         spots: &[f64],
         values: &[f64],
@@ -310,7 +311,7 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
-    /// Auto-strategy that automatically selects the best strategy based on two options.
+    // Auto-strategy that automatically selects the best strategy based on two options.
     //fn auto_strategy<T: Option>(&self, option1: &T, option2: &T) -> f64 {
     //    if option1.time_to_maturity() < option2.time_to_maturity() {
     //        log_info!("Auto-strategy: Calendar Spread.");
