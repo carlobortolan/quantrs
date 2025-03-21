@@ -254,7 +254,6 @@ pub trait OptionStrategy: OptionPricing {
         (min_y, max_y)
     }
 
-    /// Plot the individual option graph within the grid    /// Plot the main strategy chart.
     fn plot_strategy_main_chart(
         upper: &DrawingArea<BitMapBackend, Shift>,
         spots: &[f64],
@@ -271,40 +270,52 @@ pub trait OptionStrategy: OptionPricing {
                 format!("{} Strategy - Payoff & P/L", strategy_name),
                 ("Arial", 22, FontStyle::Bold).into_font().color(&WHITE),
             )
-            .margin(20)
-            .x_label_area_size(40)
+            .margin(30)
+            .x_label_area_size(50)
             .y_label_area_size(50)
             .build_cartesian_2d(range.start..range.end, min_y..max_y)?;
 
+        // Configure chart appearance with a dark background and grid lines
         chart
             .configure_mesh()
-            .disable_mesh()
+            .disable_mesh() // Disable the default mesh lines
             .x_desc("Underlying Price ($)")
             .y_desc("Value ($)")
             .x_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
             .y_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
-            .axis_style(&WHITE.mix(0.6))
+            .axis_style(&WHITE.mix(0.6)) // Configure axis lines
+            .light_line_style(ShapeStyle {
+                color: WHITE.mix(0.2).to_rgba(), // Light grid lines
+                filled: false,
+                stroke_width: 1,
+            })
+            .bold_line_style(ShapeStyle {
+                color: WHITE.mix(0.5).to_rgba(), // Bold grid lines
+                filled: false,
+                stroke_width: 2,
+            })
             .draw()?;
 
+        // Plot the curves with distinct colors and labels
         Self::plot_curve(
             &mut chart,
             spots,
             payoffs,
-            &RGBAColor::from(RGBColor(0, 255, 255)),
+            &RGBAColor::from(RGBColor(0, 255, 255)), // Cyan
             "Payoff Curve",
         )?;
         Self::plot_curve(
             &mut chart,
             spots,
             prices,
-            &RGBAColor::from(RGBColor(255, 140, 0)),
+            &RGBAColor::from(RGBColor(255, 140, 0)), // Orange
             "Price Curve",
         )?;
         Self::plot_curve(
             &mut chart,
             spots,
             p_l,
-            &RGBAColor::from(RGBColor(255, 0, 255)),
+            &RGBAColor::from(RGBColor(255, 0, 255)), // Magenta
             "P/L Curve",
         )?;
 
@@ -322,6 +333,18 @@ pub trait OptionStrategy: OptionPricing {
             },
         ))?;
 
+        // Configure the legend with a better style
+        chart
+            .configure_series_labels()
+            .border_style(&WHITE)
+            .label_font(("Arial", 12).into_font().color(&WHITE)) // White text
+            .background_style(ShapeStyle {
+                color: BLACK.mix(0.8).to_rgba(),
+                filled: true,
+                stroke_width: 1,
+            })
+            .draw()?;
+
         Ok(())
     }
 
@@ -333,21 +356,15 @@ pub trait OptionStrategy: OptionPricing {
         color: &RGBAColor,
         label: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        let owned_color = RGBColor(color.0, color.1, color.2);
         chart
             .draw_series(LineSeries::new(
                 spots.iter().cloned().zip(values.iter().cloned()),
                 color,
             ))?
             .label(label)
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(255, 140, 0)));
+            .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], owned_color));
 
-        //chart.draw_series(LineSeries::new(
-        //        spots.iter().cloned().zip(values.iter()).map(|(&x, &y)| (x, y)),
-        //        color,
-        //    ))?
-        //    .label(label)
-        //    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color));
-        //
         Ok(())
     }
 
