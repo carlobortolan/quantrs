@@ -15,7 +15,7 @@ use plotters::{
 use super::OptionPricing;
 use crate::{
     check_is_call, check_is_put, check_same_expiration_date, log_info, log_warn,
-    options::{Instrument, Option},
+    options::{EuropeanOption, Instrument, Option},
 };
 
 /// Trait for non-directional strategies.
@@ -33,7 +33,36 @@ pub trait OptionStrategy: OptionPricing {
     ///
     /// # Returns
     /// Result containing the plot or an error.
-    fn plot_strategy<F, T>(
+    fn plot_strategy<F>(
+        &self,
+        strategy_name: &str,
+        strategy_fn: F,
+        range: std::ops::Range<f64>,
+        file_name: &str,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: Fn(f64) -> (f64, f64),
+    {
+        self.plot_strategy_breakdown::<F, EuropeanOption>(
+            strategy_name,
+            strategy_fn,
+            range,
+            file_name,
+            [].as_ref(),
+        )
+    }
+    /// Plot the payoff of an option strategy.
+    ///
+    /// # Arguments
+    /// * `strategy_name` - The name of the strategy.
+    /// * `strategy_fn` - A closure that takes the stock price and returns (payoff, price).
+    /// * `range` - Stock price range.
+    /// * `file_name` - Output file path.
+    /// * `options` - A list of options to plot individually in smaller graphs.
+    ///
+    /// # Returns
+    /// Result containing the plot or an error.
+    fn plot_strategy_breakdown<F, T>(
         &self,
         strategy_name: &str,
         strategy_fn: F,

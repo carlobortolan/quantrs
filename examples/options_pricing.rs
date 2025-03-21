@@ -7,13 +7,13 @@ use quantrs::options::{
 };
 
 fn main() {
-    example_from_readme();
-    example_black_scholes();
-    example_binomial_tree();
-    example_monte_carlo();
-    example_greeks();
-    example_asian();
-    example_rainbow();
+    // example_from_readme();
+    // example_black_scholes();
+    // example_binomial_tree();
+    // example_monte_carlo();
+    // example_greeks();
+    // example_asian();
+    // example_rainbow();
     example_strategy();
 }
 
@@ -430,56 +430,141 @@ fn example_strategy() {
 
     ////////////
     /* PLOTS */
+    let options = vec![EuropeanOption::new(
+        instrument.clone(),
+        60.0,
+        1.0,
+        OptionType::Call,
+    )];
+    let _ = model.plot_strategy_breakdown(
+        "Covered Call",
+        model.covered_call(&instrument, &options[0]),
+        20.0..80.0,
+        "images/covered_call.png",
+        &options,
+    );
+    // => Covered Call: images/covered_call.png
 
-    let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
-    let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
-    let _ = model.plot_strategy::<_, EuropeanOption>(
+    let options = vec![EuropeanOption::new(
+        instrument.clone(),
+        40.0,
+        1.0,
+        OptionType::Put,
+    )];
+    let _ = model.plot_strategy_breakdown(
+        "Protective Put",
+        model.protective_put(&instrument, &options[0]),
+        20.0..80.0,
+        "images/protective_put.png",
+        &options,
+    );
+    // => Protective Put: images/protective_put.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call),
+    ];
+
+    let _ = model.plot_strategy_breakdown(
         "Guts",
-        model.guts(&itm_put, &itm_call),
+        model.guts(&options[0], &options[1]),
         20.0..80.0,
         "images/guts_strategy.png",
-        [].as_ref(),
+        &options,
     );
     // => Guts: images/guts_strategy.png
 
-    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
-    let atm_put: EuropeanOption =
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
-    let _ = model.plot_strategy::<_, EuropeanOption>(
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
         "Straddle",
-        model.straddle(&atm_put, &atm_call),
+        model.straddle(&options[0], &options[1]),
         20.0..80.0,
         "images/straddle_strategy.png",
-        [].as_ref(),
+        &options,
     );
     // => Straddle: images/straddle_strategy.png
 
-    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
-    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
-    let _ = model.plot_strategy::<_, EuropeanOption>(
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
         "Strangle",
-        model.strangle(&otm_put, &otm_call),
+        model.strangle(&options[0], &options[1]),
         20.0..80.0,
         "images/strangle_strategy.png",
-        [].as_ref(),
+        &options,
     );
     // => Strangle: images/strangle_strategy.png
 
-    let itm_call_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call);
-    let itm_call_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
-    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
-    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
-    let _ = model.plot_strategy::<_, EuropeanOption>(
-        "Condor",
-        model.condor(
-            &itm_call_long,
-            &itm_call_short,
-            &otm_call_short,
-            &otm_call_long,
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Butterfly",
+        model.butterfly(&options[0], &options[1], &options[2]),
+        20.0..80.0,
+        "images/butterfly_strategy.png",
+        &options,
+    );
+    // => Butterfly: images/butterfly_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Iron Butterfly",
+        model.iron_butterfly(&options[0], &options[1], &options[2], &options[3]),
+        20.0..80.0,
+        "images/iron_butterfly_strategy.png",
+        &options,
+    );
+    // => Iron Butterfly: images/iron_butterfly_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Christmas Tree Butterfly",
+        model.christmas_tree_butterfly(
+            &options[0],
+            &options[1],
+            &options[2],
+            &options[3],
+            &options[4],
+            &options[5],
         ),
         20.0..80.0,
+        "images/christmas_tree_butterfly_strategy.png",
+        &options,
+    );
+    // => Christmas Tree Butterfly: images/christmas_tree_butterfly_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Condor",
+        model.condor(&options[0], &options[1], &options[2], &options[3]),
+        20.0..80.0,
         "images/condor_strategy.png",
-        [].as_ref(),
+        &options,
     );
     // => Condor: images/condor_strategy.png
 
@@ -489,11 +574,63 @@ fn example_strategy() {
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
         EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
     ];
-    let _ = model.plot_strategy(
+    let _ = model.plot_strategy_breakdown(
         "Iron Condor",
         model.iron_condor(&options[0], &options[1], &options[2], &options[3]),
         20.0..80.0,
         "images/iron_condor_strategy.png",
         &options,
     ); // => Iron Condor: images/iron_condor_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Back Spread",
+        model.back_spread(&options[0], &options[1]),
+        20.0..80.0,
+        "images/beack_spread_strategy.png",
+        &options,
+    ); // => Back Spread: images/beack_spread_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Calendar Spread",
+        model.calendar_spread(&options[0], &options[1]),
+        20.0..80.0,
+        "images/calendar_spread_strategy.png",
+        &options,
+    ); // => Calendar Spread: images/calendar_spread_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Diagonal Spread",
+        model.diagonal_spread(&options[0], &options[1], &options[2]),
+        20.0..80.0,
+        "images/diagonal_spread_strategy.png",
+        &options,
+    ); // => Diagonal Spread: images/diagonal_spread_strategy.png
+}
+
+fn example_plots() {
+    // Create a new plotter and plot the option prices
+    let plotter = Plotter::new();
+    let _ = plotter.plot_option_prices(
+        "Binary Call Option",
+        instrument,
+        80.0..120.0,
+        0.1..1.0,
+        0.1,
+        OptionType::Call,
+        |k, t| BinaryOption::cash_or_nothing(instrument.clone(), k, t, OptionType::Call),
+        "path/to/destination.png",
+    );
 }
