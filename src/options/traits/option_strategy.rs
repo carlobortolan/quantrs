@@ -29,14 +29,16 @@ pub trait OptionStrategy: OptionPricing {
     ///
     /// # Returns
     /// Result containing the plot or an error.
-    fn plot_strategy<F>(
+    fn plot_strategy<F, T>(
         strategy_name: &str,
         strategy_fn: F,
         range: std::ops::Range<f64>,
         file_name: &str,
+        options: std::option::Option<&[T]>,
     ) -> Result<(), Box<dyn std::error::Error>>
     where
         F: Fn(f64) -> (f64, f64),
+        T: Option,
     {
         let spots: Vec<f64> = (range.start as u32..=range.end as u32)
             .map(|x| x as f64)
@@ -91,6 +93,15 @@ pub trait OptionStrategy: OptionPricing {
             .x_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
             .y_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
             .axis_style(&WHITE.mix(0.6))
+            .draw()?;
+
+        // Draw the x-axis at y=0
+        chart
+            .configure_mesh()
+            .bold_line_style(&WHITE.mix(0.6))
+            .x_labels(10)
+            .y_labels(10)
+            .x_label_offset(-10) // Ensure x-axis labels are aligned with y=0
             .draw()?;
 
         // Payoff curve (Cyan)
