@@ -29,7 +29,6 @@ pub trait OptionStrategy: OptionPricing {
     /// * `strategy_fn` - A closure that takes the stock price and returns (payoff, price).
     /// * `range` - Stock price range.
     /// * `file_name` - Output file path.
-    /// * `options` - A list of options to plot individually in smaller graphs.
     ///
     /// # Returns
     /// Result containing the plot or an error.

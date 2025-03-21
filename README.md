@@ -163,9 +163,11 @@ model.plot_strategy_breakdown(
 
 </details>
 
-<div align="center">
+![condor_strategy](https://github.com/user-attachments/assets/0298807f-43ed-4458-9c7d-43b0f70defea)
+
+<!--<div align="center">
   <img src="https://github.com/user-attachments/assets/0298807f-43ed-4458-9c7d-43b0f70defea" alt="condor_strategy" width="600"/>
-</div>
+</div>-->
 
 See the [documentation][docs-url] for more information and examples.
 
