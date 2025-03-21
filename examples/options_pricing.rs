@@ -257,16 +257,16 @@ fn example_strategy() {
 
     let call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     println!(
-        "[Covered Call: {}], given stock: {}, call: {}",
-        model.covered_call(&instrument, &call),
+        "[Covered Call: {:?}], given stock: {}, call: {}",
+        model.covered_call(&instrument, &call)(50.0),
         instrument.spot,
         model.price(&call)
     );
 
     let put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
     println!(
-        "[Protective Put: {}], given stock: {}, put: {}",
-        model.protective_put(&instrument, &put),
+        "[Protective Put: {:?}], given stock: {}, put: {}",
+        model.protective_put(&instrument, &put)(50.0),
         instrument.spot,
         model.price(&put)
     );
@@ -280,8 +280,8 @@ fn example_strategy() {
     let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
     let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
     println!(
-        "[Guts: {}], given put: {}, call: {}",
-        model.guts(&itm_put, &itm_call),
+        "[Guts: {:?}], given put: {}, call: {}",
+        model.guts(&itm_put, &itm_call)(50.0),
         model.price(&itm_put),
         model.price(&itm_call)
     );
@@ -289,8 +289,8 @@ fn example_strategy() {
     let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
     let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
     println!(
-        "[Straddle: {}], given put: {}, call: {}",
-        model.straddle(&atm_put, &atm_call),
+        "[Straddle: {:?}], given put: {}, call: {}",
+        model.straddle(&atm_put, &atm_call)(50.0),
         model.price(&atm_put),
         model.price(&atm_call)
     );
@@ -298,8 +298,8 @@ fn example_strategy() {
     let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
     println!(
-        "[Strangle: {}], given put: {}, call: {}",
-        model.strangle(&otm_put, &otm_call),
+        "[Strangle: {:?}], given put: {}, call: {}",
+        model.strangle(&otm_put, &otm_call)(50.0),
         model.price(&otm_put),
         model.price(&otm_call)
     );
@@ -315,8 +315,8 @@ fn example_strategy() {
     let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
     let upper_wing = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     println!(
-        "[Butterfly: {}], given lower: {}, body: {}, upper: {}",
-        model.butterfly(&lower_wing, &body, &upper_wing),
+        "[Butterfly: {:?}], given lower: {}, body: {}, upper: {}",
+        model.butterfly(&lower_wing, &body, &upper_wing)(50.0),
         model.price(&lower_wing),
         model.price(&body),
         model.price(&upper_wing)
@@ -327,8 +327,8 @@ fn example_strategy() {
     let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
     let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     println!(
-        "[Iron Butterfly: {}], given otm_put: {}, atm_put: {}, atm_call: {}, otm_call: {}",
-        model.iron_butterfly(&otm_put, &atm_put, &atm_call, &otm_call),
+        "[Iron Butterfly: {:?}], given otm_put: {}, atm_put: {}, atm_call: {}, otm_call: {}",
+        model.iron_butterfly(&otm_put, &atm_put, &atm_call, &otm_call)(50.0),
         model.price(&otm_put),
         model.price(&atm_put),
         model.price(&atm_call),
@@ -342,8 +342,8 @@ fn example_strategy() {
     let o5 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
     let o6 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
     println!(
-        "[Christmas Tree Butterfly: {}], given o1: {}, o2: {}, o3: {}, o4: {}, o5: {}, o6: {}",
-        model.christmas_tree_butterfly(&o1, &o2, &o3, &o4, &o5, &o6),
+        "[Christmas Tree Butterfly: {:?}], given o1: {}, o2: {}, o3: {}, o4: {}, o5: {}, o6: {}",
+        model.christmas_tree_butterfly(&o1, &o2, &o3, &o4, &o5, &o6)(50.0),
         model.price(&o1),
         model.price(&o2),
         model.price(&o3),
@@ -362,8 +362,8 @@ fn example_strategy() {
     let short = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
     let long = EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
     println!(
-        "[Back Spread: {}], given long: {}, short: {}",
-        model.back_spread(&short, &long),
+        "[Back Spread: {:?}], given long: {}, short: {}",
+        model.back_spread(&short, &long)(50.0),
         model.price(&long),
         model.price(&short)
     );
@@ -371,8 +371,8 @@ fn example_strategy() {
     let front_month = EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call);
     let back_month = EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, OptionType::Call);
     println!(
-        "[Calendar Spread: {}], given front: {}, back: {}",
-        model.calendar_spread(&front_month, &back_month),
+        "[Calendar Spread: {:?}], given front: {}, back: {}",
+        model.calendar_spread(&front_month, &back_month)(50.0),
         model.price(&front_month),
         model.price(&back_month)
     );
@@ -383,8 +383,8 @@ fn example_strategy() {
     let back_month_short =
         EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
     println!(
-        "[Diagonal Spread: {}], given front: {}, back short: {}, back long: {}",
-        model.diagonal_spread(&front_month, &back_month_short, &back_month_long),
+        "[Diagonal Spread: {:?}], given front: {}, back short: {}, back long: {}",
+        model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0),
         model.price(&front_month),
         model.price(&back_month_short),
         model.price(&back_month_long)
@@ -402,8 +402,8 @@ fn example_strategy() {
     let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
     println!(
-        "[Condor: {}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
-        model.condor(&itm_call_long, &itm_call_short, &otm_call_short, &otm_call_long),
+        "[Condor: {:?}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
+        model.condor(&itm_call_long, &itm_call_short, &otm_call_short, &otm_call_long)(50.0),
         model.price(&itm_call_long),
         model.price(&itm_call_short),
         model.price(&otm_call_short),
@@ -415,8 +415,8 @@ fn example_strategy() {
     let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
     println!(
-        "[Iron Condor: {}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
-        model.iron_condor(&otm_put_long, &otm_put_short, &otm_call_short, &otm_call_long),
+        "[Iron Condor: {:?}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
+        model.iron_condor(&otm_put_long, &otm_put_short, &otm_call_short, &otm_call_long)(50.0),
         model.price(&otm_put_long),
         model.price(&otm_put_short),
         model.price(&otm_call_short),
@@ -427,4 +427,71 @@ fn example_strategy() {
     // [Iron Condor: -0.6141191778206211], given itm_call_long: 0.00046003990261639024, itm_call_short: 0.19404262184266008, otm_call_short: 0.4606039644595379, otm_call_long: 0.04006736857896043
 
     // ==> OTM options are cheaper, ATM options have moderate values, and ITM options have higher premiums.
+
+    ////////////
+    /* PLOTS */
+
+    let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+    let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
+    let _ = BlackScholesModel::plot_strategy(
+        "Guts",
+        model.guts(&itm_put, &itm_call),
+        20.0..80.0,
+        "images/guts_strategy.png",
+    );
+    // => Guts: images/guts_strategy.png
+
+    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+    let _ = BlackScholesModel::plot_strategy(
+        "Straddle",
+        model.straddle(&atm_put, &atm_call),
+        20.0..80.0,
+        "images/straddle_strategy.png",
+    );
+    // => Straddle: images/straddle_strategy.png
+
+    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let _ = BlackScholesModel::plot_strategy(
+        "Strangle",
+        model.strangle(&otm_put, &otm_call),
+        20.0..80.0,
+        "images/strangle_strategy.png",
+    );
+    // => Strangle: images/strangle_strategy.png
+
+    let itm_call_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call);
+    let itm_call_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    let _ = BlackScholesModel::plot_strategy(
+        "Condor",
+        model.condor(
+            &itm_call_long,
+            &itm_call_short,
+            &otm_call_short,
+            &otm_call_long,
+        ),
+        20.0..80.0,
+        "images/condor_strategy.png",
+    );
+    // => Condor: images/condor_strategy.png
+
+    let otm_put_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put);
+    let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    let _ = BlackScholesModel::plot_strategy(
+        "Iron Condor",
+        model.iron_condor(
+            &otm_put_long,
+            &otm_put_short,
+            &otm_call_short,
+            &otm_call_long,
+        ),
+        20.0..80.0,
+        "images/iron_condor_strategy.png",
+    );
+    // => Iron Condor: images/iron_condor_strategy.png
 }
