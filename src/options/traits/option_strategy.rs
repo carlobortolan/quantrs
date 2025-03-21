@@ -7,6 +7,8 @@
 //! - [Option Strategies](https://www.investopedia.com/terms/o/option-strategy.asp)
 //! - [Options Strategies](https://www.optionsplaybook.com/option-strategies/)
 
+use plotters::prelude::*;
+
 use super::OptionPricing;
 use crate::{
     check_is_call, check_is_put, check_same_expiration_date, log_info, log_warn,
@@ -15,6 +17,96 @@ use crate::{
 
 /// Trait for non-directional strategies.
 pub trait OptionStrategy: OptionPricing {
+    /* PLOT-FUNCTIONS */
+
+    /// Plot the payoff of an option strategy.
+    ///
+    /// # Arguments
+    /// * `strategy_name` - The name of the strategy.
+    /// * `strategy_fn` - Function that computes (payoff, price).
+    /// * `range` - Stock price range.
+    /// * `file_name` - Output file path.
+    /// * `options` - List of options used in the strategy.
+    ///
+    /// # Returns
+    /// Result containing the plot or an error.
+    fn plot_strategy<T, F>(
+        strategy_name: &str,
+        strategy_fn: F,
+        range: std::ops::Range<f64>,
+        file_name: &str,
+        options: &[&T], // Use references to avoid unnecessary cloning
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        T: Option,
+        F: Fn(f64) -> (f64, f64), // Returns (profit/loss, cost)
+    {
+        let spots: Vec<f64> = (range.start as u32..=range.end as u32)
+            .map(|x| x as f64)
+            .collect();
+
+        let payouts: Vec<f64> = spots
+            .iter()
+            .map(|&s| {
+                let (payoff, price) = strategy_fn(s);
+                payoff - price
+            })
+            .collect();
+
+        let min_y = *payouts
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap();
+        let max_y = *payouts
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap();
+
+        let root = BitMapBackend::new(file_name, (800, 600)).into_drawing_area();
+        root.fill(&WHITE)?;
+
+        let mut chart = ChartBuilder::on(&root)
+            .caption(
+                format!("{} Strategy P/L", strategy_name),
+                ("sans-serif", 20),
+            )
+            .margin(5)
+            .x_label_area_size(30)
+            .y_label_area_size(40)
+            .build_cartesian_2d(range.start..range.end, min_y..max_y)?;
+
+        chart
+            .configure_mesh()
+            .x_desc("Stock Price at Maturity")
+            .y_desc("Profit/Loss")
+            .draw()?;
+
+        chart.draw_series(LineSeries::new(
+            spots.iter().zip(payouts.iter()).map(|(&x, &y)| (x, y)),
+            &BLUE,
+        ))?;
+
+        // Draw strike price markers
+        for &option in options {
+            chart.draw_series(PointSeries::of_element(
+                vec![(option.strike(), 0.0)],
+                5,
+                &RED,
+                &|coord, size, style| {
+                    EmptyElement::at(coord)
+                        + Circle::new((0, 0), size, style.filled())
+                        + Text::new(
+                            format!("[{:?}]", option.option_type()),
+                            (10, -10),
+                            ("sans-serif", 12).into_font(),
+                        )
+                },
+            ))?;
+        }
+
+        Ok(())
+    }
+
     /* AUTO-STRATEGY */
 
     /// Auto-strategy that automatically selects the best strategy based on owned stock and option.
@@ -72,19 +164,19 @@ pub trait OptionStrategy: OptionPricing {
             }
             (false, true, true, true, false, false, false, false, _) => {
                 log_info!("Auto-strategy: Long Strangle.");
-                self.strangle(option2, option1)
+                self.strangle(option2, option1, 0.0).0
             }
             (true, false, true, true, false, false, false, false, _) => {
                 log_info!("Auto-strategy: Long Strangle.");
-                self.strangle(option2, option1)
+                self.strangle(option2, option1, 0.0).0
             }
             (false, true, false, false, false, false, true, true, _) => {
                 log_info!("Auto-strategy: Long Guts.");
-                self.strangle(option2, option1)
+                self.strangle(option2, option1, 0.0).0
             }
             (true, false, false, false, false, false, true, true, _) => {
                 log_info!("Auto-strategy: Long Guts.");
-                self.strangle(option2, option1)
+                self.strangle(option2, option1, 0.0).0
             }
 
             _ => panic!("Auto-strategy not implemented for this combination"),
@@ -150,13 +242,15 @@ pub trait OptionStrategy: OptionPricing {
     /// Buy (long strangle) or sell (short strangle) a pair of OTM (out of the money) put and call.
     /// In long strangle, you profit if the stock or index moves significantly in either direction.
     /// In short strangle, you profit if the stock or index remains within the two short strikes.
-    fn strangle<T: Option>(&self, put: &T, call: &T) -> f64 {
+    fn strangle<T: Option>(&self, put: &T, call: &T, spot_price: f64) -> (f64, f64) {
         check_same_expiration_date!(put, call);
         check_is_call!(call);
         check_is_put!(put);
 
-        assert!(put.otm() && call.otm(), "Put and call must be OTM!");
-        self.price(put) + self.price(call)
+        // assert!(put.otm() && call.otm(), "Put and call must be OTM!");
+        let price = self.price(put) + self.price(call);
+        let payoff = put.payoff(Some(spot_price)) + call.payoff(Some(spot_price));
+        (payoff, price)
     }
 
     /* BUTTERFLY */
