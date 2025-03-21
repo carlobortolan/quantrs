@@ -30,11 +30,12 @@ pub trait OptionStrategy: OptionPricing {
     /// # Returns
     /// Result containing the plot or an error.
     fn plot_strategy<F, T>(
+        &self,
         strategy_name: &str,
         strategy_fn: F,
         range: std::ops::Range<f64>,
         file_name: &str,
-        options: std::option::Option<&[T]>,
+        options: std::option::Option<&[T]>, // Include options if provided
     ) -> Result<(), Box<dyn std::error::Error>>
     where
         F: Fn(f64) -> (f64, f64),
@@ -72,10 +73,18 @@ pub trait OptionStrategy: OptionPricing {
             .fold(f64::NEG_INFINITY, f64::max)
             .max(0.0); // Ensure 0 is included in the maximum
 
-        let root = BitMapBackend::new(file_name, (900, 600)).into_drawing_area();
-        root.fill(&RGBColor(10, 10, 10))?; // Bloomberg dark background
+        let mut root = BitMapBackend::new(file_name, (900, 600)).into_drawing_area();
+        if let Some(options) = options {
+            root = BitMapBackend::new(file_name, (900, 1024)).into_drawing_area();
+        }
 
-        let mut chart = ChartBuilder::on(&root)
+        let root = root.titled(&format!("{} Strategy", strategy_name), ("sans-serif", 60))?;
+
+        // Split the drawing area into two parts: upper for the strategy, lower for individual options
+        let (upper, lower) = root.split_vertically(512);
+
+        // Plot the overall strategy in the upper area
+        let mut chart = ChartBuilder::on(&upper)
             .caption(
                 format!("{} Strategy - Payoff & P/L", strategy_name),
                 ("Arial", 22, FontStyle::Bold).into_font().color(&WHITE),
@@ -93,15 +102,6 @@ pub trait OptionStrategy: OptionPricing {
             .x_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
             .y_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
             .axis_style(&WHITE.mix(0.6))
-            .draw()?;
-
-        // Draw the x-axis at y=0
-        chart
-            .configure_mesh()
-            .bold_line_style(&WHITE.mix(0.6))
-            .x_labels(10)
-            .y_labels(10)
-            .x_label_offset(-10) // Ensure x-axis labels are aligned with y=0
             .draw()?;
 
         // Payoff curve (Cyan)
@@ -145,25 +145,77 @@ pub trait OptionStrategy: OptionPricing {
             },
         ))?;
 
-        // Highlight breakeven points (Bright yellow)
-        for (&spot, &payout) in spots.iter().zip(p_l.iter()) {
-            if payout.abs() < 1e-2 {
-                chart.draw_series(PointSeries::of_element(
-                    vec![(spot, payout)],
-                    5,
-                    &RGBColor(255, 215, 0), // Bloomberg Yellow
-                    &|c, s, style| EmptyElement::at(c) + Circle::new((0, 0), s, style),
-                ))?;
-            }
-        }
+        // Plot individual options in the lower area if options are provided
+        if let Some(options) = options {
+            println!("Plotting individual options...");
+            let mut option_chart = ChartBuilder::on(&lower)
+                .caption(
+                    "Individual Option Prices and Payoffs",
+                    ("Arial", 22, FontStyle::Bold).into_font().color(&WHITE),
+                )
+                .margin(20)
+                .x_label_area_size(40)
+                .y_label_area_size(50)
+                .build_cartesian_2d(range.start..range.end, min_y..max_y)?;
 
-        // Bloomberg-style legend
-        chart
-            .configure_series_labels()
-            .border_style(&WHITE.mix(0.6))
-            .label_font(("Arial", 14, FontStyle::Bold).with_color(&RGBColor(255, 215, 0)))
-            .background_style(&BLACK.mix(0.8))
-            .draw()?;
+            option_chart
+                .configure_mesh()
+                .disable_mesh()
+                .x_desc("Underlying Price ($)")
+                .y_desc("Value ($)")
+                .x_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
+                .y_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
+                .axis_style(&WHITE.mix(0.6))
+                .draw()?;
+
+            for (i, option) in options.iter().enumerate() {
+                let option_payoffs: Vec<f64> = spots
+                    .iter()
+                    .map(|&spot| option.payoff(Some(spot)))
+                    .collect();
+                let option_prices: Vec<f64> =
+                    spots.iter().map(|&spot| self.price(option)).collect();
+
+                // Clone `i` to avoid borrowing issues
+                let color_payoff = Palette99::pick(i);
+                let color_price = Palette99::pick(i + 1);
+
+                // Plot the option's payoff curve
+                option_chart
+                    .draw_series(LineSeries::new(
+                        spots
+                            .iter()
+                            .zip(option_payoffs.iter())
+                            .map(|(&x, &y)| (x, y)),
+                        &color_payoff, // Use the cloned color
+                    ))?
+                    .label(format!("Option {} Payoff", i + 1))
+                    .legend(move |(x, y)| {
+                        PathElement::new(vec![(x, y), (x + 20, y)], &color_payoff)
+                    });
+
+                // Plot the option's price curve
+                option_chart
+                    .draw_series(LineSeries::new(
+                        spots
+                            .iter()
+                            .zip(option_prices.iter())
+                            .map(|(&x, &y)| (x, y)),
+                        &color_price, // Use the cloned color
+                    ))?
+                    .label(format!("Option {} Price", i + 1))
+                    .legend(move |(x, y)| {
+                        PathElement::new(vec![(x, y), (x + 20, y)], &color_price)
+                    });
+            }
+
+            option_chart
+                .configure_series_labels()
+                .border_style(&WHITE.mix(0.6))
+                .label_font(("Arial", 14, FontStyle::Bold).with_color(&RGBColor(255, 215, 0)))
+                .background_style(&BLACK.mix(0.8))
+                .draw()?;
+        }
 
         Ok(())
     }

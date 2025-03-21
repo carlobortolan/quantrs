@@ -433,31 +433,35 @@ fn example_strategy() {
 
     let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
     let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
-    let _ = BlackScholesModel::plot_strategy(
+    let _ = model.plot_strategy::<_, EuropeanOption>(
         "Guts",
         model.guts(&itm_put, &itm_call),
         20.0..80.0,
         "images/guts_strategy.png",
+        None,
     );
     // => Guts: images/guts_strategy.png
 
     let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
-    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
-    let _ = BlackScholesModel::plot_strategy(
+    let atm_put: EuropeanOption =
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+    let _ = model.plot_strategy::<_, EuropeanOption>(
         "Straddle",
         model.straddle(&atm_put, &atm_call),
         20.0..80.0,
         "images/straddle_strategy.png",
+        None,
     );
     // => Straddle: images/straddle_strategy.png
 
     let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
     let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
-    let _ = BlackScholesModel::plot_strategy(
+    let _ = model.plot_strategy::<_, EuropeanOption>(
         "Strangle",
         model.strangle(&otm_put, &otm_call),
         20.0..80.0,
         "images/strangle_strategy.png",
+        None,
     );
     // => Strangle: images/strangle_strategy.png
 
@@ -465,7 +469,7 @@ fn example_strategy() {
     let itm_call_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
     let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
-    let _ = BlackScholesModel::plot_strategy(
+    let _ = model.plot_strategy::<_, EuropeanOption>(
         "Condor",
         model.condor(
             &itm_call_long,
@@ -475,6 +479,7 @@ fn example_strategy() {
         ),
         20.0..80.0,
         "images/condor_strategy.png",
+        None,
     );
     // => Condor: images/condor_strategy.png
 
@@ -482,7 +487,13 @@ fn example_strategy() {
     let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
     let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
     let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
-    let _ = BlackScholesModel::plot_strategy(
+    let options = &vec![
+        otm_put_long.clone(),
+        otm_put_short.clone(),
+        otm_call_short.clone(),
+        otm_call_long.clone(),
+    ];
+    let _ = model.plot_strategy(
         "Iron Condor",
         model.iron_condor(
             &otm_put_long,
@@ -492,6 +503,7 @@ fn example_strategy() {
         ),
         20.0..80.0,
         "images/iron_condor_strategy.png",
+        Some(options),
     );
     // => Iron Condor: images/iron_condor_strategy.png
 }
