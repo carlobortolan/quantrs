@@ -29,6 +29,7 @@ pub trait OptionStrategy: OptionPricing {
     /// * `strategy_fn` - A closure that takes the stock price and returns (payoff, price).
     /// * `range` - Stock price range.
     /// * `file_name` - Output file path.
+    /// * `options` - A list of options to plot individually in smaller graphs.
     ///
     /// # Returns
     /// Result containing the plot or an error.
@@ -52,14 +53,40 @@ pub trait OptionStrategy: OptionPricing {
 
         let (min_y, max_y) = Self::calculate_y_bounds(&payoffs, &prices, &p_l);
 
-        let mut root = BitMapBackend::new(file_name, (900, 600)).into_drawing_area();
-        if options.is_some() {
-            root = BitMapBackend::new(file_name, (900, 1024)).into_drawing_area();
-        }
+        let mut root = BitMapBackend::new(file_name, (1200, 800))
+            .into_drawing_area()
+            .titled(&format!("{} Strategy", strategy_name), ("sans-serif", 60))?;
 
-        let root = root.titled(&format!("{} Strategy", strategy_name), ("sans-serif", 60))?;
-        let (upper, lower) = root.split_vertically(512);
+        // Split into a grid (1 large chart + smaller individual option plots) if options are provided
+        let (upper, lower) = if let Some(options) = options {
+            let num_options = options.len();
+            // With 3 options per line, each option should have a 400x400 grid cell
+            // Calculate the number of columns
+            let num_columns = if num_options % 4 == 0 {
+                4
+            } else if num_options % 3 == 0 {
+                3
+            } else if num_options % 2 == 0 {
+                2
+            } else {
+                2
+            };
 
+            root = BitMapBackend::new(
+                file_name,
+                (
+                    1400,
+                    (800.0 + ((num_options as f64) / (num_columns as f64)).ceil() * 400.0) as u32,
+                ),
+            )
+            .into_drawing_area()
+            .titled(&format!("{} Strategy", strategy_name), ("sans-serif", 60))?;
+            root.split_vertically(800)
+        } else {
+            (root.clone(), root)
+        };
+
+        // Main strategy plot
         Self::plot_strategy_main_chart(
             &upper,
             &spots,
@@ -72,8 +99,113 @@ pub trait OptionStrategy: OptionPricing {
             strategy_name,
         )?;
 
+        // If options are provided, plot them individually in smaller graphs
         if let Some(options) = options {
-            self.plot_individual_options(&lower, &spots, options, &range, min_y, max_y)?;
+            let num_options = options.len();
+            // With 3 options per line, each option should have a 400x400 grid cell
+            // Calculate the number of columns
+            let num_columns = if num_options % 4 == 0 {
+                4
+            } else if num_options % 3 == 0 {
+                3
+            } else if num_options % 2 == 0 {
+                2
+            } else {
+                2
+            };
+
+            // if options % 4 == 0, num_rows = options / 4
+            // if options % 3 == 0, num_rows = options / 3
+            // if options % 2 == 0, num_rows = options / 2
+            // else num_rows = 4
+
+            let num_rows = (num_options as f64 / num_columns as f64).ceil() as usize;
+
+            // Get the dimensions of the lower area
+            let (total_width, total_height) = lower.dim_in_pixel();
+            let option_height = total_height / num_rows as u32;
+            let option_width = total_width / num_columns as u32;
+
+            // Split the lower area into a grid for individual options
+            let grid = lower.split_evenly((num_rows, num_columns));
+
+            for (i, option) in options.iter().enumerate() {
+                let row = i / num_columns;
+                let col = i % num_columns;
+
+                let option_plot_area = &grid[row * num_columns + col]; // Access the correct grid cell
+
+                // Plot the individual option graph
+                // TODO: Implement graph that shows option payoff and price
+                // option.payoff(Some(spot)) and self.price(option)
+                // Implement graph that shows option payoff and price
+                let option_payoffs: Vec<f64> = spots
+                    .iter()
+                    .map(|&spot| option.payoff(Some(spot)))
+                    .collect();
+                let option_prices: Vec<f64> =
+                    spots.iter().map(|&spot| self.price(option)).collect();
+
+                let (min_y, max_y) =
+                    Self::calculate_y_bounds(&option_payoffs, &option_prices, &option_payoffs);
+
+                // Plot the individual option graph (payoff vs. price)
+                let mut chart = ChartBuilder::on(option_plot_area)
+                    .margin(10)
+                    .x_label_area_size(30)
+                    .y_label_area_size(30)
+                    .build_cartesian_2d(range.start..range.end, min_y..max_y)?;
+
+                // Set the background to dark and configure the mesh for a Bloomberg-style chart
+                chart
+                    .configure_mesh()
+                    .disable_mesh() // Disable the default mesh
+                    .x_desc("Underlying Price ($)")
+                    .y_desc("Value ($)")
+                    .x_label_style(("Arial", 14).into_font().color(&WHITE))
+                    .y_label_style(("Arial", 14).into_font().color(&WHITE))
+                    .axis_style(&WHITE.mix(0.8)) // White axis lines
+                    .light_line_style(&WHITE.mix(0.2)) // Light grid lines
+                    .bold_line_style(&WHITE.mix(0.5)) // Bold grid lines
+                    .draw()?;
+
+                // Set the chart background to dark
+                chart.plotting_area().fill(&BLACK)?;
+
+                chart
+                    .draw_series(LineSeries::new(
+                        spots
+                            .iter()
+                            .zip(option_payoffs.iter())
+                            .map(|(&x, &y)| (x, y)),
+                        &RGBColor(0, 255, 255), // Cyan for payoff curve
+                    ))?
+                    .label("Payoff Curve")
+                    .legend(|(x, y)| {
+                        PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(0, 255, 255))
+                    });
+
+                chart
+                    .draw_series(LineSeries::new(
+                        spots
+                            .iter()
+                            .zip(option_prices.iter())
+                            .map(|(&x, &y)| (x, y)),
+                        &RGBColor(255, 140, 0), // Orange for price curve
+                    ))?
+                    .label("Price Curve")
+                    .legend(|(x, y)| {
+                        PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(255, 140, 0))
+                    });
+
+                // Configure the legend for Bloomberg-style
+                chart
+                    .configure_series_labels()
+                    .background_style(&BLACK.mix(0.8)) // Dark background for the legend
+                    .border_style(&WHITE.mix(0.8)) // White border
+                    .label_font(("Arial", 12).into_font().color(&WHITE)) // White text
+                    .draw()?;
+            }
         }
 
         Ok(())
@@ -122,7 +254,7 @@ pub trait OptionStrategy: OptionPricing {
         (min_y, max_y)
     }
 
-    /// Plot the main strategy chart.
+    /// Plot the individual option graph within the grid    /// Plot the main strategy chart.
     fn plot_strategy_main_chart(
         upper: &DrawingArea<BitMapBackend, Shift>,
         spots: &[f64],
@@ -206,7 +338,8 @@ pub trait OptionStrategy: OptionPricing {
                 spots.iter().cloned().zip(values.iter().cloned()),
                 color,
             ))?
-            .label(label);
+            .label(label)
+            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(255, 140, 0)));
 
         //chart.draw_series(LineSeries::new(
         //        spots.iter().cloned().zip(values.iter()).map(|(&x, &y)| (x, y)),
@@ -215,147 +348,6 @@ pub trait OptionStrategy: OptionPricing {
         //    .label(label)
         //    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color));
         //
-        Ok(())
-    }
-
-    /// Plot individual option prices and payoffs in the lower chart area.
-    fn plot_individual_options<T>(
-        &self,
-        lower: &DrawingArea<BitMapBackend, Shift>,
-        spots: &[f64],
-        options: &[T],
-        range: &std::ops::Range<f64>,
-        min_y: f64,
-        max_y: f64,
-    ) -> Result<(), Box<dyn std::error::Error>>
-    where
-        T: Option,
-    {
-        let mut option_chart = ChartBuilder::on(lower)
-            .caption(
-                "Individual Option Prices and Payoffs",
-                ("Arial", 22, FontStyle::Bold).into_font().color(&WHITE),
-            )
-            .margin(20)
-            .x_label_area_size(40)
-            .y_label_area_size(50)
-            .build_cartesian_2d(range.start..range.end, min_y..max_y)?;
-
-        option_chart
-            .configure_mesh()
-            .disable_mesh()
-            .x_desc("Underlying Price ($)")
-            .y_desc("Value ($)")
-            .x_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
-            .y_label_style(("Arial", 16, FontStyle::Bold).into_font().color(&WHITE))
-            .axis_style(&WHITE.mix(0.6))
-            .draw()?;
-
-        for (i, option) in options.iter().enumerate() {
-            self.plot_option_data(&mut option_chart, spots, i, option, None, None)?;
-        }
-
-        option_chart
-            .configure_series_labels()
-            .border_style(&WHITE.mix(0.6))
-            .label_font(("Arial", 14, FontStyle::Bold).with_color(&RGBColor(255, 215, 0)))
-            .background_style(&BLACK.mix(0.8))
-            .draw()?;
-
-        Ok(())
-    }
-
-    /// Plot data for a single option (payoff and price curves).
-    fn plot_option_data<T>(
-        &self,
-        option_chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
-        spots: &[f64],
-        option_index: usize,
-        option: &T,
-        time_series: std::option::Option<&[f64]>, // Optional time series to show price development over time
-        time_price: std::option::Option<&[f64]>,  // Optional price data over time
-    ) -> Result<(), Box<dyn std::error::Error>>
-    where
-        T: Option, // T must implement OptionTrait (e.g., has `payoff` method)
-    {
-        let option_payoffs: Vec<f64> = spots
-            .iter()
-            .map(|&spot| option.payoff(Some(spot)))
-            .collect();
-
-        let option_prices: Vec<f64> = spots.iter().map(|&spot| self.price(option)).collect();
-
-        // Use Bloomberg-like color scheme
-        let color_payoff = RGBColor(0, 204, 0).to_rgba(); // Green for Payoff
-        let color_price = RGBColor(0, 120, 215).to_rgba(); // Blue for Price
-        let color_time_price = RGBColor(255, 140, 0).to_rgba(); // Orange for time-based price movement
-
-        // Plot the payoff curve
-        Self::plot_curve(
-            option_chart,
-            spots,
-            &option_payoffs,
-            &color_payoff,
-            &format!("Option {} Payoff", option_index + 1),
-        )?;
-
-        // Plot the price curve
-        Self::plot_curve(
-            option_chart,
-            spots,
-            &option_prices,
-            &color_price,
-            &format!("Option {} Price", option_index + 1),
-        )?;
-
-        // If a time series is provided, plot the price development over time
-        if let Some(time_series) = time_series {
-            if let Some(time_price) = time_price {
-                Self::plot_time_based_price(
-                    option_chart,
-                    time_series,
-                    time_price,
-                    color_time_price,
-                    "Price Development Over Time",
-                )?;
-            }
-        }
-
-        // Annotate with strike price or important levels (e.g., breakeven)
-        let strike_price = option.strike();
-        option_chart
-            .draw_series(LineSeries::new(
-                vec![
-                    (strike_price, 0.0),
-                    (strike_price, *option_payoffs.last().unwrap()),
-                ],
-                &RGBColor(255, 0, 0), // Red color for the line
-            ))?
-            .label("Strike Price")
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RGBColor(255, 0, 0)));
-
-        Ok(())
-    }
-
-    /// Plot the price development over time (additional line chart).
-    fn plot_time_based_price(
-        option_chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
-        time_series: &[f64],
-        time_price: &[f64],
-        color: RGBAColor,
-        label: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        option_chart
-            .draw_series(LineSeries::new(
-                time_series
-                    .iter()
-                    .zip(time_price.iter())
-                    .map(|(&x, &y)| (x, y)),
-                &color,
-            ))?
-            .label(label)
-            .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &color));
-
         Ok(())
     }
 
