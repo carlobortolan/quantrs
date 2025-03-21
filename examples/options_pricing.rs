@@ -438,7 +438,7 @@ fn example_strategy() {
         model.guts(&itm_put, &itm_call),
         20.0..80.0,
         "images/guts_strategy.png",
-        None,
+        &[].to_vec(),
     );
     // => Guts: images/guts_strategy.png
 
@@ -450,7 +450,7 @@ fn example_strategy() {
         model.straddle(&atm_put, &atm_call),
         20.0..80.0,
         "images/straddle_strategy.png",
-        None,
+        &[].to_vec(),
     );
     // => Straddle: images/straddle_strategy.png
 
@@ -461,7 +461,7 @@ fn example_strategy() {
         model.strangle(&otm_put, &otm_call),
         20.0..80.0,
         "images/strangle_strategy.png",
-        None,
+        &[].to_vec(),
     );
     // => Strangle: images/strangle_strategy.png
 
@@ -479,31 +479,21 @@ fn example_strategy() {
         ),
         20.0..80.0,
         "images/condor_strategy.png",
-        None,
+        &[].to_vec(),
     );
     // => Condor: images/condor_strategy.png
 
-    let otm_put_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put);
-    let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
-    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
-    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
-    let options = &vec![
-        otm_put_long.clone(),
-        otm_put_short.clone(),
-        otm_call_short.clone(),
-        otm_call_long.clone(),
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
     ];
     let _ = model.plot_strategy(
         "Iron Condor",
-        model.iron_condor(
-            &otm_put_long,
-            &otm_put_short,
-            &otm_call_short,
-            &otm_call_long,
-        ),
+        model.iron_condor(&options[0], &options[1], &options[2], &options[3]),
         20.0..80.0,
         "images/iron_condor_strategy.png",
-        Some(options),
-    );
-    // => Iron Condor: images/iron_condor_strategy.png
+        &options,
+    ); // => Iron Condor: images/iron_condor_strategy.png
 }

@@ -39,7 +39,7 @@ pub trait OptionStrategy: OptionPricing {
         strategy_fn: F,
         range: std::ops::Range<f64>,
         file_name: &str,
-        options: std::option::Option<&[T]>,
+        options: &[T],
     ) -> Result<(), Box<dyn std::error::Error>>
     where
         F: Fn(f64) -> (f64, f64),
@@ -53,8 +53,7 @@ pub trait OptionStrategy: OptionPricing {
         let (min_y, max_y) = Self::calculate_y_bounds(&payoffs, &prices, &p_l);
 
         // Adjust canvas size if options are present
-        let mut root = BitMapBackend::new(file_name, (2400, 1600)).into_drawing_area();
-        let (upper, lower) = if let Some(options) = options {
+        let (upper, lower) = {
             let num_options = options.len();
             let num_columns = match num_options {
                 n if n % 4 == 0 => 4,
@@ -63,15 +62,13 @@ pub trait OptionStrategy: OptionPricing {
             };
             let num_rows = (num_options as f64 / num_columns as f64).ceil() as usize;
 
-            root = BitMapBackend::new(
+            let root = BitMapBackend::new(
                 file_name,
                 (2800, (1600.0 + (num_rows as f64 * 800.0)) as u32),
             )
             .into_drawing_area();
             root.split_vertically(1600)
-        } else {
-            (root.clone(), root)
-        };
+        } as (DrawingArea<_, Shift>, DrawingArea<_, Shift>);
 
         // Plot the main strategy chart
         Self::plot_strategy_main_chart(
@@ -87,7 +84,7 @@ pub trait OptionStrategy: OptionPricing {
         )?;
 
         // Plot individual option graphs if provided
-        if let Some(options) = options {
+        if !options.is_empty() {
             let num_options = options.len();
             let num_columns = match num_options {
                 n if n % 4 == 0 => 4,
