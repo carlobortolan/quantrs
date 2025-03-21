@@ -20,7 +20,7 @@
 [crates-download-badge]: https://img.shields.io/crates/d/quantrs
 
 Quantrs is a tiny quantitative finance library for Rust.
-It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading quantlib documentation.
+It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading QuantLib documentation.
 The library is still in the early stages of development, and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
@@ -29,7 +29,7 @@ Please check out the documentation [here][docs-url].
 
 ### Options Pricing
 
-For now quantrs only supports options pricing of vanilla and various exotic options.
+Quantrs supports options pricing with various models for both vanilla and exotic options as well as options trading strategies for both basic options spreads and non-directional strategies.
 
 <details>
 <summary><i>Click to see supported models</i></summary>
@@ -56,6 +56,30 @@ For now quantrs only supports options pricing of vanilla and various exotic opti
 > ² _Non-vanilla path-dependent "exotic" options_\
 > ³ _MC simulates underlying price paths based on geometric Brownian motion for Black-Scholes models and geometric average price paths for Asian and Lookback options_\
 > ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
+
+</details>
+
+<details>
+<summary><i>Click to see supported strategies</i></summary>
+
+| Strategy Name    | Type         | Description                                                                  |
+| ---------------- | ------------ | ---------------------------------------------------------------------------- |
+| Covered Call     | Income       | Long stock + short call                                                      |
+| Protective Put   | Hedging      | Long stock + long put                                                        |
+| Straddle         | Volatility   | Long call + long put (same strike)                                           |
+| Strangle         | Volatility   | Long OTM call + long OTM put                                                 |
+| Butterfly Spread | ¹Spread      | Long ATM call, short two middle calls, long OTM call                         |
+| Iron Butterfly   | ¹Spread      | Short straddle + long wings                                                  |
+| Condor Spread    | ¹Spread      | Long OTM call, short ITM call, short ITM put, long OTM put                   |
+| Iron Condor      | ¹Spread      | Short strangle + long wings                                                  |
+| Calendar Spread  | ²Time Spread | Long far-expiry call + short near-expiry call                                |
+| Diagonal Spread  | ³Time Spread | Long far-expiry call (higher strike) + short near-expiry call (lower strike) |
+| Back Spread      | Directional  | Long 2 calls + short 1 ITM call                                              |
+| Christmas Tree   | ¹Complex     | Long 1 ITM call, short 3 middle calls, long 2 OTM calls                      |
+
+> ¹ _Also referred to as 'vertical'_\
+> ² _Also referred to as 'horizontal'_\
+> ³ _Also referred to as 'diagonal'_\
 
 </details>
 
@@ -118,9 +142,6 @@ fn main() {
 
     // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
     println!("Greeks: {:?}", Greeks::calculate(&model, &option));
-
-    // Create new option strategies, e.g., a straddle
-    println!("Straddle price: {}", model.straddle(&option));
 }
 ```
 
