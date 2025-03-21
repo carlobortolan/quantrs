@@ -53,7 +53,7 @@ pub trait OptionStrategy: OptionPricing {
         let (min_y, max_y) = Self::calculate_y_bounds(&payoffs, &prices, &p_l);
 
         let mut root = BitMapBackend::new(file_name, (900, 600)).into_drawing_area();
-        if let Some(_) = options {
+        if options.is_some() {
             root = BitMapBackend::new(file_name, (900, 1024)).into_drawing_area();
         }
 
@@ -73,7 +73,7 @@ pub trait OptionStrategy: OptionPricing {
         )?;
 
         if let Some(options) = options {
-            self.plot_individual_options(&lower, &spots, &options, &range, min_y, max_y)?;
+            self.plot_individual_options(&lower, &spots, options, &range, min_y, max_y)?;
         }
 
         Ok(())
@@ -155,21 +155,21 @@ pub trait OptionStrategy: OptionPricing {
             .draw()?;
 
         Self::plot_curve(
-            &chart,
+            &mut chart,
             spots,
             payoffs,
             &RGBAColor::from(RGBColor(0, 255, 255)),
             "Payoff Curve",
         )?;
         Self::plot_curve(
-            &chart,
+            &mut chart,
             spots,
             prices,
             &RGBAColor::from(RGBColor(255, 140, 0)),
             "Price Curve",
         )?;
         Self::plot_curve(
-            &chart,
+            &mut chart,
             spots,
             p_l,
             &RGBAColor::from(RGBColor(255, 0, 255)),
@@ -195,7 +195,7 @@ pub trait OptionStrategy: OptionPricing {
 
     /// Plot a single curve (e.g., Payoff, Price, or P/L) on the chart.
     fn plot_curve<'a, 'b>(
-        chart: &'a mut ChartContext<BitMapBackend<'b>, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
+        chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
         spots: &[f64],
         values: &[f64],
         color: &RGBAColor,
@@ -203,12 +203,18 @@ pub trait OptionStrategy: OptionPricing {
     ) -> Result<(), Box<dyn std::error::Error>> {
         chart
             .draw_series(LineSeries::new(
-                spots.iter().zip(values.iter()).map(|(&x, &y)| (x, y)),
+                spots.iter().cloned().zip(values.iter().cloned()),
                 color,
             ))?
-            .label(label)
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color));
+            .label(label);
 
+        //chart.draw_series(LineSeries::new(
+        //        spots.iter().cloned().zip(values.iter()).map(|(&x, &y)| (x, y)),
+        //        color,
+        //    ))?
+        //    .label(label)
+        //    .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color));
+        //
         Ok(())
     }
 
@@ -246,7 +252,7 @@ pub trait OptionStrategy: OptionPricing {
             .draw()?;
 
         for (i, option) in options.iter().enumerate() {
-            self.plot_option_data(&option_chart, spots, i, option)?;
+            self.plot_option_data(&mut option_chart, spots, i, option)?;
         }
 
         option_chart
@@ -262,7 +268,7 @@ pub trait OptionStrategy: OptionPricing {
     /// Plot data for a single option (payoff and price curves).
     fn plot_option_data<T>(
         &self,
-        option_chart: &ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
+        option_chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>,
         spots: &[f64],
         option_index: usize,
         option: &T,
