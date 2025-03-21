@@ -54,6 +54,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Install dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev
+      - name: Install dependencies
+        if: runner.os == 'macOS'
+        run: brew install fontconfig
+      - name: Install dependencies
+        if: runner.os == 'Windows'
+        run: choco install fontconfig
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
       - name: Test default features
