@@ -5,8 +5,9 @@ authors = ["Carlo Bortolan <carlobortolan@gmail.com>"]
 description = " A tiny Rust library for quantitative finance"
 license = "MIT"
 # license = "MIT OR Apache-2.0"
-# keywords = ["quantitative", "statistics", "finance", "options", "pricing"]
-# categories = ["finance", "simulation", "mathematics"]
+# keywords = ["quantitative", "quant", "finance", "options", "pricing"]
+# categories = ["finance", "simulation", "mathematics", "algorithms", "science"]
+
 repository = "https://github.com/carlobortolan/quantrs"
 documentation = "https://docs.rs/quantrs"
 homepage = "https://github.com/carlobortolan/quantrs"
@@ -15,7 +16,7 @@ edition = "2021"
 include = ["CHANGELOG.md", "LICENSE.md", "src/", "tests/"]
 
 # When changing MSRV: Also update the README
-rust-version = "1.65.0"
+rust-version = "1.77.0"
 
 [dependencies]
 chrono = "0.4.40"

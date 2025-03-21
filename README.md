@@ -156,7 +156,7 @@ See the [documentation][docs-url] for more information and examples.
 
 ## Minimum supported Rust version (MSRV)
 
-This crate requires a Rust version of 1.65.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+This crate requires a Rust version of 1.77.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
 ## Outlook
 
