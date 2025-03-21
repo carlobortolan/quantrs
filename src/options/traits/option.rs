@@ -13,6 +13,13 @@ pub trait Option: Clone + Send + Sync {
     /// The underlying instrument of the option.
     fn instrument(&self) -> &Instrument;
 
+    /// Set the underlying instrument of the option.
+    ///
+    /// # Arguments
+    ///
+    /// * `instrument` - The underlying instrument.
+    fn set_instrument(&mut self, instrument: Instrument);
+
     /// Get the strike price of the option.
     ///
     /// # Returns
@@ -65,6 +72,13 @@ pub trait Option: Clone + Send + Sync {
         }
     }
 
+    fn profit_loss(&self, spot: std::option::Option<f64>) -> f64 {
+        let spot_price = spot.unwrap_or_else(|| self.instrument().spot);
+        match self.option_type() {
+            OptionType::Call => spot_price - self.strike(),
+            OptionType::Put => self.strike() - spot_price,
+        }
+    }
     /// Calculate the price of the option.
     ///
     /// # Arguments

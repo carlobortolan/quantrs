@@ -169,6 +169,10 @@ impl Option for RainbowOption {
         }
     }
 
+    fn set_instrument(&mut self, instrument: Instrument) {
+        self.instrument = instrument;
+    }
+
     fn strike(&self) -> f64 {
         self.strike
     }

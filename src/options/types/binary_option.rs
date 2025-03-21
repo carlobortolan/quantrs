@@ -109,6 +109,10 @@ impl Option for BinaryOption {
         &self.instrument
     }
 
+    fn set_instrument(&mut self, instrument: Instrument) {
+        self.instrument = instrument;
+    }
+
     fn strike(&self) -> f64 {
         self.strike
     }

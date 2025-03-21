@@ -42,6 +42,10 @@ impl Option for LookbackOption {
         &self.instrument
     }
 
+    fn set_instrument(&mut self, instrument: Instrument) {
+        self.instrument = instrument;
+    }
+
     fn time_to_maturity(&self) -> f64 {
         self.time_to_maturity
     }
