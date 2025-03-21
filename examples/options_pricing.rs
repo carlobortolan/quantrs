@@ -7,13 +7,13 @@ use quantrs::options::{
 };
 
 fn main() {
-    // example_from_readme();
-    // example_black_scholes();
-    // example_binomial_tree();
-    // example_monte_carlo();
-    // example_greeks();
-    // example_asian();
-    // example_rainbow();
+    example_from_readme();
+    example_black_scholes();
+    example_binomial_tree();
+    example_monte_carlo();
+    example_greeks();
+    example_asian();
+    example_rainbow();
     example_strategy();
 }
 
@@ -438,7 +438,7 @@ fn example_strategy() {
         model.guts(&itm_put, &itm_call),
         20.0..80.0,
         "images/guts_strategy.png",
-        &[].to_vec(),
+        [].as_ref(),
     );
     // => Guts: images/guts_strategy.png
 
@@ -450,7 +450,7 @@ fn example_strategy() {
         model.straddle(&atm_put, &atm_call),
         20.0..80.0,
         "images/straddle_strategy.png",
-        &[].to_vec(),
+        [].as_ref(),
     );
     // => Straddle: images/straddle_strategy.png
 
@@ -461,7 +461,7 @@ fn example_strategy() {
         model.strangle(&otm_put, &otm_call),
         20.0..80.0,
         "images/strangle_strategy.png",
-        &[].to_vec(),
+        [].as_ref(),
     );
     // => Strangle: images/strangle_strategy.png
 
@@ -479,7 +479,7 @@ fn example_strategy() {
         ),
         20.0..80.0,
         "images/condor_strategy.png",
-        &[].to_vec(),
+        [].as_ref(),
     );
     // => Condor: images/condor_strategy.png
 
