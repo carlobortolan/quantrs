@@ -2,22 +2,10 @@ use crate::options::types::*;
 use crate::options::Instrument;
 use std::any::Any;
 
+use super::OptionPricing;
+
 /// Supertrait that combines OptionPricing and Greeks.
 pub trait Option: Clone + Send + Sync {
-    /// Time horizon (in years).
-    ///
-    /// # Returns
-    ///
-    /// The time horizon (in years).
-    fn time_to_maturity(&self) -> f64;
-
-    /// Get the style of the option.
-    ///
-    /// # Returns
-    ///
-    /// The style of the option.
-    fn style(&self) -> &OptionStyle;
-
     /// Get the underlying instrument of the option.
     ///
     /// # Returns
@@ -32,12 +20,26 @@ pub trait Option: Clone + Send + Sync {
     /// The strike price of the option.
     fn strike(&self) -> f64;
 
+    /// Time horizon (in years).
+    ///
+    /// # Returns
+    ///
+    /// The time horizon (in years).
+    fn time_to_maturity(&self) -> f64;
+
     /// Get the type of the option.
     ///
     /// # Returns
     ///
     /// The type of the option.
     fn option_type(&self) -> OptionType;
+
+    /// Get the style of the option.
+    ///
+    /// # Returns
+    ///
+    /// The style of the option.
+    fn style(&self) -> &OptionStyle;
 
     /// Flip the option type (Call to Put or Put to Call).
     ///
@@ -60,6 +62,114 @@ pub trait Option: Clone + Send + Sync {
         match self.option_type() {
             OptionType::Call => (spot_price - self.strike()).max(0.0),
             OptionType::Put => (self.strike() - spot_price).max(0.0),
+        }
+    }
+
+    /// Calculate the price of the option.
+    ///
+    /// # Arguments
+    ///
+    /// * `model` - The pricing model.
+    ///
+    /// # Returns
+    ///
+    /// The price of the option.
+    fn price<T: OptionPricing>(&self, model: T) -> f64 {
+        model.price(self)
+    }
+
+    /// Calculate the time value of the option.
+    ///
+    /// # Arguments
+    ///
+    /// * `spot` - The price of the underlying asset.
+    /// * `model` - The pricing model.
+    ///
+    /// # Returns
+    ///
+    /// The time value of the option.
+    fn time_value<T: OptionPricing>(&self, model: T) -> f64 {
+        model.price(self) - self.payoff(None)
+    }
+
+    /// Return the option as a call.
+    ///
+    /// # Returns
+    ///
+    /// The option as a call.
+    fn as_call(&self) -> Self {
+        if self.is_call() {
+            self.clone()
+        } else {
+            self.flip()
+        }
+    }
+
+    /// Return the option as a put.
+    ///
+    /// # Returns
+    ///
+    /// The option as a put.
+    fn as_put(&self) -> Self {
+        if self.is_put() {
+            self.clone()
+        } else {
+            self.flip()
+        }
+    }
+
+    /// Check if the option is a call.
+    ///
+    /// # Returns
+    ///
+    /// True if the option is a call, false otherwise.
+    ///
+    fn is_call(&self) -> bool {
+        matches!(self.option_type(), OptionType::Call)
+    }
+
+    /// Check if the option is a put.
+    ///
+    /// # Returns
+    ///
+    /// True if the option is a put, false otherwise.
+    fn is_put(&self) -> bool {
+        matches!(self.option_type(), OptionType::Put)
+    }
+
+    /// Check if the option is ATM
+    ///
+    /// # Returns
+    ///
+    /// True if the option is ATM, false otherwise.
+    fn atm(&self) -> bool {
+        match self.option_type() {
+            OptionType::Call => self.instrument().spot == self.strike(),
+            OptionType::Put => self.instrument().spot == self.strike(),
+        }
+    }
+
+    /// Check if the option is ITM
+    ///
+    /// # Returns
+    ///
+    /// True if the option is ITM, false otherwise.
+    fn itm(&self) -> bool {
+        match self.option_type() {
+            OptionType::Call => self.instrument().spot > self.strike(),
+            OptionType::Put => self.instrument().spot < self.strike(),
+        }
+    }
+
+    /// Check if the option is OTM
+    ///
+    /// # Returns
+    ///
+    /// True if the option is OTM, false otherwise.
+    fn otm(&self) -> bool {
+        match self.option_type() {
+            OptionType::Call => self.instrument().spot < self.strike(),
+            OptionType::Put => self.instrument().spot > self.strike(),
         }
     }
 

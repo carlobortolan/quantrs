@@ -5,15 +5,38 @@ use quantrs::options::{
     OptionPricing, OptionType, RainbowOption,
 };
 
+struct MockModel {}
+
+impl OptionPricing for MockModel {
+    fn price<T: Option>(&self, _option: &T) -> f64 {
+        321.0
+    }
+
+    fn implied_volatility<T: Option>(&self, _option: &T, _market_price: f64) -> f64 {
+        0.123
+    }
+}
+
 // Function to assert that a type implements the Option trait
 fn assert_implements_option_trait<T: Option>(option: &T) {
     // This function does nothing but ensures that T implements the Option trait and required methods
-    option.style();
     option.instrument();
     option.strike();
+    option.time_to_maturity();
     option.option_type();
+    option.style();
     option.flip();
     option.payoff(Some(100.0));
+    option.price(MockModel {});
+    option.time_value(MockModel {});
+    option.as_call();
+    option.as_put();
+    option.is_call();
+    option.is_put();
+    option.atm();
+    option.itm();
+    option.otm();
+    option.as_any();
 }
 
 // Function to assert that a type implements the OptionPricing trait

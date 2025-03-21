@@ -31,4 +31,11 @@
 
 #![allow(unused_variables)]
 
+#[macro_use]
+mod macros {
+    pub mod logging_macros;
+    pub mod math_macros;
+    pub mod validation_macros;
+}
+
 pub mod options;

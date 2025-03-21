@@ -7,13 +7,37 @@ use quantrs::options::{
 };
 
 fn main() {
-    example_from_readme();
-    example_black_scholes();
-    example_binomial_tree();
-    example_greeks();
-    example_monte_carlo();
-    rainbow_option_example();
-    example_asian();
+    // example_from_readme();
+    // example_black_scholes();
+    // example_binomial_tree();
+    // example_monte_carlo();
+    // example_greeks();
+    // example_asian();
+    // example_rainbow();
+    example_strategy();
+}
+
+fn example_from_readme() {
+    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
+    let instrument = Instrument::new()
+        .with_spot(100.0)
+        .with_continuous_dividend_yield(0.02);
+
+    // Create a new Cash-or-Nothing binary call option with:
+    // - Strike price (K) = 85
+    // - Time to maturity (T) = 0.78 years
+    let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, OptionType::Call);
+
+    // Create a new Black-Scholes model with:
+    // - Risk-free interest rate (r) = 5%
+    // - Volatility (σ) = 20%
+    let model = BlackScholesModel::new(0.05, 0.2);
+
+    // Calculate the price of the binary call option using the Black-Scholes model
+    println!("Price: {}", model.price(&option));
+
+    // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
+    println!("Greeks: {:?}", Greeks::calculate(&model, &option));
 }
 
 fn example_black_scholes() {
@@ -46,6 +70,42 @@ fn example_binomial_tree() {
     let market_price = 10.0; // Example market price
     let implied_volatility = model.implied_volatility(&option, market_price);
     println!("Implied Volatility: {}\n", implied_volatility);
+}
+
+fn example_monte_carlo() {
+    let instrument = Instrument::new().with_spot(100.0);
+    let model = MonteCarloModel::arithmetic(0.01, 0.3, 1_000, 52);
+
+    let european_option = EuropeanOption::new(instrument.clone(), 100.0, 1.0, OptionType::Call);
+    println!(
+        "[Monte Carlo] European Call: {}",
+        model.price(&european_option)
+    );
+    println!(
+        "[Monte Carlo] European Put: {}",
+        model.price(&european_option.flip())
+    );
+
+    let binary_option =
+        BinaryOption::cash_or_nothing(instrument.clone(), 100.0, 1.0, OptionType::Call);
+    println!("[Monte Carlo] Binary Call: {}", model.price(&binary_option));
+    println!(
+        "[Monte Carlo] Binary Put: {}",
+        model.price(&binary_option.flip())
+    );
+
+    // let barrier_option = BarrierOption::up(instrument.clone(), 100.0, OptionType::Call);
+    // println!("[Monte Carlo] Barrier Call: {}", model.price(&barrier_option));
+    // println!("[Monte Carlo] Barrier Put: {}", model.price(&barrier_option.flip()));
+    // => 4.895841997908933
+    // => 12.15233976468229
+
+    let asian_option = AsianOption::fixed(instrument.clone(), 100.0, 1.0, OptionType::Call);
+    println!("[Monte Carlo] Asian Call: {}", model.price(&asian_option));
+    println!(
+        "[Monte Carlo] Asian Put: {}",
+        model.price(&asian_option.flip())
+    );
 }
 
 fn example_greeks() {
@@ -90,69 +150,7 @@ fn example_asian() {
     println!("Geometric Put Price: {}", price);
 }
 
-fn example_monte_carlo() {
-    let instrument = Instrument::new().with_spot(100.0);
-    let model = MonteCarloModel::arithmetic(0.01, 0.3, 1_000, 52);
-
-    let european_option = EuropeanOption::new(instrument.clone(), 100.0, 1.0, OptionType::Call);
-    println!(
-        "[Monte Carlo] European Call: {}",
-        model.price(&european_option)
-    );
-    println!(
-        "[Monte Carlo] European Put: {}",
-        model.price(&european_option.flip())
-    );
-
-    let binary_option =
-        BinaryOption::cash_or_nothing(instrument.clone(), 100.0, 1.0, OptionType::Call);
-    println!("[Monte Carlo] Binary Call: {}", model.price(&binary_option));
-    println!(
-        "[Monte Carlo] Binary Put: {}",
-        model.price(&binary_option.flip())
-    );
-
-    // let barrier_option = BarrierOption::up(instrument.clone(), 100.0, OptionType::Call);
-    // println!("[Monte Carlo] Barrier Call: {}", model.price(&barrier_option));
-    // println!("[Monte Carlo] Barrier Put: {}", model.price(&barrier_option.flip()));
-    // => 4.895841997908933
-    // => 12.15233976468229
-
-    let asian_option = AsianOption::fixed(instrument.clone(), 100.0, 1.0, OptionType::Call);
-    println!("[Monte Carlo] Asian Call: {}", model.price(&asian_option));
-    println!(
-        "[Monte Carlo] Asian Put: {}",
-        model.price(&asian_option.flip())
-    );
-}
-
-fn example_from_readme() {
-    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
-    let instrument = Instrument::new()
-        .with_spot(100.0)
-        .with_continuous_dividend_yield(0.02);
-
-    // Create a new Cash-or-Nothing binary call option with:
-    // - Strike price (K) = 85
-    // - Time to maturity (T) = 0.78 years
-    let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, OptionType::Call);
-
-    // Create a new Black-Scholes model with:
-    // - Risk-free interest rate (r) = 5%
-    // - Volatility (σ) = 20%
-    let model = BlackScholesModel::new(0.05, 0.2);
-
-    // Calculate the price of the binary call option using the Black-Scholes model
-    println!("Price: {}", model.price(&option));
-
-    // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-    println!("Greeks: {:?}", Greeks::calculate(&model, &option));
-
-    // Create new option strategies, e.g., a straddle
-    println!("Straddle price: {}", model.straddle(&option));
-}
-
-fn rainbow_option_example() {
+fn example_rainbow() {
     let q = 0.0;
 
     let asset1 = Instrument::new()
@@ -248,4 +246,185 @@ fn rainbow_option_example() {
     // Call-On-Min Price: 12.572331070072991, should be: 12.572331070072991
     // Put-On-Max Price: 8.706509687477691, should be: 8.706509687477691
     // Put-On-Min Price: 16.3115106502782, should be: 16.3115106502782
+}
+
+fn example_strategy() {
+    let model = BlackScholesModel::new(0.0025, 0.15);
+    let instrument = Instrument::new().with_spot(50.0);
+
+    ////////////////////
+    /* STOCK & OPTION */
+
+    let call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    println!(
+        "[Covered Call: {}], given stock: {}, call: {}",
+        model.covered_call(&instrument, &call),
+        instrument.spot,
+        model.price(&call)
+    );
+
+    let put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    println!(
+        "[Protective Put: {}], given stock: {}, put: {}",
+        model.protective_put(&instrument, &put),
+        instrument.spot,
+        model.price(&put)
+    );
+
+    // [Covered Call: 50.46060396445954], given stock: 50, call: 0.4606039644595379
+    // [Protective Put: 50.19404262184266], given stock: 50, put: 0.19404262184266008
+
+    ////////////
+    /* SIMPLE */
+
+    let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+    let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
+    println!(
+        "[Guts: {}], given put: {}, call: {}",
+        model.guts(&itm_put, &itm_call),
+        model.price(&itm_put),
+        model.price(&itm_call)
+    );
+
+    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+    println!(
+        "[Straddle: {}], given put: {}, call: {}",
+        model.straddle(&atm_put, &atm_call),
+        model.price(&atm_put),
+        model.price(&atm_call)
+    );
+
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    println!(
+        "[Strangle: {}], given put: {}, call: {}",
+        model.strangle(&otm_put, &otm_call),
+        model.price(&otm_put),
+        model.price(&otm_call)
+    );
+
+    // [Guts: 20.604709034251407], given put: 10.310791308307145, call: 10.293917725944262
+    // [Straddle: 5.971892724319904], given put: 2.923524422096456, call: 3.048368302223448
+    // [Strangle: 0.654646586302198], given put: 0.19404262184266008, call: 0.4606039644595379
+
+    ///////////////
+    /* BUTTERFLY */
+
+    let lower_wing = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+    let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+    let upper_wing = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    println!(
+        "[Butterfly: {}], given lower: {}, body: {}, upper: {}",
+        model.butterfly(&lower_wing, &body, &upper_wing),
+        model.price(&lower_wing),
+        model.price(&body),
+        model.price(&upper_wing)
+    );
+
+    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    println!(
+        "[Iron Butterfly: {}], given otm_put: {}, atm_put: {}, atm_call: {}, otm_call: {}",
+        model.iron_butterfly(&otm_put, &atm_put, &atm_call, &otm_call),
+        model.price(&otm_put),
+        model.price(&atm_put),
+        model.price(&atm_call),
+        model.price(&otm_call)
+    );
+
+    let o1 = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+    let o2 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    let o3 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    let o4 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    let o5 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
+    let o6 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
+    println!(
+        "[Christmas Tree Butterfly: {}], given o1: {}, o2: {}, o3: {}, o4: {}, o5: {}, o6: {}",
+        model.christmas_tree_butterfly(&o1, &o2, &o3, &o4, &o5, &o6),
+        model.price(&o1),
+        model.price(&o2),
+        model.price(&o3),
+        model.price(&o4),
+        model.price(&o5),
+        model.price(&o6)
+    );
+
+    // [Butterfly: 4.657785085956903], given lower: 10.293917725944262, body: 3.048368302223448, upper: 0.4606039644595379
+    // [Iron Butterfly: 5.317246138017706], given otm_put: 0.19404262184266008, atm_put: 2.923524422096456, atm_call: 3.048368302223448, otm_call: 0.4606039644595379
+    // [Christmas Tree Butterfly: 3.093190784397068], given o1: 3.048368302223448, o2: 0.04006736857896043, o3: 0.04006736857896043, o4: 0.04006736857896043, o5: 0.0023775567973298092, o6: 0.0023775567973298092
+
+    ////////////
+    /* SPREAD */
+
+    let short = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+    let long = EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+    println!(
+        "[Back Spread: {}], given long: {}, short: {}",
+        model.back_spread(&short, &long),
+        model.price(&long),
+        model.price(&short)
+    );
+
+    let front_month = EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call);
+    let back_month = EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, OptionType::Call);
+    println!(
+        "[Calendar Spread: {}], given front: {}, back: {}",
+        model.calendar_spread(&front_month, &back_month),
+        model.price(&front_month),
+        model.price(&back_month)
+    );
+
+    let front_month = EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
+    let back_month_long =
+        EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, OptionType::Call);
+    let back_month_short =
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
+    println!(
+        "[Diagonal Spread: {}], given front: {}, back short: {}, back long: {}",
+        model.diagonal_spread(&front_month, &back_month_short, &back_month_long),
+        model.price(&front_month),
+        model.price(&back_month_short),
+        model.price(&back_month_long)
+    );
+
+    // [Back Spread: -1.7651058588339037], given long: 1.2832624433895443, short: 3.048368302223448
+    // [Calendar Spread: 0.3627080842794541], given front: 0.8687957274316425, back: 1.2315038117110966
+    // [Diagonal Spread: -0.000013350720468530537], given front: 0.000006675365300142389, back short: 0.000006675365300142389, back long: 0.000000000010131754241613834
+
+    ////////////
+    /* CONDOR */
+
+    let itm_call_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call);
+    let itm_call_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    println!(
+        "[Condor: {}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
+        model.condor(&itm_call_long, &itm_call_short, &otm_call_short, &otm_call_long),
+        model.price(&itm_call_long),
+        model.price(&itm_call_short),
+        model.price(&otm_call_short),
+        model.price(&otm_call_long)
+    );
+
+    let otm_put_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put);
+    let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    println!(
+        "[Iron Condor: {}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
+        model.iron_condor(&otm_put_long, &otm_put_short, &otm_call_short, &otm_call_long),
+        model.price(&otm_put_long),
+        model.price(&otm_put_short),
+        model.price(&otm_call_short),
+        model.price(&otm_call_long)
+    );
+
+    // [Condor: 9.360912046153977], given itm_call_long: 20.075366367978816, itm_call_short: 10.293917725944262, otm_call_short: 0.4606039644595379, otm_call_long: 0.04006736857896043
+    // [Iron Condor: -0.6141191778206211], given itm_call_long: 0.00046003990261639024, itm_call_short: 0.19404262184266008, otm_call_short: 0.4606039644595379, otm_call_long: 0.04006736857896043
+
+    // ==> OTM options are cheaper, ATM options have moderate values, and ITM options have higher premiums.
 }

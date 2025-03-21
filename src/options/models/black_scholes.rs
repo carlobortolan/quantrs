@@ -264,7 +264,7 @@ impl BlackScholesModel {
 
     /// Calculate the price of a rainbow call using the Black-Scholes formula.
     pub fn price_rainbow_call<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
-        if option.style() == &OptionStyle::Rainbow(RainbowType::AllITM)
+        if matches!(option.style(), OptionStyle::Rainbow(RainbowType::AllITM))
             && option.payoff(None) <= 0.0
         {
             return 0.0;
@@ -276,8 +276,8 @@ impl BlackScholesModel {
             normal,
         );
 
-        if option.style() == &OptionStyle::Rainbow(RainbowType::BestOf)
-            || option.style() == &OptionStyle::Rainbow(RainbowType::WorstOf)
+        if matches!(option.style(), OptionStyle::Rainbow(RainbowType::BestOf))
+            || matches!(option.style(), OptionStyle::Rainbow(RainbowType::WorstOf))
         {
             panic!("BestOf/WorstOf options not supported by Black-Scholes model");
         }
@@ -286,7 +286,7 @@ impl BlackScholesModel {
 
     /// Calculate the price of a rainbow put using the Black-Scholes formula.
     pub fn price_rainbow_put<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
-        if option.style() == &OptionStyle::Rainbow(RainbowType::AllOTM)
+        if matches!(option.style(), OptionStyle::Rainbow(RainbowType::AllOTM))
             && option.payoff(None) <= 0.0
         {
             return 0.0;
