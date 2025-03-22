@@ -481,9 +481,9 @@ dependencies = [
 
 [[package]]
 name = "half"
-version = "2.3.1"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc52e53916c08643f1b56ec082790d1e86a32e58dc5268f897f313fbae7b4872"
+checksum = "7db2ff139bba50379da6aa0766b52fdcb62cb5b263009b09ed58ba604e14bbd1"
 dependencies = [
  "cfg-if",
  "crunchy",
@@ -838,7 +838,7 @@ dependencies = [
 
 [[package]]
 name = "quantrs"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "approx",
  "chrono",

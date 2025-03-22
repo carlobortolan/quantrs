@@ -1,7 +1,7 @@
 # quantrs
 
 ![tests][actions-test-badge]
-[![MIT licensed][license-badge]](./LICENSE.md)
+[![MIT/Apache 2.0 licensed][license-badge]](./LICENSE.md)
 [![Crate][crates-badge]][crates-url]
 [![docs.rs][docsrs-badge]][docs-url]
 [![codecov-quantrs][codecov-badge]][codecov-url]
@@ -11,7 +11,7 @@
 [actions-test-badge]: https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml/badge.svg
 [crates-badge]: https://img.shields.io/crates/v/quantrs.svg
 [crates-url]: https://crates.io/crates/quantrs
-[license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[license-badge]: https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg
 [docsrs-badge]: https://img.shields.io/docsrs/quantrs
 [docs-url]: https://docs.rs/quantrs/*/quantrs
 [codecov-badge]: https://codecov.io/gh/carlobortolan/quantrs/graph/badge.svg?token=NJ4HW3OQFY
@@ -90,7 +90,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.5"
+quantrs = "0.1.6"
 ```
 
 Now if you want to e.g., model binary call options using the Black-Scholes model, you can:
@@ -175,7 +175,7 @@ See the [documentation][docs-url] for more information and examples.
 
 ## Benchmarks
 
-Compared to other popular options pricing libraries, quantrs is _significantly_ faster:
+Compared to other popular and well-maintained (i.e., actively developed, well-documented, and feature-rich) options pricing libraries, quantrs is _significantly_ faster:
 
 <!-- - **⏳x faster** `QuantLib` (C++ bindings) -->
 
@@ -211,7 +211,12 @@ If you find any bugs or have suggestions for improvement, please open a new issu
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under either of:
+
+- [MIT license](LICENSE-MIT.md) or
+- [Apache License, Version 2.0](LICENSE-APACHE.md)
+
+at your option.
 
 ---
 

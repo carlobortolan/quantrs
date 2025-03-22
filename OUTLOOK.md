@@ -177,6 +177,7 @@ This document outlines the planned features and improvements for the `quantrs` l
   - [ ] Maximum diversification
 
 ### Rates Space
+
 - [ ] Yield curve modelling, parameterization, linear swap pricing/risk
 - [ ] Inflation modelling and swap/linker pricing
 - [ ] Vanilla swaptions, SABR, YCSO, mid-curve swaptions, CMS, Bermudans
@@ -187,7 +188,12 @@ This document outlines the planned features and improvements for the `quantrs` l
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under either of:
+
+- [MIT license](LICENSE-MIT) or
+- [Apache License, Version 2.0](LICENSE-APACHE)
+
+at your option.
 
 ---
 
