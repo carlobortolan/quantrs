@@ -29,7 +29,8 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-llvm-cov
-
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install pkg-config libfreetype6-dev libfontconfig1-dev
       - name: Collect coverage
         run: |
           cargo llvm-cov --no-report nextest
