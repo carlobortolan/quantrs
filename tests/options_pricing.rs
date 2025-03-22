@@ -21,6 +21,8 @@ impl OptionPricing for MockModel {
 fn assert_implements_option_trait<T: Option>(option: &T) {
     // This function does nothing but ensures that T implements the Option trait and required methods
     option.instrument();
+    option.clone().set_instrument(Instrument::new());
+    option.clone().set_time_to_maturity(1.0);
     option.strike();
     option.time_to_maturity();
     option.option_type();
