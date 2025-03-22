@@ -79,7 +79,7 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 
 > ¹ _Also referred to as 'vertical'_\
 > ² _Also referred to as 'horizontal'_\
-> ³ _Also referred to as 'diagonal'_\
+> ³ _Also referred to as 'diagonal'_
 
 </details>
 

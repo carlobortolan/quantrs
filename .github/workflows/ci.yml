@@ -1,15 +1,12 @@
 name: Tests
-
 on:
   push:
     branches: [master]
   pull_request:
     branches: [master]
-
 env:
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-Dwarnings"
-
 jobs:
   clippy:
     runs-on: ubuntu-latest
@@ -20,7 +17,7 @@ jobs:
         with:
           components: clippy
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install pkg-config libfreetype6-dev libfontconfig1-dev
       - name: Run cargo clippy (default features)
         run: cargo clippy --all-targets
 
@@ -34,13 +31,12 @@ jobs:
           components: rustfmt
       - name: Run rustfmt --check
         run: cargo fmt -- --check
-
   msrv:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install pkg-config libfreetype6-dev libfontconfig1-dev
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
@@ -48,7 +44,6 @@ jobs:
         run: mv -v Cargo.lock.MSRV Cargo.lock
       - name: Build (lib only)
         run: cargo hack check --rust-version --locked
-
   test:
     needs: [clippy, fmt, msrv]
     runs-on: ${{ matrix.os }}
@@ -58,50 +53,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev pkg-config
-          echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
-          # Verify fontconfig installation
-          pkg-config --list-all | grep fontconfig || echo "Fontconfig not found in pkg-config"
-          # Print PKG_CONFIG_PATH for debugging
-          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
-
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install fontconfig pkg-config
-          echo "PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig" >> $GITHUB_ENV
-          # Verify fontconfig installation
-          pkg-config --list-all | grep fontconfig || echo "Fontconfig not found in pkg-config"
-
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install -y fontconfig pkg-config
-          # For Windows, set the path to where fontconfig.pc might be located
-          echo "PKG_CONFIG_PATH=C:\ProgramData\chocolatey\lib\fontconfig\pkgconfig" >> $env:GITHUB_ENV
-          # Verify pkg-config
-          pkg-config --version
-
-      - name: Debug fontconfig (Linux/macOS)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
-        run: |
-          echo "Checking fontconfig installation..."
-          find /usr -name "fontconfig.pc" 2>/dev/null || echo "fontconfig.pc not found"
-          pkg-config --modversion fontconfig || echo "fontconfig not recognized by pkg-config"
-          fc-list || echo "fc-list command not found"
-
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Alternative dependency handling
-        run: |
-          cargo update -p yeslogic-fontconfig-sys --precise 5.0.0 || echo "Could not downgrade yeslogic-fontconfig-sys"
-          cargo update -p font-kit --precise 0.11.0 || echo "Could not downgrade font-kit"
-
       - name: Test default features
         run: cargo test
 
@@ -110,16 +63,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev pkg-config
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
-      - name: Alternative dependency handling
-        run: |
-          cargo update -p yeslogic-fontconfig-sys --precise 5.0.0 || echo "Could not downgrade yeslogic-fontconfig-sys"
-          cargo update -p font-kit --precise 0.11.0 || echo "Could not downgrade font-kit"
       - name: Check all possible feature sets
         run: cargo hack check --feature-powerset --no-dev-deps
