@@ -70,6 +70,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install pkg-config libfreetype6-dev libfontconfig1-dev
       - uses: Swatinem/rust-cache@v2
       - name: Check all possible feature sets
         run: cargo hack check --feature-powerset --no-dev-deps
