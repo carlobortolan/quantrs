@@ -72,7 +72,7 @@
 //! println!("Option price: {}", price);
 //! ```
 
-use crate::options::{Option, OptionPricing, OptionStyle};
+use crate::options::{Option, OptionPricing, OptionStrategy, OptionStyle};
 
 /// Binomial tree option pricing model.
 #[derive(Debug, Default)]
@@ -150,3 +150,5 @@ impl OptionPricing for BinomialTreeModel {
         panic!("BinomialTreeModel does not support implied volatility calculation yet");
     }
 }
+
+impl OptionStrategy for BinomialTreeModel {}

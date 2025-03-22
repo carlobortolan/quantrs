@@ -414,7 +414,7 @@ pub trait OptionStrategy: OptionPricing {
 
     /* STOCK & OPTION */
 
-    /// Buy (long covered call) or sell (short covered call) a pair of ITM (in the money) stock and sell a OTM (out of the money) call.
+    /// Own underlying stock and sell a OTM (out of the money) call.
     fn covered_call<'a, T: Option>(
         &'a self,
         stock: &'a Instrument,
@@ -427,8 +427,8 @@ pub trait OptionStrategy: OptionPricing {
                 "Stock must be ITM and call must be OTM!"
             );
 
-            let price = stock.spot + self.price(call);
-            let payoff = spot_price + call.payoff(Some(spot_price));
+            let price = stock.spot - self.price(call);
+            let payoff = spot_price - call.payoff(Some(spot_price));
             (payoff, price)
         }
     }
@@ -557,7 +557,7 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
-    /// The iron butterfly strategy involves buying a pair of ATM (at the money) call and put, and shorting a pair of OTM (out of the money) call and put.
+    /// The iron butterfly strategy involves buying a pair of OTM (out of the money) call and put, and shorting a pair of ATM (at the money) call and put.
     /// It is a limited-risk, limited-profit trading strategy structured for a larger probability of earning smaller limited profit when the underlying stock is perceived to have a low volatility.
     fn iron_butterfly<'a, T: Option>(
         &'a self,
@@ -578,12 +578,12 @@ pub trait OptionStrategy: OptionPricing {
             assert!(otm_put.strike() < atm_put.strike() && atm_put.strike() == atm_call.strike() && atm_call.strike() < otm_call.strike(),
                     "Iron Butterfly must have ordered strikes: lower_put < atm_put == atm_call < upper_call");
 
-            let price = -self.price(otm_put) + self.price(atm_put) + self.price(atm_call)
-                - self.price(otm_call);
-            let payoff = -otm_put.payoff(Some(spot_price))
-                + atm_put.payoff(Some(spot_price))
-                + atm_call.payoff(Some(spot_price))
-                - otm_call.payoff(Some(spot_price));
+            let price = self.price(otm_put) - self.price(atm_put) - self.price(atm_call)
+                + self.price(otm_call);
+            let payoff = otm_put.payoff(Some(spot_price))
+                - atm_put.payoff(Some(spot_price))
+                - atm_call.payoff(Some(spot_price))
+                + otm_call.payoff(Some(spot_price));
             (payoff, price)
         }
     }
@@ -778,6 +778,7 @@ pub trait OptionStrategy: OptionPricing {
         front_month: &'a T,
         back_month: &'a T,
     ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        log_warn!("Flaky implementation of calendar spread. Use with caution!");
         if back_month.time_to_maturity() < front_month.time_to_maturity() {
             log_warn!("Back month is the front month => continuing with the inverse order!");
             return self.calendar_spread(back_month, front_month);
@@ -789,10 +790,6 @@ pub trait OptionStrategy: OptionPricing {
 
             if !front_month.atm() || !back_month.atm() {
                 log_warn!("Options are not ATM. Consider choosing ATM options!");
-            }
-
-            if front_month.time_to_maturity() > 0.083333334 {
-                log_warn!("Front month expires in more than 1 month. Consider choosing a shorter expiration date!");
             }
 
             if back_month.time_to_maturity() - front_month.time_to_maturity() > 0.083333334 {
@@ -814,11 +811,6 @@ pub trait OptionStrategy: OptionPricing {
         back_month_long: &'a T,
     ) -> impl Fn(f64) -> (f64, f64) + 'a {
         move |spot_price| {
-            if back_month_long.time_to_maturity() < front_month.time_to_maturity() {
-                log_warn!("Back month is the front month => continuing with the inverse order!");
-                return self.calendar_spread(back_month_long, front_month)(spot_price);
-            }
-
             if front_month.strike() != back_month_short.strike() {
                 log_warn!("Front month short and back month long strikes are not equal. Consider choosing equal strikes!");
             }
@@ -831,24 +823,25 @@ pub trait OptionStrategy: OptionPricing {
                 log_warn!("Front month expires in more than 1 month. Consider choosing a shorter expiration date!");
             }
 
-            // Check if back-month long is further OTM than back-month short.
-            if back_month_long.is_call() && back_month_long.strike() < back_month_short.strike()
-                || back_month_long.is_put() && back_month_long.strike() > back_month_short.strike()
-            {
-                log_warn!("Back-month long is not further OTM than back-month short. Consider choosing further OTM options!");
-            }
-
             if (front_month.time_to_maturity() - back_month_short.time_to_maturity()).abs() > 0.0027
             {
                 log_warn!("Time to maturity delta between front-month and back-month short is more than 1 day. Consider choosing a shorter expiration date!");
             }
 
-            if back_month_long.time_to_maturity() - front_month.time_to_maturity() > 0.086073059 {
-                log_warn!("Time to maturity delta between front-month and back-month long is more than 1 month. Consider choosing a shorter expiration option!");
+            // Ensure back-month long expires ~1 month after the front-month
+            let time_delta = back_month_long.time_to_maturity() - front_month.time_to_maturity();
+            if time_delta > 0.086073059 {
+                log_warn!("Back-month long expires more than 1 month after front-month. Consider a shorter expiration!");
+            }
+            if time_delta < 0.080593607 {
+                log_warn!("Back-month long expires less than 1 month after front-month. Consider a longer expiration!");
             }
 
-            if back_month_long.time_to_maturity() - front_month.time_to_maturity() < 0.080593607 {
-                log_warn!("Time to maturity delta between front-month and back-month long is less than 1 month. Consider choosing a longer expiration option!");
+            // Check if back-month long is further OTM than back-month short.
+            if back_month_long.is_call() && back_month_long.strike() < back_month_short.strike()
+                || back_month_long.is_put() && back_month_long.strike() > back_month_short.strike()
+            {
+                log_warn!("Back-month long is not further OTM than back-month short. Consider choosing further OTM options!");
             }
 
             if front_month.is_call() {
@@ -859,12 +852,21 @@ pub trait OptionStrategy: OptionPricing {
                 check_is_put!(back_month_short);
             }
 
+            // Adjust back-month short time to maturity after front-month expires
+            let mut back_month_short = back_month_short.clone();
+            back_month_short
+                .set_instrument(back_month_short.instrument().clone().with_spot(spot_price));
+
+            // Calculate the net price (cost/debit of entering the trade)
             let price = self.price(back_month_long)
                 - self.price(front_month)
-                - self.price(back_month_short);
+                - self.price(&back_month_short);
+
+            // Compute the payoff at given spot price
             let payoff = back_month_long.payoff(Some(spot_price))
                 - front_month.payoff(Some(spot_price))
                 - back_month_short.payoff(Some(spot_price));
+
             (payoff, price)
         }
     }

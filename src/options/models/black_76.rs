@@ -1,6 +1,6 @@
 //! Module for Black76 option pricing model.
 
-use crate::options::{Option, OptionPricing};
+use crate::options::{Option, OptionPricing, OptionStrategy};
 
 /// Black76 option pricing model.
 #[derive(Debug, Default)]
@@ -33,3 +33,5 @@ impl OptionPricing for Black76Model {
         panic!("Black76Model does not support implied volatility calculation yet");
     }
 }
+
+impl OptionStrategy for Black76Model {}

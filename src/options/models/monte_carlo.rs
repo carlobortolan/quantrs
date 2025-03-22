@@ -26,7 +26,7 @@
 //! println!("Monte Carlo Call Price: {}", price);
 //! ```
 
-use crate::options::{Option, OptionPricing, OptionStyle, SimMethod};
+use crate::options::{Option, OptionPricing, OptionStrategy, OptionStyle, SimMethod};
 use rand::rngs::ThreadRng;
 use rayon::prelude::*;
 
@@ -202,3 +202,5 @@ impl MonteCarloModel {
         self.simulate_price_paths(option)
     }
 }
+
+impl OptionStrategy for MonteCarloModel {}

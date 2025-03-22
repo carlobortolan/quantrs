@@ -34,6 +34,13 @@ pub trait Option: Clone + Send + Sync {
     /// The time horizon (in years).
     fn time_to_maturity(&self) -> f64;
 
+    /// Set the time horizon (in years).
+    ///
+    /// # Arguments
+    ///
+    /// * `time_to_maturity` - The time horizon (in years).
+    fn set_time_to_maturity(&mut self, time_to_maturity: f64);
+
     /// Get the type of the option.
     ///
     /// # Returns

@@ -129,7 +129,7 @@ Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17
 
 Quantrs also supports plotting option prices and strategies using the `plotters` backend.
 
-E.g., Plot the P/L of a slightly skewed Condor spread:
+E.g., Plot the P/L of a slightly skewed Condor spread using the Monte-Carlo model:
 
 <details>
 <summary><i>Click to see example code</i></summary>
@@ -148,24 +148,26 @@ let options = vec![
     EuropeanOption::new(instrument.clone(), 115.0, 1.0, Call),
 ];
 
-// Create a new Black-Scholes model with:
+// Create a new Monte-Carlo model with:
 // - Risk-free interest rate (r) = 5%
 // - Volatility (σ) = 20%
-let model = BlackScholesModel::new(0.05, 0.2);
+// - Number of simulations = 10,000
+// - Number of time steps = 365
+let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 365);
 
 // Plot a breakdown of the Condor spread with a spot price range of [80,120]
 model.plot_strategy_breakdown(
     "Condor Example",
     model.condor(&options[0], &options[1], &options[2], &options[3]),
     80.0..120.0,
-    "path/to/destination.png",
+    "examples/images/strategy.png",
     &options,
 );
 ```
 
 </details>
 
-![condor_strategy](./examples/images/condor.png)
+![condor_strategy](./examples/images/strategy.png)
 
 <!--<div align="center">
   <img src="https://github.com/user-attachments/assets/0298807f-43ed-4458-9c7d-43b0f70defea" alt="condor_strategy" width="600"/>
@@ -176,7 +178,7 @@ See the [documentation][docs-url] for more information and examples.
 ## Benchmarks
 
 Compared to other popular and well-maintained (i.e., actively developed, well-documented, and feature-rich) options pricing libraries, quantrs competes well in terms of performance:
-E.g., for building and pricing a European call with the Merton Black-Scholes model, quantrs is:
+E.g., for pricing a European call with the Merton Black-Scholes model, quantrs is:
 
 - **87x faster** than `py_vollib`
 - **29x faster** than `QuantLib` (python bindings)

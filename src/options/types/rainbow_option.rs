@@ -181,6 +181,10 @@ impl Option for RainbowOption {
         self.time_to_maturity
     }
 
+    fn set_time_to_maturity(&mut self, time_to_maturity: f64) {
+        self.time_to_maturity = time_to_maturity;
+    }
+
     fn option_type(&self) -> OptionType {
         self.option_type
     }

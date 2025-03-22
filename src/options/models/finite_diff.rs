@@ -1,6 +1,6 @@
 //! Module for finite difference option pricing model.
 
-use crate::options::{Option, OptionPricing};
+use crate::options::{Option, OptionPricing, OptionStrategy};
 
 /// Finite difference option pricing model.
 #[derive(Debug, Default)]
@@ -33,3 +33,5 @@ impl OptionPricing for FiniteDiffModel {
         panic!("FiniteDiffModel does not support implied volatility calculation yet");
     }
 }
+
+impl OptionStrategy for FiniteDiffModel {}
