@@ -19,8 +19,8 @@
 //! use quantrs::options::{MonteCarloModel, OptionPricing, Instrument, OptionType, EuropeanOption};
 //!
 //! let instrument = Instrument::new().with_spot(100.0);
-//! let option = EuropeanOption::new(instrument, 100.0, OptionType::Call);
-//! let model = MonteCarloModel::geometric(1.0, 0.05, 0.2, 10_000, 252);
+//! let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
+//! let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 252);
 //!
 //! let price = model.price(&option);
 //! println!("Monte Carlo Call Price: {}", price);
@@ -41,8 +41,6 @@ pub enum AvgMethod {
 /// A struct representing a Monte Carlo Simulation model for option pricing.
 #[derive(Debug, Default, Clone)]
 pub struct MonteCarloModel {
-    /// Time horizon (in years).
-    pub time_to_maturity: f64,
     /// Risk-free interest rate (e.g., 0.05 for 5%).
     pub risk_free_rate: f64,
     /// Volatility of the underlying asset (e.g., 0.2 for 20%).
@@ -58,7 +56,6 @@ pub struct MonteCarloModel {
 impl MonteCarloModel {
     /// Create a new `MonteCarloModel`.
     pub fn new(
-        time_to_maturity: f64,
         risk_free_rate: f64,
         volatility: f64,
         simulations: usize,
@@ -66,7 +63,6 @@ impl MonteCarloModel {
         method: AvgMethod,
     ) -> Self {
         Self {
-            time_to_maturity,
             risk_free_rate,
             volatility,
             simulations,
@@ -77,14 +73,12 @@ impl MonteCarloModel {
 
     /// Create a new `MonteCarloModel` with the geometric averaging method.
     pub fn geometric(
-        time_to_maturity: f64,
         risk_free_rate: f64,
         volatility: f64,
         simulations: usize,
         steps: usize,
     ) -> Self {
         Self::new(
-            time_to_maturity,
             risk_free_rate,
             volatility,
             simulations,
@@ -95,14 +89,12 @@ impl MonteCarloModel {
 
     /// Create a new `MonteCarloModel` with the arithmetic averaging method.
     pub fn arithmetic(
-        time_to_maturity: f64,
         risk_free_rate: f64,
         volatility: f64,
         simulations: usize,
         steps: usize,
     ) -> Self {
         Self::new(
-            time_to_maturity,
             risk_free_rate,
             volatility,
             simulations,
@@ -113,7 +105,7 @@ impl MonteCarloModel {
 
     /// Simulate price paths and compute the expected discounted payoff.
     fn simulate_price_paths<T: Option>(&self, option: &T) -> f64 {
-        let discount_factor = (-self.risk_free_rate * self.time_to_maturity).exp();
+        let discount_factor = (-self.risk_free_rate * option.time_to_maturity()).exp();
 
         // Use parallel iteration to simulate multiple price paths
         let total_payoff: f64 = (0..self.simulations)
@@ -123,7 +115,7 @@ impl MonteCarloModel {
                 let simulated_price = option.instrument().simulate_geometric_brownian_motion(
                     &mut rng,
                     self.volatility,
-                    self.time_to_maturity,
+                    option.time_to_maturity(),
                     self.risk_free_rate,
                     self.steps,
                 );
@@ -170,15 +162,15 @@ impl MonteCarloModel {
                 &mut rng,
                 SimMethod::Log,
                 self.volatility,
-                self.time_to_maturity,
+                option.time_to_maturity(),
                 self.risk_free_rate,
                 self.steps,
             );
 
             // Calculate each payoff
             sum += (-(self.risk_free_rate - option.instrument().continuous_dividend_yield)
-                * self.time_to_maturity)
-                .exp()
+                * option.time_to_maturity())
+            .exp()
                 * option.payoff(Some(avg_price));
         }
 

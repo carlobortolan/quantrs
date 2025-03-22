@@ -20,7 +20,7 @@
 [crates-download-badge]: https://img.shields.io/crates/d/quantrs
 
 Quantrs is a tiny quantitative finance library for Rust.
-It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading quantlib documentation.
+It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading QuantLib documentation.
 The library is still in the early stages of development, and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
@@ -29,7 +29,7 @@ Please check out the documentation [here][docs-url].
 
 ### Options Pricing
 
-For now quantrs only supports options pricing of vanilla and various exotic options.
+Quantrs supports options pricing with various models for both vanilla and exotic options as well as options trading strategies for both basic options spreads and non-directional strategies.
 
 <details>
 <summary><i>Click to see supported models</i></summary>
@@ -59,6 +59,120 @@ For now quantrs only supports options pricing of vanilla and various exotic opti
 
 </details>
 
+<details>
+<summary><i>Click to see supported strategies</i></summary>
+
+| Strategy Name            | Type         | Description                                                                                       |
+| ------------------------ | ------------ | ------------------------------------------------------------------------------------------------- |
+| Covered Call             | Income       | Long stock + short call                                                                           |
+| Protective Put           | Hedging      | Long stock + long put                                                                             |
+| Guts                     | Volatility   | Long ITM call + long ITM put                                                                      |
+| Straddle                 | Volatility   | Long ATM call + long ATM put                                                                      |
+| Strangle                 | Volatility   | Long OTM call + long OTM put                                                                      |
+| Butterfly Spread         | ¹Spread      | Long ITM call, short two ATM calls, long OTM call (or all puts)                                   |
+| Iron Butterfly           | ¹Spread      | Short straddle + long wings                                                                       |
+| Christmas Tree Butterfly | ¹Spread      | Long 1 ATM call, short 3 OTM calls, long 2 high-strike OTM calls (or all puts)                    |
+| Condor Spread            | ¹Spread      | Long low-strike ITM call, short ITM call, short OTM call, long high-strike OTM call (or all puts) |
+| Iron Condor              | ¹Spread      | Short strangle + long wings                                                                       |
+| Calendar Spread          | ²Time Spread | Long far-expiry ATM call + short near-expiry ATM call (or all puts)                               |
+| Diagonal Spread          | ³Time Spread | Short near-expiry OTM call + long far-expiry further OTM call (or all puts)                       |
+| Back Spread              | Directional  | Long 2 OTM calls + short 1 ATM call (or all puts)                                                 |
+
+> ¹ _Also referred to as 'vertical'_\
+> ² _Also referred to as 'horizontal'_\
+> ³ _Also referred to as 'diagonal'_
+
+</details>
+
+## Usage
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+quantrs = "0.1.5"
+```
+
+Now if you want to e.g., model binary call options using the Black-Scholes model, you can:
+
+```rust
+use quantrs::options::*;
+
+// Create a new instrument with a spot price of 100 and a dividend yield of 2%
+let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
+
+// Create a new Cash-or-Nothing binary call option with:
+// - Strike price (K) = 85
+// - Time to maturity (T) = 0.78 years
+let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, Call);
+
+// Create a new Black-Scholes model with:
+// - Risk-free interest rate (r) = 5%
+// - Volatility (σ) = 20%
+let model = BlackScholesModel::new(0.05, 0.2);
+
+// Calculate the price of the binary call option using the Black-Scholes model
+println!("Price: {}", model.price(&option));
+
+// Calculate first order greeks for the option
+println!("{:?}", Greeks::calculate(&model, &option));
+```
+
+This will output:
+
+```text
+Price: 0.8006934914644723
+Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
+```
+
+### Plotting
+
+Quantrs also supports plotting option prices and strategies using the `plotters` backend.
+
+E.g., Plot the P/L of a slightly skewed Condor spread:
+
+<details>
+<summary><i>Click to see example code</i></summary>
+
+```rust
+use quantrs::options::*;
+
+// Create a new instrument with a spot price of 100 and a dividend yield of 2%
+let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
+
+// Create a vector of European call options with different strike prices
+let options = vec![
+    EuropeanOption::new(instrument.clone(), 85.0, 1.0, Call),
+    EuropeanOption::new(instrument.clone(), 95.0, 1.0, Call),
+    EuropeanOption::new(instrument.clone(), 102.0, 1.0, Call),
+    EuropeanOption::new(instrument.clone(), 115.0, 1.0, Call),
+];
+
+// Create a new Black-Scholes model with:
+// - Risk-free interest rate (r) = 5%
+// - Volatility (σ) = 20%
+let model = BlackScholesModel::new(0.05, 0.2);
+
+// Plot a breakdown of the Condor spread with a spot price range of [80,120]
+model.plot_strategy_breakdown(
+    "Condor Example",
+    model.condor(&options[0], &options[1], &options[2], &options[3]),
+    80.0..120.0,
+    "path/to/destination.png",
+    &options,
+);
+```
+
+</details>
+
+![condor_strategy](./examples/images/condor.png)
+
+<!--<div align="center">
+  <img src="https://github.com/user-attachments/assets/0298807f-43ed-4458-9c7d-43b0f70defea" alt="condor_strategy" width="600"/>
+</div>-->
+
+See the [documentation][docs-url] for more information and examples.
+
 ## Benchmarks
 
 Compared to other popular options pricing libraries, quantrs is _significantly_ faster:
@@ -83,55 +197,9 @@ You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.
 
 _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD Ryzen 7 PRO 6850U @ 2.70GHz, and Manjaro Linux x86_64_
 
-## Usage
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-quantrs = "0.1.4"
-```
-
-Now if you want to e.g., model binary call options using the Black-Scholes model, you can:
-
-```rust
-use quantrs::options::*;
-
-fn main() {
-    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
-    let instrument = Instrument::new()
-        .with_spot(100.0)
-        .with_continuous_dividend_yield(0.02);
-
-    // Create a new Cash-or-Nothing binary call option with a strike price of 85
-    let option = BinaryOption::cash_or_nothing(instrument, 85.0, OptionType::Call);
-
-    // Create a new Black-Scholes model with:
-    // - Time to maturity (T) = 0.78 years
-    // - Risk-free interest rate (r) = 5%
-    // - Volatility (σ) = 20%
-    let model = BlackScholesModel::new(0.78, 0.05, 0.2);
-
-    // Calculate the price of the binary call option using the Black-Scholes model
-    println!("Price: {}", model.price(&option));
-
-    // Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-    println!("Greeks: {:?}", Greeks::calculate(&model, option));
-}
-```
-
-This will output:
-
-```text
-Price: 0.8006934914644723
-Greeks: Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
-```
-
-See the [documentation][docs-url] for more information and examples.
-
 ## Minimum supported Rust version (MSRV)
 
-This crate requires a Rust version of 1.65.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+This crate requires a Rust version of 1.77.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
 ## Outlook
 
@@ -152,3 +220,7 @@ This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md)
 > Carlo Bortolan &nbsp;&middot;&nbsp;
 > GitHub [carlobortolan](https://github.com/carlobortolan) &nbsp;&middot;&nbsp;
 > contact via [carlobortolan@gmail.com](mailto:carlobortolan@gmail.com)
+
+```
+
+```
