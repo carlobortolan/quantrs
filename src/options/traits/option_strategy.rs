@@ -778,6 +778,7 @@ pub trait OptionStrategy: OptionPricing {
         front_month: &'a T,
         back_month: &'a T,
     ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        log_warn!("Flaky implementation of calendar spread. Use with caution!");
         if back_month.time_to_maturity() < front_month.time_to_maturity() {
             log_warn!("Back month is the front month => continuing with the inverse order!");
             return self.calendar_spread(back_month, front_month);
@@ -789,10 +790,6 @@ pub trait OptionStrategy: OptionPricing {
 
             if !front_month.atm() || !back_month.atm() {
                 log_warn!("Options are not ATM. Consider choosing ATM options!");
-            }
-
-            if front_month.time_to_maturity() > 0.083333334 {
-                log_warn!("Front month expires in more than 1 month. Consider choosing a shorter expiration date!");
             }
 
             if back_month.time_to_maturity() - front_month.time_to_maturity() > 0.083333334 {

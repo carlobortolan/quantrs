@@ -249,7 +249,9 @@ fn example_rainbow() {
 }
 
 fn example_strategy() {
-    let model = BlackScholesModel::new(0.0025, 0.15);
+    // let model = BlackScholesModel::new(0.0025, 0.15);
+    // let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 365);
+    let model = BinomialTreeModel::new(0.05, 0.2, 100);
     let instrument = Instrument::new().with_spot(50.0);
 
     ////////////////////
@@ -587,52 +589,44 @@ fn example_strategy() {
     ); // => Calendar Spread: examples/images/calendar_spread_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, Call),
-        EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, Call),
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, Call),
+        EuropeanOption::new(Instrument::new().with_spot(48.0), 49.0, 1.0 / 12.0, Call),
+        EuropeanOption::new(Instrument::new().with_spot(48.0), 49.0, 1.0 / 12.0, Call),
+        EuropeanOption::new(Instrument::new().with_spot(48.0), 50.0, 2.0 / 12.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Diagonal Spread",
         model.diagonal_spread(&options[0], &options[1], &options[2]),
-        20.0..80.0,
+        40.0..60.0,
         "examples/images/diagonal_spread_strategy.png",
         &options,
-    ); // => Diagonal Spread: examples/images/diagonal_spread_strategy.png
+    ); //model.diagonal_spread(&options[0], &options[1], &options[2])(50.0);
 }
 
 fn example_plots() {
-    // Create a new plotter and plot the option prices
-    // let plotter = Plotter::new();
-    // let _ = plotter.plot_option_prices(
-    //     "Binary Call Option",
-    //     instrument,
-    //     80.0..120.0,
-    //     0.1..1.0,
-    //     0.1,
-    //     Call,
-    //     |k, t| BinaryOption::cash_or_nothing(instrument.clone(), k, t, Call),
-    //     "path/to/destination.png",
-    // );
+    // Create a new Monte-Carlo model with:
+    // - Risk-free interest rate (r) = 5%
+    // - Volatility (σ) = 20%
+    // - Number of simulations = 10,000
+    // - Number of time steps = 365
+    let model = MonteCarloModel::geometric(0.05, 0.2, 100_000, 365);
+
+    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
     let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
     // Create a vector of European call options with different strike prices
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 85.0, 1.0, Call),
-        EuropeanOption::new(instrument.clone(), 95.0, 1.0, Call),
-        EuropeanOption::new(instrument.clone(), 102.0, 1.0, Call),
-        EuropeanOption::new(instrument.clone(), 115.0, 1.0, Call),
+        BinaryOption::asset_or_nothing(instrument.clone(), 85.0, 1.0, Call),
+        BinaryOption::asset_or_nothing(instrument.clone(), 95.0, 1.0, Call),
+        BinaryOption::asset_or_nothing(instrument.clone(), 102.0, 1.0, Call),
+        BinaryOption::asset_or_nothing(instrument.clone(), 115.0, 1.0, Call),
     ];
 
-    // Create a new Black-Scholes model with:
-    // - Risk-free interest rate (r) = 5%
-    // - Volatility (σ) = 20%
-    let model = BlackScholesModel::new(0.05, 0.2);
-
+    // Plot a breakdown of the Condor spread with a spot price range of [80,120]
     let _ = model.plot_strategy_breakdown(
         "Condor Example",
         model.condor(&options[0], &options[1], &options[2], &options[3]),
         80.0..120.0,
-        "examples/images/condor.png",
+        "examples/images/strategy.png",
         &options,
     );
 }

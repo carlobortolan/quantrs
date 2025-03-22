@@ -1,6 +1,6 @@
 //! Module for Heston option pricing model.
 
-use crate::options::{Option, OptionPricing};
+use crate::options::{Option, OptionPricing, OptionStrategy};
 
 /// Heston option pricing model.
 #[derive(Debug, Default)]
@@ -33,3 +33,5 @@ impl OptionPricing for HestonModel {
         panic!("HestonModel does not support implied volatility calculation yet");
     }
 }
+
+impl OptionStrategy for HestonModel {}
