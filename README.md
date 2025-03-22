@@ -114,15 +114,15 @@ let model = BlackScholesModel::new(0.05, 0.2);
 // Calculate the price of the binary call option using the Black-Scholes model
 println!("Price: {}", model.price(&option));
 
-// Calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) for the option
-println!("Greeks: {:?}", Greeks::calculate(&model, &option));
+// Calculate first order greeks for the option
+println!("{:?}", Greeks::calculate(&model, &option));
 ```
 
 This will output:
 
 ```text
 Price: 0.8006934914644723
-Greeks: Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
+Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
 ```
 
 ### Plotting
@@ -153,11 +153,11 @@ let options = vec![
 // - Volatility (σ) = 20%
 let model = BlackScholesModel::new(0.05, 0.2);
 
-// Plot a breakdown of the Condor spread with a spot price range of [20,80]
+// Plot a breakdown of the Condor spread with a spot price range of [80,120]
 model.plot_strategy_breakdown(
     "Condor Example",
     model.condor(&options[0], &options[1], &options[2], &options[3]),
-    20.0..80.0,
+    80.0..120.0,
     "path/to/destination.png",
     &options,
 );
