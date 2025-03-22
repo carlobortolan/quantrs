@@ -1,21 +1,17 @@
 name: Coverage
-
 on:
   push:
     branches: [master]
   pull_request:
     branches: [master]
-
 jobs:
   coverage:
     strategy: # allows pinning additional nightly
       fail-fast: false # allows continue past failure of one toolchain if multiple
       matrix:
         toolchain: [nightly]
-
     # 360 mins is gh actions default
     timeout-minutes: ${{ matrix.toolchain == 'nightly' && 10 || 360 }}
-
     name: Coverage
     runs-on: ubuntu-latest
     env:
@@ -27,7 +23,6 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           components: llvm-tools-preview
-
       - uses: taiki-e/install-action@v2
         with:
           tool: nextest
@@ -35,29 +30,11 @@ jobs:
         with:
           tool: cargo-llvm-cov
 
-      # Add fontconfig installation
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev pkg-config
-          echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
-          # Verify fontconfig installation
-          pkg-config --list-all | grep fontconfig || echo "Fontconfig not found in pkg-config"
-          # Print PKG_CONFIG_PATH for debugging
-          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
-
-      # Add fallback for dependency issues
-      - name: Alternative dependency handling
-        run: |
-          cargo update -p yeslogic-fontconfig-sys --precise 5.0.0 || echo "Could not downgrade yeslogic-fontconfig-sys"
-          cargo update -p font-kit --precise 0.11.0 || echo "Could not downgrade font-kit"
-
       - name: Collect coverage
         run: |
           cargo llvm-cov --no-report nextest
           cargo llvm-cov --no-report --doc
           cargo llvm-cov report --doctests --lcov --output-path lcov.info
-
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v5
         with:
