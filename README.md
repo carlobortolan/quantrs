@@ -176,7 +176,7 @@ See the [documentation][docs-url] for more information and examples.
 ## Benchmarks
 
 Compared to other popular and well-maintained (i.e., actively developed, well-documented, and feature-rich) options pricing libraries, quantrs competes well in terms of performance:
-E.g., for building and pricing a European call with the Merton Black-Scholes model, quantrs is:
+E.g., for pricing a European call with the Merton Black-Scholes model, quantrs is:
 
 - **87x faster** than `py_vollib`
 - **29x faster** than `QuantLib` (python bindings)
