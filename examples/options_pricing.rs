@@ -352,10 +352,6 @@ fn example_strategy() {
         model.price(&o6)
     );
 
-    // [Butterfly: 4.657785085956903], given lower: 10.293917725944262, body: 3.048368302223448, upper: 0.4606039644595379
-    // [Iron Butterfly: 5.317246138017706], given otm_put: 0.19404262184266008, atm_put: 2.923524422096456, atm_call: 3.048368302223448, otm_call: 0.4606039644595379
-    // [Christmas Tree Butterfly: 3.093190784397068], given o1: 3.048368302223448, o2: 0.04006736857896043, o3: 0.04006736857896043, o4: 0.04006736857896043, o5: 0.0023775567973298092, o6: 0.0023775567973298092
-
     ////////////
     /* SPREAD */
 
@@ -390,10 +386,6 @@ fn example_strategy() {
         model.price(&back_month_long)
     );
 
-    // [Back Spread: -1.7651058588339037], given long: 1.2832624433895443, short: 3.048368302223448
-    // [Calendar Spread: 0.3627080842794541], given front: 0.8687957274316425, back: 1.2315038117110966
-    // [Diagonal Spread: -0.000013350720468530537], given front: 0.000006675365300142389, back short: 0.000006675365300142389, back long: 0.000000000010131754241613834
-
     ////////////
     /* CONDOR */
 
@@ -422,9 +414,6 @@ fn example_strategy() {
         model.price(&otm_call_short),
         model.price(&otm_call_long)
     );
-
-    // [Condor: 9.360912046153977], given itm_call_long: 20.075366367978816, itm_call_short: 10.293917725944262, otm_call_short: 0.4606039644595379, otm_call_long: 0.04006736857896043
-    // [Iron Condor: -0.6141191778206211], given itm_call_long: 0.00046003990261639024, itm_call_short: 0.19404262184266008, otm_call_short: 0.4606039644595379, otm_call_long: 0.04006736857896043
 
     // ==> OTM options are cheaper, ATM options have moderate values, and ITM options have higher premiums.
 

@@ -681,7 +681,7 @@ pub trait OptionStrategy: OptionPricing {
                 check_is_put!(otm_short);
                 check_is_put!(otm_long);
 
-                assert!(itm_long.strike() <= itm_short.strike() && itm_short.strike() <= otm_short.strike() && otm_short.strike() <= otm_long.strike(),
+                assert!(itm_long.strike() >= itm_short.strike() && itm_short.strike() >= otm_short.strike() && otm_short.strike() >= otm_long.strike(),
             "Condor Spread w/ Puts must have ordered strikes: OTM (long) <= OTM (short) <= ITM (short) <= ITM (long)");
             }
 

@@ -1660,3 +1660,200 @@ mod option_trait_tests {
         assert_implements_model_trait(&model);
     }
 }
+
+mod test_option_strategies {
+    use quantrs::options::OptionStrategy;
+
+    use super::*;
+    #[test]
+    fn test_option_strategies() {
+        let model = BlackScholesModel::new(0.0025, 0.15);
+        let instrument = Instrument::new().with_spot(50.0);
+
+        // Stock & Option
+        let call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.covered_call(&instrument, &call)(50.0),
+            (50.0, 50.46060396445954),
+        );
+
+        let put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.protective_put(&instrument, &put)(50.0),
+            (50.0, 50.19404262184266),
+        );
+
+        // Simple Strategies
+        let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+        let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.guts(&itm_put, &itm_call)(50.0),
+            (20.0, 20.604709034251407),
+        );
+
+        let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.straddle(&atm_put, &atm_call)(50.0),
+            (0.0, 5.971892724319904),
+        );
+
+        let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.strangle(&otm_put, &otm_call)(50.0),
+            (0.0, 0.654646586302198),
+        );
+
+        // Butterfly Strategies
+        let lower = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+        let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let upper = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.butterfly(&lower, &body, &upper)(50.0),
+            (10.0, 4.657785085956903),
+        );
+
+        let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.iron_butterfly(&otm_put, &atm_put, &atm_call, &otm_call)(50.0),
+            (0.0, 5.317246138017706),
+        );
+
+        let o1 = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let o2 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+        let o3 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+        let o4 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+        let o5 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
+        let o6 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.christmas_tree_butterfly(&o1, &o2, &o3, &o4, &o5, &o6)(50.0),
+            (0.0, 2.9329213100812264),
+        );
+
+        // Condor strategies
+        let itm_call_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call);
+        let itm_call_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+        let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.condor(
+                &itm_call_long,
+                &itm_call_short,
+                &otm_call_short,
+                &otm_call_long
+            )(50.0),
+            (10.0, 9.360912046153977),
+        );
+
+        let otm_put_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put);
+        let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.iron_condor(
+                &otm_put_long,
+                &otm_put_short,
+                &otm_call_short,
+                &otm_call_long
+            )(50.0),
+            (0.0, -0.6141191778206211),
+        );
+
+        // Spread strategies
+        let short = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let long1 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+        let long2 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.back_spread(&short, &long1, &long2)(50.0),
+            (0.0, -0.4818434154443594),
+        );
+
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call);
+        let back_month =
+            EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, OptionType::Call);
+        assert_eq!(
+            model.calendar_spread(&front_month, &back_month)(50.0),
+            (0.0, 0.3627080842794541),
+        );
+
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, OptionType::Call);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
+        assert_eq!(
+            model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0),
+            (0.0, -1.3350720468530537e-5),
+        );
+    }
+
+    #[test]
+    fn test_option_strategies_with_puts() {
+        let model = BlackScholesModel::new(0.0025, 0.15);
+        let instrument = Instrument::new().with_spot(50.0);
+
+        // Butterfly Strategies
+        let lower = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
+        let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        let upper = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.butterfly(&lower, &body, &upper)(50.0),
+            (10.0, 4.657785085956894),
+        );
+
+        let o1 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Put);
+        let o2 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Put);
+        let o3 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Put);
+        let o4 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Put);
+        let o5 = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        let o6 = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.christmas_tree_butterfly(&o1, &o2, &o3, &o4, &o5, &o6)(50.0),
+            (-30.0, -23.94618161641646),
+        );
+
+        // Condor strategies
+        let itm_put_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Put);
+        let itm_put_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
+        let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        let otm_put_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.condor(&itm_put_long, &itm_put_short, &otm_put_short, &otm_put_long)(50.0),
+            (10.0, 9.360912046153976),
+        );
+
+        // Spread strategies
+        let short = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        let long1 = EuropeanOption::new(instrument.clone(), 45.0, 1.0, OptionType::Put);
+        let long2 = EuropeanOption::new(instrument.clone(), 45.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.back_spread(&short, &long1, &long2)(50.0),
+            (0.0, -0.9607806830432359),
+        );
+
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Put);
+        let back_month = EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, OptionType::Put);
+        assert_eq!(
+            model.calendar_spread(&front_month, &back_month)(50.0),
+            (0.0, 0.35229467229370925),
+        );
+
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 40.0, 1.0 / 12.0, OptionType::Put);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 25.0, 2.0 / 12.0, OptionType::Put);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 40.0, 1.0 / 12.0, OptionType::Put);
+        assert_eq!(
+            model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0),
+            (0.0, -8.764136364746778e-8),
+        );
+    }
+}
