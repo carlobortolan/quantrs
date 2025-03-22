@@ -624,7 +624,7 @@ fn example_plots() {
     //     |k, t| BinaryOption::cash_or_nothing(instrument.clone(), k, t, Call),
     //     "path/to/destination.png",
     // );
-    let instrument = Instrument::spot(100.0).with_cont_yield(0.02);
+    let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
     // Create a vector of European call options with different strike prices
     let options = vec![
