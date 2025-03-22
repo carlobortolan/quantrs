@@ -175,25 +175,25 @@ See the [documentation][docs-url] for more information and examples.
 
 ## Benchmarks
 
-Compared to other popular and well-maintained (i.e., actively developed, well-documented, and feature-rich) options pricing libraries, quantrs is _significantly_ faster:
+Compared to other popular and well-maintained (i.e., actively developed, well-documented, and feature-rich) options pricing libraries, quantrs competes well in terms of performance:
+E.g., for building and pricing a European call with the Merton Black-Scholes model, quantrs is:
 
-<!-- - **⏳x faster** `QuantLib` (C++ bindings) -->
-
+- **87x faster** than `py_vollib`
 - **29x faster** than `QuantLib` (python bindings)
-- **113x faster** than `py_vollib`
 - **15x faster** than `RustQuant`
-- **2.7x faster** than `Q-Fin`
+- **3x faster** than `Q-Fin`
+- **1.7x slower** than `QuantLib` (cpp)
 
 | Library                                                | Mean Execution Time (μs) | Median Execution Time (μs) | Standard Deviation (μs) | Operations / Second (OPS) |
 | ------------------------------------------------------ | ------------------------ | -------------------------- | ----------------------- | ------------------------- |
 | quantrs                                                | 0.0971                   | 0.0970                     | 0.0007                  | 10,142,000                |
-| [QuantLib](https://www.quantlib.org) (cpp)             | n.a.                     | n.a.                       | n.a.                    | n.a.                      |
+| [py_vollib](https://github.com/vollib/py_vollib)       | 8.5341                   | 8.5210                     | 0.8129                  | 117,176                   |
 | [QuantLib](https://pypi.org/project/QuantLib) (py)     | 2.8551                   | 2.8630                     | 0.9391                  | 350,250                   |
-| [py_vollib](https://github.com/vollib/py_vollib)       | 10.9959                  | 10.8950                    | 1.1398                  | 90,943                    |
-| [Q-Fin](https://github.com/romanmichaelpaolucci/Q-Fin) | 0.2622                   | 0.2603                     | 0.0356                  | 3,813,700                 |
 | [RustQuant](https://github.com/avhz/RustQuant)         | 1.4777                   | 1.4750                     | 0.0237                  | 676,727                   |
+| [Q-Fin](https://github.com/romanmichaelpaolucci/Q-Fin) | 0.2900                   | 0.2906                     | 0.0448                  | 3,447,870                 |
+| [QuantLib](https://www.quantlib.org) (cpp)             | 0.0556                   | n.a.                       | n.a.                    | 17,958,600                |
 
-You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.dev/report/)
+You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.dev/report/).
 
 _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD Ryzen 7 PRO 6850U @ 2.70GHz, and Manjaro Linux x86_64_
 
@@ -225,7 +225,3 @@ at your option.
 > Carlo Bortolan &nbsp;&middot;&nbsp;
 > GitHub [carlobortolan](https://github.com/carlobortolan) &nbsp;&middot;&nbsp;
 > contact via [carlobortolan@gmail.com](mailto:carlobortolan@gmail.com)
-
-```
-
-```
