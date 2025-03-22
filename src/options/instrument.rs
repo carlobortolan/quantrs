@@ -61,6 +61,20 @@ impl Instrument {
         }
     }
 
+    /// Create a simple `Instrument` with a spot price.
+    pub fn spot(spot: f64) -> Self {
+        Self {
+            spot,
+            max_spot: 0.0,
+            min_spot: 0.0,
+            continuous_dividend_yield: 0.0,
+            discrete_dividend_yield: 0.0,
+            dividend_times: Vec::new(),
+            assets: Vec::new(),
+            sorted: false,
+        }
+    }
+
     /// Set the spot price of the instrument.
     pub fn with_spot(mut self, spot: f64) -> Self {
         self.spot = spot;
@@ -86,6 +100,11 @@ impl Instrument {
             a.continuous_dividend_yield = yield_;
         });
         self
+    }
+
+    /// Alias for `with_continuous_dividend_yield`.
+    pub fn with_cont_yield(self, yield_: f64) -> Self {
+        self.with_continuous_dividend_yield(yield_)
     }
 
     /// Set the discrete dividend yield of the instrument.

@@ -136,7 +136,7 @@ pub trait OptionStrategy: OptionPricing {
                     Self::calculate_y_bounds(&option_payoffs, &option_prices, &option_payoffs);
 
                 let mut chart = ChartBuilder::on(option_plot_area)
-                    .margin(30)
+                    .margin(40)
                     .x_label_area_size(100)
                     .y_label_area_size(100)
                     .build_cartesian_2d(range.clone(), min_y..max_y)?;
@@ -145,10 +145,23 @@ pub trait OptionStrategy: OptionPricing {
 
                 chart
                     .configure_mesh()
-                    .x_desc("Underlying Price ($)")
+                    .x_desc(&format!(
+                        "{:?} @ ${:.2} | {} | TTM: {:.2}y",
+                        option.option_type(),
+                        option.strike(),
+                        if option.itm() {
+                            "ITM"
+                        } else if option.atm() {
+                            "ATM"
+                        } else {
+                            "OTM"
+                        },
+                        option.time_to_maturity()
+                    ))
                     .y_desc("Value ($)")
-                    .x_label_style(("Inter", 40).into_font().color(&WHITE))
-                    .y_label_style(("Inter", 40).into_font().color(&WHITE))
+                    .x_label_style(("Inter", 30).into_font().color(&WHITE))
+                    .y_label_style(("Inter", 30).into_font().color(&WHITE))
+                    .axis_desc_style(("Inter", 42, FontStyle::Bold).into_font().color(&WHITE)) // Changed from x_desc_style and y_desc_style
                     .axis_style(WHITE.mix(0.8))
                     .light_line_style(WHITE.mix(0.2).stroke_width(1))
                     .bold_line_style(WHITE.mix(0.7).stroke_width(1))
@@ -243,9 +256,9 @@ pub trait OptionStrategy: OptionPricing {
                 format!("{} Strategy - Payoff & P/L", strategy_name),
                 ("Inter", 60, FontStyle::Bold).into_font().color(&WHITE),
             )
-            .margin(40)
-            .x_label_area_size(100)
-            .y_label_area_size(100)
+            .margin(60)
+            .x_label_area_size(110)
+            .y_label_area_size(110)
             .build_cartesian_2d(range.clone(), min_y..max_y)?;
 
         // Configure chart appearance
@@ -274,7 +287,7 @@ pub trait OptionStrategy: OptionPricing {
         // Draw horizontal zero line
         chart.draw_series(DashedLineSeries::new(
             (range.start as u32..=range.end as u32).map(|x| (x as f64, 0.0)),
-            10,
+            20,
             10,
             WHITE.stroke_width(2),
         ))?;

@@ -98,14 +98,12 @@ Now if you want to e.g., model binary call options using the Black-Scholes model
 use quantrs::options::*;
 
 // Create a new instrument with a spot price of 100 and a dividend yield of 2%
-let instrument = Instrument::new()
-    .with_spot(100.0)
-    .with_continuous_dividend_yield(0.02);
+let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
 // Create a new Cash-or-Nothing binary call option with:
 // - Strike price (K) = 85
 // - Time to maturity (T) = 0.78 years
-let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, OptionType::Call);
+let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, Call);
 
 // Create a new Black-Scholes model with:
 // - Risk-free interest rate (r) = 5%
@@ -128,23 +126,25 @@ Greeks: Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, the
 
 ### Plotting
 
-Quantrs also supports plotting option prices and strategies using the `plotters` backend:
+Quantrs also supports plotting option prices and strategies using the `plotters` backend.
+
+E.g., Plot the P/L of a slightly skewed Condor spread:
 
 <details>
 <summary><i>Click to see example code</i></summary>
 
 ```rust
+use quantrs::options::*;
+
 // Create a new instrument with a spot price of 100 and a dividend yield of 2%
-let instrument = Instrument::new()
-    .with_spot(100.0)
-    .with_continuous_dividend_yield(0.02);
+let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
 // Create a vector of European call options with different strike prices
 let options = vec![
-    EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call),
-    EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call),
-    EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
-    EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
+    EuropeanOption::new(instrument.clone(), 85.0, 1.0, Call),
+    EuropeanOption::new(instrument.clone(), 95.0, 1.0, Call),
+    EuropeanOption::new(instrument.clone(), 102.0, 1.0, Call),
+    EuropeanOption::new(instrument.clone(), 115.0, 1.0, Call),
 ];
 
 // Create a new Black-Scholes model with:
@@ -152,6 +152,7 @@ let options = vec![
 // - Volatility (σ) = 20%
 let model = BlackScholesModel::new(0.05, 0.2);
 
+// Plot a breakdown of the Condor spread with a spot price range of [20,80]
 model.plot_strategy_breakdown(
     "Condor Example",
     model.condor(&options[0], &options[1], &options[2], &options[3]),
@@ -163,7 +164,7 @@ model.plot_strategy_breakdown(
 
 </details>
 
-![condor_strategy](https://github.com/user-attachments/assets/0298807f-43ed-4458-9c7d-43b0f70defea)
+![condor_strategy](./examples/images/condor.png)
 
 <!--<div align="center">
   <img src="https://github.com/user-attachments/assets/0298807f-43ed-4458-9c7d-43b0f70defea" alt="condor_strategy" width="600"/>

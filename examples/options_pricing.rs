@@ -2,8 +2,8 @@
 
 use quantrs::options::{
     AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks,
-    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionStrategy, OptionType,
-    RainbowOption,
+    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionStrategy,
+    OptionType::*, RainbowOption,
 };
 
 fn main() {
@@ -14,7 +14,8 @@ fn main() {
     // example_greeks();
     // example_asian();
     // example_rainbow();
-    example_strategy();
+    // example_strategy();
+    example_plots();
 }
 
 fn example_from_readme() {
@@ -26,7 +27,7 @@ fn example_from_readme() {
     // Create a new Cash-or-Nothing binary call option with:
     // - Strike price (K) = 85
     // - Time to maturity (T) = 0.78 years
-    let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, OptionType::Call);
+    let option = BinaryOption::cash_or_nothing(instrument, 85.0, 0.78, Call);
 
     // Create a new Black-Scholes model with:
     // - Risk-free interest rate (r) = 5%
@@ -42,7 +43,7 @@ fn example_from_readme() {
 
 fn example_black_scholes() {
     let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
+    let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
     let model = BlackScholesModel::new(0.05, 0.2);
 
     let call_price = model.price(&option);
@@ -58,7 +59,7 @@ fn example_black_scholes() {
 
 fn example_binomial_tree() {
     let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
+    let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
     let model = BinomialTreeModel::new(0.05, 0.2, 100);
 
     let call_price = model.price(&option);
@@ -76,7 +77,7 @@ fn example_monte_carlo() {
     let instrument = Instrument::new().with_spot(100.0);
     let model = MonteCarloModel::arithmetic(0.01, 0.3, 1_000, 52);
 
-    let european_option = EuropeanOption::new(instrument.clone(), 100.0, 1.0, OptionType::Call);
+    let european_option = EuropeanOption::new(instrument.clone(), 100.0, 1.0, Call);
     println!(
         "[Monte Carlo] European Call: {}",
         model.price(&european_option)
@@ -86,21 +87,20 @@ fn example_monte_carlo() {
         model.price(&european_option.flip())
     );
 
-    let binary_option =
-        BinaryOption::cash_or_nothing(instrument.clone(), 100.0, 1.0, OptionType::Call);
+    let binary_option = BinaryOption::cash_or_nothing(instrument.clone(), 100.0, 1.0, Call);
     println!("[Monte Carlo] Binary Call: {}", model.price(&binary_option));
     println!(
         "[Monte Carlo] Binary Put: {}",
         model.price(&binary_option.flip())
     );
 
-    // let barrier_option = BarrierOption::up(instrument.clone(), 100.0, OptionType::Call);
+    // let barrier_option = BarrierOption::up(instrument.clone(), 100.0, Call);
     // println!("[Monte Carlo] Barrier Call: {}", model.price(&barrier_option));
     // println!("[Monte Carlo] Barrier Put: {}", model.price(&barrier_option.flip()));
     // => 4.895841997908933
     // => 12.15233976468229
 
-    let asian_option = AsianOption::fixed(instrument.clone(), 100.0, 1.0, OptionType::Call);
+    let asian_option = AsianOption::fixed(instrument.clone(), 100.0, 1.0, Call);
     println!("[Monte Carlo] Asian Call: {}", model.price(&asian_option));
     println!(
         "[Monte Carlo] Asian Put: {}",
@@ -110,7 +110,7 @@ fn example_monte_carlo() {
 
 fn example_greeks() {
     let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, 1.0, OptionType::Call);
+    let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
     let model = BlackScholesModel::new(0.05, 0.2);
 
     let greeks = Greeks::calculate(&model, &option);
@@ -133,7 +133,7 @@ fn example_asian() {
     let instrument = Instrument::new()
         .with_spot(110.0)
         .with_continuous_dividend_yield(0.0);
-    let option = AsianOption::floating(instrument.clone(), 1.0, OptionType::Call);
+    let option = AsianOption::floating(instrument.clone(), 1.0, Call);
     let arithmetic_model = MonteCarloModel::arithmetic(0.03, 0.2, 4_000, 20);
     let geometric_model = MonteCarloModel::geometric(0.03, 0.2, 4_000, 20);
 
@@ -192,10 +192,10 @@ fn example_rainbow() {
     println!("Put-On-Max Payoff: {}", put_on_max.payoff(None)); // should be 5.0
     println!("Put-On-Min Payoff: {}", put_on_min.payoff(None)); // should be 19.0
 
-    let eur_call_max = EuropeanOption::new(asset1.clone(), 105.0, 1.0, OptionType::Call);
-    let eur_call_min = EuropeanOption::new(asset3.clone(), 80.0, 1.0, OptionType::Call);
-    let eur_put_max = EuropeanOption::new(asset1.clone(), 120.0, 1.0, OptionType::Put);
-    let eur_put_min = EuropeanOption::new(asset3.clone(), 105.0, 1.0, OptionType::Put);
+    let eur_call_max = EuropeanOption::new(asset1.clone(), 105.0, 1.0, Call);
+    let eur_call_min = EuropeanOption::new(asset3.clone(), 80.0, 1.0, Call);
+    let eur_put_max = EuropeanOption::new(asset1.clone(), 120.0, 1.0, Put);
+    let eur_put_min = EuropeanOption::new(asset3.clone(), 105.0, 1.0, Put);
 
     // let model = MonteCarloModel::arithmetic(1.0, 0.05, 0.2, 1_000, 252);
     let model = BinomialTreeModel::new(0.05, 0.2, 100);
@@ -255,7 +255,7 @@ fn example_strategy() {
     ////////////////////
     /* STOCK & OPTION */
 
-    let call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
     println!(
         "[Covered Call: {:?}], given stock: {}, call: {}",
         model.covered_call(&instrument, &call)(50.0),
@@ -263,7 +263,7 @@ fn example_strategy() {
         model.price(&call)
     );
 
-    let put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    let put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
     println!(
         "[Protective Put: {:?}], given stock: {}, put: {}",
         model.protective_put(&instrument, &put)(50.0),
@@ -277,8 +277,8 @@ fn example_strategy() {
     ////////////
     /* SIMPLE */
 
-    let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
-    let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
+    let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call);
+    let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Put);
     println!(
         "[Guts: {:?}], given put: {}, call: {}",
         model.guts(&itm_put, &itm_call)(50.0),
@@ -286,8 +286,8 @@ fn example_strategy() {
         model.price(&itm_call)
     );
 
-    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
-    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
+    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put);
     println!(
         "[Straddle: {:?}], given put: {}, call: {}",
         model.straddle(&atm_put, &atm_call)(50.0),
@@ -295,8 +295,8 @@ fn example_strategy() {
         model.price(&atm_call)
     );
 
-    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
-    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
+    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
     println!(
         "[Strangle: {:?}], given put: {}, call: {}",
         model.strangle(&otm_put, &otm_call)(50.0),
@@ -311,9 +311,9 @@ fn example_strategy() {
     ///////////////
     /* BUTTERFLY */
 
-    let lower_wing = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
-    let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
-    let upper_wing = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let lower_wing = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call);
+    let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
+    let upper_wing = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
     println!(
         "[Butterfly: {:?}], given lower: {}, body: {}, upper: {}",
         model.butterfly(&lower_wing, &body, &upper_wing)(50.0),
@@ -322,10 +322,10 @@ fn example_strategy() {
         model.price(&upper_wing)
     );
 
-    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
-    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
-    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
-    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
+    let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put);
+    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
     println!(
         "[Iron Butterfly: {:?}], given otm_put: {}, atm_put: {}, atm_call: {}, otm_call: {}",
         model.iron_butterfly(&otm_put, &atm_put, &atm_call, &otm_call)(50.0),
@@ -335,12 +335,12 @@ fn example_strategy() {
         model.price(&otm_call)
     );
 
-    let o1 = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
-    let o2 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
-    let o3 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
-    let o4 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
-    let o5 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
-    let o6 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call);
+    let o1 = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
+    let o2 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call);
+    let o3 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call);
+    let o4 = EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call);
+    let o5 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, Call);
+    let o6 = EuropeanOption::new(instrument.clone(), 80.0, 1.0, Call);
     println!(
         "[Christmas Tree Butterfly: {:?}], given o1: {}, o2: {}, o3: {}, o4: {}, o5: {}, o6: {}",
         model.christmas_tree_butterfly(&o1, &o2, &o3, &o4, &o5, &o6)(50.0),
@@ -359,8 +359,8 @@ fn example_strategy() {
     ////////////
     /* SPREAD */
 
-    let short = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
-    let long = EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+    let short = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
+    let long = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
     println!(
         "[Back Spread: {:?}], given long: {}, short: {}",
         model.back_spread(&short, &long)(50.0),
@@ -368,8 +368,8 @@ fn example_strategy() {
         model.price(&short)
     );
 
-    let front_month = EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call);
-    let back_month = EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, OptionType::Call);
+    let front_month = EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, Call);
+    let back_month = EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, Call);
     println!(
         "[Calendar Spread: {:?}], given front: {}, back: {}",
         model.calendar_spread(&front_month, &back_month)(50.0),
@@ -377,11 +377,9 @@ fn example_strategy() {
         model.price(&back_month)
     );
 
-    let front_month = EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
-    let back_month_long =
-        EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, OptionType::Call);
-    let back_month_short =
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
+    let front_month = EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, Call);
+    let back_month_long = EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, Call);
+    let back_month_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, Call);
     println!(
         "[Diagonal Spread: {:?}], given front: {}, back short: {}, back long: {}",
         model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0),
@@ -397,10 +395,10 @@ fn example_strategy() {
     ////////////
     /* CONDOR */
 
-    let itm_call_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call);
-    let itm_call_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
-    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
-    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    let itm_call_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, Call);
+    let itm_call_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call);
+    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
+    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call);
     println!(
         "[Condor: {:?}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
         model.condor(&itm_call_long, &itm_call_short, &otm_call_short, &otm_call_long)(50.0),
@@ -410,10 +408,10 @@ fn example_strategy() {
         model.price(&otm_call_long)
     );
 
-    let otm_put_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put);
-    let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
-    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
-    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call);
+    let otm_put_long = EuropeanOption::new(instrument.clone(), 30.0, 1.0, Put);
+    let otm_put_short = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
+    let otm_call_short = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
+    let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call);
     println!(
         "[Iron Condor: {:?}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
         model.iron_condor(&otm_put_long, &otm_put_short, &otm_call_short, &otm_call_long)(50.0),
@@ -430,12 +428,7 @@ fn example_strategy() {
 
     ////////////
     /* PLOTS */
-    let options = vec![EuropeanOption::new(
-        instrument.clone(),
-        60.0,
-        1.0,
-        OptionType::Call,
-    )];
+    let options = vec![EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call)];
     let _ = model.plot_strategy_breakdown(
         "Covered Call",
         model.covered_call(&instrument, &options[0]),
@@ -445,12 +438,7 @@ fn example_strategy() {
     );
     // => Covered Call: images/covered_call.png
 
-    let options = vec![EuropeanOption::new(
-        instrument.clone(),
-        40.0,
-        1.0,
-        OptionType::Put,
-    )];
+    let options = vec![EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put)];
     let _ = model.plot_strategy_breakdown(
         "Protective Put",
         model.protective_put(&instrument, &options[0]),
@@ -461,8 +449,8 @@ fn example_strategy() {
     // => Protective Put: images/protective_put.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put),
-        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),
     ];
 
     let _ = model.plot_strategy_breakdown(
@@ -475,8 +463,8 @@ fn example_strategy() {
     // => Guts: images/guts_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put),
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Straddle",
@@ -488,8 +476,8 @@ fn example_strategy() {
     // => Straddle: images/straddle_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put),
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Strangle",
@@ -501,9 +489,9 @@ fn example_strategy() {
     // => Strangle: images/strangle_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Butterfly",
@@ -515,10 +503,10 @@ fn example_strategy() {
     // => Butterfly: images/butterfly_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put),
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put),
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Iron Butterfly",
@@ -530,12 +518,12 @@ fn example_strategy() {
     // => Iron Butterfly: images/iron_butterfly_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 80.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 80.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 80.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Christmas Tree Butterfly",
@@ -554,10 +542,10 @@ fn example_strategy() {
     // => Christmas Tree Butterfly: images/christmas_tree_butterfly_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 30.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Condor",
@@ -569,10 +557,10 @@ fn example_strategy() {
     // => Condor: images/condor_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 30.0, 1.0, OptionType::Put),
-        EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put),
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 30.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Iron Condor",
@@ -583,8 +571,8 @@ fn example_strategy() {
     ); // => Iron Condor: images/iron_condor_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Back Spread",
@@ -595,8 +583,8 @@ fn example_strategy() {
     ); // => Back Spread: images/beack_spread_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, Call),
+        EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Calendar Spread",
@@ -607,9 +595,9 @@ fn example_strategy() {
     ); // => Calendar Spread: images/calendar_spread_strategy.png
 
     let options = vec![
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, OptionType::Call),
-        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, Call),
+        EuropeanOption::new(instrument.clone(), 75.0, 2.0 / 12.0, Call),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Diagonal Spread",
@@ -622,15 +610,37 @@ fn example_strategy() {
 
 fn example_plots() {
     // Create a new plotter and plot the option prices
-    let plotter = Plotter::new();
-    let _ = plotter.plot_option_prices(
-        "Binary Call Option",
-        instrument,
+    // let plotter = Plotter::new();
+    // let _ = plotter.plot_option_prices(
+    //     "Binary Call Option",
+    //     instrument,
+    //     80.0..120.0,
+    //     0.1..1.0,
+    //     0.1,
+    //     Call,
+    //     |k, t| BinaryOption::cash_or_nothing(instrument.clone(), k, t, Call),
+    //     "path/to/destination.png",
+    // );
+    let instrument = Instrument::spot(100.0).with_cont_yield(0.02);
+
+    // Create a vector of European call options with different strike prices
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 85.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 95.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 102.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 115.0, 1.0, Call),
+    ];
+
+    // Create a new Black-Scholes model with:
+    // - Risk-free interest rate (r) = 5%
+    // - Volatility (σ) = 20%
+    let model = BlackScholesModel::new(0.05, 0.2);
+
+    let _ = model.plot_strategy_breakdown(
+        "Condor Example",
+        model.condor(&options[0], &options[1], &options[2], &options[3]),
         80.0..120.0,
-        0.1..1.0,
-        0.1,
-        OptionType::Call,
-        |k, t| BinaryOption::cash_or_nothing(instrument.clone(), k, t, OptionType::Call),
-        "path/to/destination.png",
+        "examples/images/condor.png",
+        &options,
     );
 }
