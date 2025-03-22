@@ -58,19 +58,19 @@ fn example_black_scholes() {
 }
 
 fn example_binomial_tree() {
-    let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
-    let model = BinomialTreeModel::new(0.05, 0.2, 100);
-
-    let call_price = model.price(&option);
-    println!("Binomial Tree Call Price: {}", call_price);
-
-    let put_price = model.price(&option.flip());
-    println!("Binomial Tree Put Price: {}", put_price);
-
-    let market_price = 10.0; // Example market price
-    let implied_volatility = model.implied_volatility(&option, market_price);
-    println!("Implied Volatility: {}\n", implied_volatility);
+    //let instrument = Instrument::new().with_spot(100.0);
+    //let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
+    //let model = BinomialTreeModel::new(0.05, 0.2, 100);
+    //
+    //let call_price = model.price(&option);
+    //println!("Binomial Tree Call Price: {}", call_price);
+    //
+    //let put_price = model.price(&option.flip());
+    //println!("Binomial Tree Put Price: {}", put_price);
+    //
+    //let market_price = 10.0; // Example market price
+    //let implied_volatility = model.implied_volatility(&option, market_price);
+    //println!("Implied Volatility: {}\n", implied_volatility);
 }
 
 fn example_monte_carlo() {
@@ -360,12 +360,14 @@ fn example_strategy() {
     /* SPREAD */
 
     let short = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
-    let long = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
+    let long1 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
+    let long2 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
     println!(
-        "[Back Spread: {:?}], given long: {}, short: {}",
-        model.back_spread(&short, &long)(50.0),
-        model.price(&long),
-        model.price(&short)
+        "[Back Spread: {:?}], given short: {}, long1: {}, given long2: {}",
+        model.back_spread(&short, &long1, &long2)(50.0),
+        model.price(&short),
+        model.price(&long1),
+        model.price(&long2),
     );
 
     let front_month = EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, Call);
@@ -573,14 +575,15 @@ fn example_strategy() {
     let options = vec![
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
     ];
     let _ = model.plot_strategy_breakdown(
         "Back Spread",
-        model.back_spread(&options[0], &options[1]),
+        model.back_spread(&options[0], &options[1], &options[2]),
         20.0..80.0,
-        "images/beack_spread_strategy.png",
+        "images/back_spread_strategy.png",
         &options,
-    ); // => Back Spread: images/beack_spread_strategy.png
+    ); // => Back Spread: images/back_spread_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, Call),

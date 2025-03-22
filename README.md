@@ -62,20 +62,21 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 <details>
 <summary><i>Click to see supported strategies</i></summary>
 
-| Strategy Name    | Type         | Description                                                                  |
-| ---------------- | ------------ | ---------------------------------------------------------------------------- |
-| Covered Call     | Income       | Long stock + short call                                                      |
-| Protective Put   | Hedging      | Long stock + long put                                                        |
-| Straddle         | Volatility   | Long call + long put (same strike)                                           |
-| Strangle         | Volatility   | Long OTM call + long OTM put                                                 |
-| Butterfly Spread | ¹Spread      | Long ATM call, short two middle calls, long OTM call                         |
-| Iron Butterfly   | ¹Spread      | Short straddle + long wings                                                  |
-| Condor Spread    | ¹Spread      | Long OTM call, short ITM call, short ITM put, long OTM put                   |
-| Iron Condor      | ¹Spread      | Short strangle + long wings                                                  |
-| Calendar Spread  | ²Time Spread | Long far-expiry call + short near-expiry call                                |
-| Diagonal Spread  | ³Time Spread | Long far-expiry call (higher strike) + short near-expiry call (lower strike) |
-| Back Spread      | Directional  | Long 2 calls + short 1 ITM call                                              |
-| Christmas Tree   | ¹Complex     | Long 1 ITM call, short 3 middle calls, long 2 OTM calls                      |
+| Strategy Name            | Type         | Description                                                                                       |
+| ------------------------ | ------------ | ------------------------------------------------------------------------------------------------- |
+| Covered Call             | Income       | Long stock + short call                                                                           |
+| Protective Put           | Hedging      | Long stock + long put                                                                             |
+| Guts                     | Volatility   | Long ITM call + long ITM put                                                                      |
+| Straddle                 | Volatility   | Long ATM call + long ATM put                                                                      |
+| Strangle                 | Volatility   | Long OTM call + long OTM put                                                                      |
+| Butterfly Spread         | ¹Spread      | Long ITM call, short two ATM calls, long OTM call (or all puts)                                   |
+| Iron Butterfly           | ¹Spread      | Short straddle + long wings                                                                       |
+| Christmas Tree Butterfly | ¹Spread      | Long 1 ATM call, short 3 OTM calls, long 2 high-strike OTM calls (or all puts)                    |
+| Condor Spread            | ¹Spread      | Long low-strike ITM call, short ITM call, short OTM call, long high-strike OTM call (or all puts) |
+| Iron Condor              | ¹Spread      | Short strangle + long wings                                                                       |
+| Calendar Spread          | ²Time Spread | Long far-expiry ATM call + short near-expiry ATM call (or all puts)                               |
+| Diagonal Spread          | ³Time Spread | Short near-expiry OTM call + long far-expiry further OTM call (or all puts)                       |
+| Back Spread              | Directional  | Long 2 OTM calls + short 1 ATM call (or all puts)                                                 |
 
 > ¹ _Also referred to as 'vertical'_\
 > ² _Also referred to as 'horizontal'_\

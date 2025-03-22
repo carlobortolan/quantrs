@@ -741,27 +741,32 @@ pub trait OptionStrategy: OptionPricing {
     fn back_spread<'a, T: Option>(
         &'a self,
         short: &'a T,
-        long: &'a T,
+        long1: &'a T,
+        long2: &'a T,
     ) -> impl Fn(f64) -> (f64, f64) + 'a {
         move |spot_price| {
-            check_same_expiration_date!(long, short);
+            check_same_expiration_date!(short, long1);
+            check_same_expiration_date!(long1, long2);
 
-            if long.is_call() {
+            if long1.is_call() {
+                check_is_call!(long2);
                 check_is_call!(short);
                 assert!(
-                    long.strike() > short.strike(),
-                    "Long call must have higher strike than short call!"
+                    short.atm() && long1.otm() && long2.otm(),
+                    "Short call must be ATM and long calls must be OTM!"
                 );
             } else {
+                check_is_put!(long2);
                 check_is_put!(short);
                 assert!(
-                    long.strike() < short.strike(),
-                    "Long put must have lower strike than short put!"
+                    short.atm() && long1.otm() && long2.otm(),
+                    "Short put must be ATM and long puts must be OTM!"
                 );
             }
 
-            let price = self.price(long) - self.price(short);
-            let payoff = long.payoff(Some(spot_price)) - short.payoff(Some(spot_price));
+            let price = self.price(long1) + self.price(long2) - self.price(short);
+            let payoff = long1.payoff(Some(spot_price)) + long2.payoff(Some(spot_price))
+                - short.payoff(Some(spot_price));
             (payoff, price)
         }
     }
