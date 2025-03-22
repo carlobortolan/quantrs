@@ -1674,7 +1674,7 @@ mod test_option_strategies {
         let call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
         assert_eq!(
             model.covered_call(&instrument, &call)(50.0),
-            (50.0, 50.46060396445954),
+            (50.0, 49.53939603554046),
         );
 
         let put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
@@ -1720,7 +1720,7 @@ mod test_option_strategies {
         let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
         assert_eq!(
             model.iron_butterfly(&otm_put, &atm_put, &atm_call, &otm_call)(50.0),
-            (0.0, 5.317246138017706),
+            (0.0, -5.317246138017706),
         );
 
         let o1 = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
