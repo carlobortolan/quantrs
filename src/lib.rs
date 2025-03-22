@@ -23,12 +23,19 @@
 //! ```rust
 //! use quantrs::options::*;
 //!
-//! let option = BinaryOption::cash_or_nothing(Instrument::new().with_spot(100.0), 85.0, OptionType::Call);
-//! let model = BlackScholesModel::new(0.78, 0.05, 0.2);
+//! let option = BinaryOption::cash_or_nothing(Instrument::new().with_spot(100.0), 85.0, 0.78, OptionType::Call);
+//! let model = BlackScholesModel::new(0.05, 0.2);
 //! let price = model.price(&option);
-//! let greeks = Greeks::calculate(&model, option);
+//! let greeks = Greeks::calculate(&model, &option);
 //! ```
 
 #![allow(unused_variables)]
+
+#[macro_use]
+mod macros {
+    pub mod logging_macros;
+    pub mod math_macros;
+    pub mod validation_macros;
+}
 
 pub mod options;

@@ -3,6 +3,7 @@ use crate::options::{types::Permutation, Instrument, Option, OptionStyle, Option
 #[derive(Clone, Debug)]
 pub struct LookbackOption {
     pub instrument: Instrument,
+    pub time_to_maturity: f64,
     pub option_type: OptionType,
     pub option_style: OptionStyle,
     pub lookback_type: Permutation,
@@ -12,11 +13,13 @@ impl LookbackOption {
     /// Create a new `LookbackOption`.
     pub fn new(
         instrument: Instrument,
+        time_to_maturity: f64,
         option_type: OptionType,
         lookback_type: Permutation,
     ) -> Self {
         Self {
             instrument,
+            time_to_maturity,
             option_type,
             option_style: OptionStyle::Lookback(lookback_type),
             lookback_type,
@@ -24,23 +27,27 @@ impl LookbackOption {
     }
 
     /// Create a new `Fixed` lookback option.
-    pub fn fixed(instrument: Instrument, option_type: OptionType) -> Self {
-        Self::new(instrument, option_type, Permutation::Fixed)
+    pub fn fixed(instrument: Instrument, ttm: f64, option_type: OptionType) -> Self {
+        Self::new(instrument, ttm, option_type, Permutation::Fixed)
     }
 
     /// Create a new `Floating` lookback option.
-    pub fn floating(instrument: Instrument, option_type: OptionType) -> Self {
-        Self::new(instrument, option_type, Permutation::Floating)
+    pub fn floating(instrument: Instrument, ttm: f64, option_type: OptionType) -> Self {
+        Self::new(instrument, ttm, option_type, Permutation::Floating)
     }
 }
 
 impl Option for LookbackOption {
-    fn style(&self) -> &OptionStyle {
-        &self.option_style
-    }
-
     fn instrument(&self) -> &Instrument {
         &self.instrument
+    }
+
+    fn set_instrument(&mut self, instrument: Instrument) {
+        self.instrument = instrument;
+    }
+
+    fn time_to_maturity(&self) -> f64 {
+        self.time_to_maturity
     }
 
     fn strike(&self) -> f64 {
@@ -49,6 +56,10 @@ impl Option for LookbackOption {
 
     fn option_type(&self) -> OptionType {
         self.option_type
+    }
+
+    fn style(&self) -> &OptionStyle {
+        &self.option_style
     }
 
     fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
@@ -72,6 +83,7 @@ impl Option for LookbackOption {
         };
         LookbackOption::new(
             self.instrument.clone(),
+            self.time_to_maturity,
             flipped_option_type,
             self.lookback_type,
         )

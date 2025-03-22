@@ -88,6 +88,11 @@ impl Instrument {
         self
     }
 
+    /// Alias for `with_continuous_dividend_yield`.
+    pub fn with_cont_yield(self, yield_: f64) -> Self {
+        self.with_continuous_dividend_yield(yield_)
+    }
+
     /// Set the discrete dividend yield of the instrument.
     pub fn with_discrete_dividend_yield(mut self, yield_: f64) -> Self {
         self.discrete_dividend_yield = yield_;

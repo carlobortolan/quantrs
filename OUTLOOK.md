@@ -9,6 +9,9 @@ This document outlines the planned features and improvements for the `quantrs` l
 - [x] European Options Price and Greeks
 - [x] Cash or Nothing Binary Options Price and Greeks
 - [x] Asset or Nothing Binary Options Price and Greeks
+- [x] Binary Cash-or-Nothing Options Price and Greeks
+- [x] Binary Asset-or-Nothing Options Price and Greeks
+- [x] Rainbow Options Price and Greeks
 - [ ] FX European Options Price and Greeks
 - [ ] Swaption Price and Greeks
 - [ ] Caplet/Floorlet Price and Greeks
@@ -24,11 +27,11 @@ This document outlines the planned features and improvements for the `quantrs` l
 
 - [x] European Options Price and Greeks
 - [x] American Options Price and Greeks
-- [ ] Cash or Nothing Binary Options Price and Greeks
-- [ ] Asset or Nothing Binary Options Price and Greeks
+- [x] Cash or Nothing Binary Options Price and Greeks
+- [x] Asset or Nothing Binary Options Price and Greeks
 - [ ] Bermudan Options Price and Greeks
 - [ ] Basket Options Price and Greeks
-- [ ] Rainbow Options Price and Greeks
+- [x] Rainbow Options Price and Greeks
 - [ ] Barrier Options Price and Greeks
 - [ ] Double Barrier Options Price and Greeks
 
@@ -38,7 +41,7 @@ This document outlines the planned features and improvements for the `quantrs` l
 - [x] Cash or Nothing Binary Options Price and Greeks
 - [x] Asset or Nothing Binary Options Price and Greeks
 - [ ] Basket Options Price and Greeks
-- [ ] Rainbow Options Price and Greeks
+- [x] Rainbow Options Price and Greeks
 - [ ] Barrier Options Price and Greeks
 - [ ] Double Barrier Options Price and Greeks
 - [x] Asian Options Price and Greeks
