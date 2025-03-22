@@ -160,7 +160,7 @@ model.plot_strategy_breakdown(
     "Condor Example",
     model.condor(&options[0], &options[1], &options[2], &options[3]),
     80.0..120.0,
-    "example/images/strategy.png",
+    "examples/images/strategy.png",
     &options,
 );
 ```

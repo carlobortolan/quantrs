@@ -854,7 +854,6 @@ pub trait OptionStrategy: OptionPricing {
 
             // Adjust back-month short time to maturity after front-month expires
             let mut back_month_short = back_month_short.clone();
-            back_month_short.set_time_to_maturity(time_delta);
             back_month_short
                 .set_instrument(back_month_short.instrument().clone().with_spot(spot_price));
 
