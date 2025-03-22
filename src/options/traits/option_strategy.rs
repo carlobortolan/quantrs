@@ -145,7 +145,7 @@ pub trait OptionStrategy: OptionPricing {
 
                 chart
                     .configure_mesh()
-                    .x_desc(&format!(
+                    .x_desc(format!(
                         "{:?} @ ${:.2} | {} | TTM: {:.2}y",
                         option.option_type(),
                         option.strike(),
