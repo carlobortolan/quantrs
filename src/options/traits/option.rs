@@ -72,13 +72,6 @@ pub trait Option: Clone + Send + Sync {
         }
     }
 
-    fn profit_loss(&self, spot: std::option::Option<f64>) -> f64 {
-        let spot_price = spot.unwrap_or_else(|| self.instrument().spot);
-        match self.option_type() {
-            OptionType::Call => spot_price - self.strike(),
-            OptionType::Put => self.strike() - spot_price,
-        }
-    }
     /// Calculate the price of the option.
     ///
     /// # Arguments

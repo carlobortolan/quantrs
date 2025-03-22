@@ -435,20 +435,20 @@ fn example_strategy() {
         "Covered Call",
         model.covered_call(&instrument, &options[0]),
         20.0..80.0,
-        "images/covered_call.png",
+        "examples/images/covered_call.png",
         &options,
     );
-    // => Covered Call: images/covered_call.png
+    // => Covered Call: examples/images/covered_call.png
 
     let options = vec![EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put)];
     let _ = model.plot_strategy_breakdown(
         "Protective Put",
         model.protective_put(&instrument, &options[0]),
         20.0..80.0,
-        "images/protective_put.png",
+        "examples/images/protective_put.png",
         &options,
     );
-    // => Protective Put: images/protective_put.png
+    // => Protective Put: examples/images/protective_put.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Put),
@@ -459,10 +459,10 @@ fn example_strategy() {
         "Guts",
         model.guts(&options[0], &options[1]),
         20.0..80.0,
-        "images/guts_strategy.png",
+        "examples/images/guts_strategy.png",
         &options,
     );
-    // => Guts: images/guts_strategy.png
+    // => Guts: examples/images/guts_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put),
@@ -472,10 +472,10 @@ fn example_strategy() {
         "Straddle",
         model.straddle(&options[0], &options[1]),
         20.0..80.0,
-        "images/straddle_strategy.png",
+        "examples/images/straddle_strategy.png",
         &options,
     );
-    // => Straddle: images/straddle_strategy.png
+    // => Straddle: examples/images/straddle_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
@@ -485,10 +485,10 @@ fn example_strategy() {
         "Strangle",
         model.strangle(&options[0], &options[1]),
         20.0..80.0,
-        "images/strangle_strategy.png",
+        "examples/images/strangle_strategy.png",
         &options,
     );
-    // => Strangle: images/strangle_strategy.png
+    // => Strangle: examples/images/strangle_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),
@@ -499,10 +499,10 @@ fn example_strategy() {
         "Butterfly",
         model.butterfly(&options[0], &options[1], &options[2]),
         20.0..80.0,
-        "images/butterfly_strategy.png",
+        "examples/images/butterfly_strategy.png",
         &options,
     );
-    // => Butterfly: images/butterfly_strategy.png
+    // => Butterfly: examples/images/butterfly_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
@@ -514,10 +514,10 @@ fn example_strategy() {
         "Iron Butterfly",
         model.iron_butterfly(&options[0], &options[1], &options[2], &options[3]),
         20.0..80.0,
-        "images/iron_butterfly_strategy.png",
+        "examples/images/iron_butterfly_strategy.png",
         &options,
     );
-    // => Iron Butterfly: images/iron_butterfly_strategy.png
+    // => Iron Butterfly: examples/images/iron_butterfly_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
@@ -538,10 +538,10 @@ fn example_strategy() {
             &options[5],
         ),
         20.0..80.0,
-        "images/christmas_tree_butterfly_strategy.png",
+        "examples/images/christmas_tree_butterfly_strategy.png",
         &options,
     );
-    // => Christmas Tree Butterfly: images/christmas_tree_butterfly_strategy.png
+    // => Christmas Tree Butterfly: examples/images/christmas_tree_butterfly_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 30.0, 1.0, Call),
@@ -553,10 +553,10 @@ fn example_strategy() {
         "Condor",
         model.condor(&options[0], &options[1], &options[2], &options[3]),
         20.0..80.0,
-        "images/condor_strategy.png",
+        "examples/images/condor_strategy.png",
         &options,
     );
-    // => Condor: images/condor_strategy.png
+    // => Condor: examples/images/condor_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 30.0, 1.0, Put),
@@ -568,9 +568,9 @@ fn example_strategy() {
         "Iron Condor",
         model.iron_condor(&options[0], &options[1], &options[2], &options[3]),
         20.0..80.0,
-        "images/iron_condor_strategy.png",
+        "examples/images/iron_condor_strategy.png",
         &options,
-    ); // => Iron Condor: images/iron_condor_strategy.png
+    ); // => Iron Condor: examples/images/iron_condor_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
@@ -581,9 +581,9 @@ fn example_strategy() {
         "Back Spread",
         model.back_spread(&options[0], &options[1], &options[2]),
         20.0..80.0,
-        "images/back_spread_strategy.png",
+        "examples/images/back_spread_strategy.png",
         &options,
-    ); // => Back Spread: images/back_spread_strategy.png
+    ); // => Back Spread: examples/images/back_spread_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, Call),
@@ -593,9 +593,9 @@ fn example_strategy() {
         "Calendar Spread",
         model.calendar_spread(&options[0], &options[1]),
         20.0..80.0,
-        "images/calendar_spread_strategy.png",
+        "examples/images/calendar_spread_strategy.png",
         &options,
-    ); // => Calendar Spread: images/calendar_spread_strategy.png
+    ); // => Calendar Spread: examples/images/calendar_spread_strategy.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, Call),
@@ -606,9 +606,9 @@ fn example_strategy() {
         "Diagonal Spread",
         model.diagonal_spread(&options[0], &options[1], &options[2]),
         20.0..80.0,
-        "images/diagonal_spread_strategy.png",
+        "examples/images/diagonal_spread_strategy.png",
         &options,
-    ); // => Diagonal Spread: images/diagonal_spread_strategy.png
+    ); // => Diagonal Spread: examples/images/diagonal_spread_strategy.png
 }
 
 fn example_plots() {

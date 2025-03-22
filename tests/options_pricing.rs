@@ -1448,9 +1448,7 @@ mod instrument_tests {
 
     #[test]
     fn test_instrument() {
-        let instrument = Instrument::new()
-            .with_spot(100.0)
-            .with_continuous_dividend_yield(0.01);
+        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
 
         assert_eq!(instrument.spot, 100.0);
         assert_eq!(instrument.continuous_dividend_yield, 0.01);
@@ -1458,9 +1456,7 @@ mod instrument_tests {
 
     #[test]
     fn test_log_simulation() {
-        let instrument = Instrument::new()
-            .with_spot(100.0)
-            .with_continuous_dividend_yield(0.01);
+        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
 
         let prices = instrument.log_simulation(&mut rand::rng(), 0.2, 1.0, 0.05, 252);
 
@@ -1474,9 +1470,7 @@ mod instrument_tests {
 
     #[test]
     fn test_arithmetic_avg() {
-        let instrument = Instrument::new()
-            .with_spot(100.0)
-            .with_continuous_dividend_yield(0.01);
+        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
 
         let price = instrument.simulate_arithmetic_average(
             &mut rand::rng(),
@@ -1492,9 +1486,7 @@ mod instrument_tests {
 
     #[test]
     fn test_geometric_avg() {
-        let instrument = Instrument::new()
-            .with_spot(100.0)
-            .with_continuous_dividend_yield(0.01);
+        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
 
         let price = instrument.simulate_geometric_average(
             &mut rand::rng(),
