@@ -1662,9 +1662,9 @@ mod option_trait_tests {
 }
 
 mod test_option_strategies {
+    use super::*;
     use quantrs::options::OptionStrategy;
 
-    use super::*;
     #[test]
     fn test_option_strategies() {
         let model = BlackScholesModel::new(0.0025, 0.15);
@@ -1855,5 +1855,46 @@ mod test_option_strategies {
             model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0),
             (0.0, -8.764136364746778e-8),
         );
+    }
+
+    #[test]
+    fn test_strategy_breakdown() {
+        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
+        let options = vec![
+            EuropeanOption::new(instrument.clone(), 85.0, 1.0, OptionType::Call),
+            EuropeanOption::new(instrument.clone(), 95.0, 1.0, OptionType::Call),
+            EuropeanOption::new(instrument.clone(), 102.0, 1.0, OptionType::Call),
+            EuropeanOption::new(instrument.clone(), 115.0, 1.0, OptionType::Call),
+        ];
+        let model = BlackScholesModel::new(0.05, 0.2);
+        let result = model.plot_strategy_breakdown(
+            "Condor Example",
+            model.condor(&options[0], &options[1], &options[2], &options[3]),
+            20.0..80.0,
+            "path/to/destination.png",
+            &options,
+        );
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_strategy_plot() {
+        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
+        let options = vec![
+            EuropeanOption::new(instrument.clone(), 85.0, 1.0, OptionType::Call),
+            EuropeanOption::new(instrument.clone(), 95.0, 1.0, OptionType::Call),
+            EuropeanOption::new(instrument.clone(), 102.0, 1.0, OptionType::Call),
+            EuropeanOption::new(instrument.clone(), 115.0, 1.0, OptionType::Call),
+        ];
+        let model = BlackScholesModel::new(0.05, 0.2);
+        let result = model.plot_strategy(
+            "Condor Example",
+            model.condor(&options[0], &options[1], &options[2], &options[3]),
+            20.0..80.0,
+            "path/to/destination.png",
+        );
+
+        assert!(result.is_ok());
     }
 }
