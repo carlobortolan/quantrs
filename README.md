@@ -153,11 +153,11 @@ let options = vec![
 // - Volatility (σ) = 20%
 let model = BlackScholesModel::new(0.05, 0.2);
 
-// Plot a breakdown of the Condor spread with a spot price range of [20,80]
+// Plot a breakdown of the Condor spread with a spot price range of [80,120]
 model.plot_strategy_breakdown(
     "Condor Example",
     model.condor(&options[0], &options[1], &options[2], &options[3]),
-    20.0..80.0,
+    80.0..120.0,
     "path/to/destination.png",
     &options,
 );
