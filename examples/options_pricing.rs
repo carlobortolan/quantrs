@@ -273,6 +273,16 @@ fn example_strategy() {
         model.price(&put)
     );
 
+    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
+    println!(
+        "[Collar: {:?}], given stock: {}, put: {}, call: {}",
+        model.collar(&instrument, &otm_put, &otm_call)(50.0),
+        instrument.spot,
+        model.price(&put),
+        model.price(&call)
+    );
+
     // [Covered Call: 50.46060396445954], given stock: 50, call: 0.4606039644595379
     // [Protective Put: 50.19404262184266], given stock: 50, put: 0.19404262184266008
 
@@ -437,6 +447,19 @@ fn example_strategy() {
         model.protective_put(&instrument, &options[0]),
         20.0..80.0,
         "examples/images/protective_put.png",
+        &options,
+    );
+    // => Protective Put: examples/images/protective_put.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Collar",
+        model.collar(&instrument, &options[0], &options[1]),
+        20.0..80.0,
+        "examples/images/collar.png",
         &options,
     );
     // => Protective Put: examples/images/protective_put.png

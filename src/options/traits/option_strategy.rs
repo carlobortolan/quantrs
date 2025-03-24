@@ -452,6 +452,28 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
+    /// The collar strategy involves buying a protective put and selling a covered call with the same expiration date.
+    fn collar<'a, T: Option>(
+        &'a self,
+        stock: &'a Instrument,
+        otm_put: &'a T,
+        otm_call: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_is_put!(otm_put);
+            check_is_call!(otm_call);
+            assert!(
+                stock.spot > 0.0 && otm_put.otm() && otm_call.otm(),
+                "Stock must be ITM and options must be OTM!"
+            );
+
+            let price = stock.spot + self.price(otm_put) - self.price(otm_call);
+            let payoff =
+                spot_price + otm_put.payoff(Some(spot_price)) - otm_call.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
     /* SIMPLE */
 
     /// Buy (long gut) or sell (short gut) a pair of ITM (in the money) put and call.
@@ -872,12 +894,6 @@ pub trait OptionStrategy: OptionPricing {
     }
 
     /* SPREAD */
-
-    /// TODO
-    /// The collar strategy involves buying a protective put and selling a covered call with the same expiration date.
-    fn collar<T: Option>(&self, option: &T) -> f64 {
-        panic!("Collar not implemented for this model");
-    }
 
     /// TODO
     /// The fence strategy involves buying a call and selling a put with the same expiration date, but different strike prices.
