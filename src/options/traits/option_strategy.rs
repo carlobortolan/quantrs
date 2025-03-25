@@ -826,6 +826,41 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
+    /// The ladder strategy, also known as a Christmas tree, is a combination of three options of the same type (all calls or all puts) at three different strike prices.
+    fn ladder<'a, T: Option>(
+        &'a self,
+        long: &'a T,
+        short1: &'a T,
+        short2: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_same_expiration_date!(long, short1);
+            check_same_expiration_date!(short1, short2);
+
+            if long.is_call() {
+                check_is_call!(short1);
+                check_is_call!(short2);
+                assert!(
+                    long.atm() && short1.otm() && short2.otm(),
+                    "Long call must be ATM and short calls must be OTM!"
+                );
+            } else {
+                check_is_put!(short1);
+                check_is_put!(short2);
+                assert!(
+                    long.atm() && short1.otm() && short2.otm(),
+                    "Long put must be ATM and short puts must be OTM!"
+                );
+            }
+
+            let price = self.price(long) - self.price(short1) - self.price(short2);
+            let payoff = long.payoff(Some(spot_price))
+                - short1.payoff(Some(spot_price))
+                - short2.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
     /// Short an ATM (at the money) call/put near-term expiration ("front-month") and long an ATM call/put with expiration one month later ("back-month").
     /// Used when a trader expects a gradual or sideways movement in the short term and has more direction bias over the life of the longer-dated option.
     fn calendar_spread<'a, T: Option>(
@@ -926,37 +961,20 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
-    /* SPREAD */
-
-    /// TODO
-    /// The jelly roll strategy involves buying a call and put with the same expiration date, but different strike prices, and selling a call and put with different strike prices.
-    fn jelly_roll<T: Option>(&self, option: &T) -> f64 {
-        panic!("Jelly roll not implemented for this model");
-    }
-
-    /// TODO
-    /// The christmas tree strategy involves buying one call and two puts with the same expiration date and strike price.
-    fn christmas_tree<T: Option>(&self, option: &T) -> f64 {
-        panic!("Christmas tree not implemented for this model");
-    }
-
     /* ALIASES */
-
-    /// TODO
-    fn ladder<T: Option>(&self, option: &T) -> f64 {
+    fn christmas_tree<'a, T: Option>(
+        &'a self,
+        long: &'a T,
+        short1: &'a T,
+        short2: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) {
         log_info!("Ladder strategy is equivalent to the Christmas Tree strategy!");
-        self.christmas_tree(option)
+        self.ladder(long, short1, short2)
     }
 
     /// TODO
     fn risk_reversal<T: Option>(&self, option: &T) -> f64 {
         log_info!("Risk reversal strategy is equivalent to the Butterfly strategy!");
-        todo!()
-    }
-
-    /// TODO
-    fn synthetic_long<T: Option>(&self, option: &T) -> f64 {
-        log_info!("Synthetic long strategy is equivalent to the Long Call strategy!");
         todo!()
     }
 }

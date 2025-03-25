@@ -287,7 +287,7 @@ fn example_strategy() {
     let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
     let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
     println!(
-        "[Collar: {:?}], given stock: {}, put: {}, put: {}, call: {}",
+        "[Fence: {:?}], given stock: {}, put: {}, put: {}, call: {}",
         model.fence(&instrument, &atm_put, &otm_put, &otm_call)(50.0),
         instrument.spot,
         model.price(&atm_put),
@@ -383,8 +383,19 @@ fn example_strategy() {
     let long1 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
     let long2 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
     println!(
-        "[Back Spread: {:?}], given short: {}, long1: {}, given long2: {}",
+        "[Back Spread: {:?}], given short: {}, long1: {}, long2: {}",
         model.back_spread(&short, &long1, &long2)(50.0),
+        model.price(&short),
+        model.price(&long1),
+        model.price(&long2),
+    );
+
+    let long = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
+    let short1 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
+    let short2 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call);
+    println!(
+        "[Ladder: {:?}], given long: {}, short1: {}, short2: {}",
+        model.ladder(&long, &short1, &short2)(50.0),
         model.price(&short),
         model.price(&long1),
         model.price(&long2),
@@ -483,7 +494,7 @@ fn example_strategy() {
     ];
     let _ = model.plot_strategy_breakdown(
         "Fence",
-        model.fence(&instrument, &options[0],&options[1], &options[2]),
+        model.fence(&instrument, &options[0], &options[1], &options[2]),
         20.0..80.0,
         "examples/images/fence.png",
         &options,
@@ -624,6 +635,19 @@ fn example_strategy() {
         "examples/images/back_spread_strategy.png",
         &options,
     ); // => Back Spread: examples/images/back_spread_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
+        EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Ladder",
+        model.ladder(&options[0], &options[1], &options[2]),
+        20.0..80.0,
+        "examples/images/ladder_strategy.png",
+        &options,
+    );
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, Call),

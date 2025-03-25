@@ -1789,6 +1789,24 @@ mod test_option_strategies {
             (0.0, -0.4818434154443594),
         );
 
+        let long = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let short1: EuropeanOption =
+            EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+        let short2 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.ladder(&long, &short1, &short2)(50.0),
+            (0.0, 0.4818434154443594),
+        );
+
+        let long = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let short1: EuropeanOption =
+            EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+        let short2 = EuropeanOption::new(instrument.clone(), 55.0, 1.0, OptionType::Call);
+        assert_eq!(
+            model.christmas_tree(&long, &short1, &short2)(50.0),
+            (0.0, 0.4818434154443594),
+        );
+
         let front_month =
             EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call);
         let back_month =
@@ -1852,6 +1870,15 @@ mod test_option_strategies {
         assert_eq!(
             model.back_spread(&short, &long1, &long2)(50.0),
             (0.0, -0.9607806830432359),
+        );
+
+        let long = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        let short1: EuropeanOption =
+            EuropeanOption::new(instrument.clone(), 45.0, 1.0, OptionType::Put);
+        let short2 = EuropeanOption::new(instrument.clone(), 45.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.ladder(&long, &short1, &short2)(50.0),
+            (0.0, 0.9607806830432359),
         );
 
         let front_month =
