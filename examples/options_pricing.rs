@@ -301,8 +301,8 @@ fn example_strategy() {
     ////////////
     /* SIMPLE */
 
-    let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call);
     let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Put);
+    let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call);
     println!(
         "[Guts: {:?}], given put: {}, call: {}",
         model.guts(&itm_put, &itm_call)(50.0),
@@ -310,8 +310,8 @@ fn example_strategy() {
         model.price(&itm_call)
     );
 
-    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
     let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put);
+    let atm_call = EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call);
     println!(
         "[Straddle: {:?}], given put: {}, call: {}",
         model.straddle(&atm_put, &atm_call)(50.0),
@@ -319,8 +319,8 @@ fn example_strategy() {
         model.price(&atm_call)
     );
 
-    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
     let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
     println!(
         "[Strangle: {:?}], given put: {}, call: {}",
         model.strangle(&otm_put, &otm_call)(50.0),
@@ -328,9 +328,14 @@ fn example_strategy() {
         model.price(&otm_call)
     );
 
-    // [Guts: 20.604709034251407], given put: 10.310791308307145, call: 10.293917725944262
-    // [Straddle: 5.971892724319904], given put: 2.923524422096456, call: 3.048368302223448
-    // [Strangle: 0.654646586302198], given put: 0.19404262184266008, call: 0.4606039644595379
+    let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put);
+    let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call);
+    println!(
+        "[Risk Reversal: {:?}], given put: {}, call: {}",
+        model.risk_reversal(&otm_put, &otm_call)(50.0),
+        model.price(&otm_put),
+        model.price(&otm_call)
+    );
 
     ///////////////
     /* BUTTERFLY */
@@ -540,6 +545,19 @@ fn example_strategy() {
         &options,
     );
     // => Strangle: examples/images/strangle_strategy.png
+
+    let options = vec![
+        EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
+        EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
+    ];
+    let _ = model.plot_strategy_breakdown(
+        "Risk Reversal",
+        model.risk_reversal(&options[0], &options[1]),
+        20.0..80.0,
+        "examples/images/risk_reversal.png",
+        &options,
+    );
+    // => Strangle: examples/images/risk_reversal.png
 
     let options = vec![
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),

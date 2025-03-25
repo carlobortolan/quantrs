@@ -1722,6 +1722,13 @@ mod test_option_strategies {
             (0.0, 0.654646586302198),
         );
 
+        let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.risk_reversal(&otm_put, &otm_call)(50.0),
+            (0.0, 0.2665613426168778),
+        );
+
         // Butterfly Strategies
         let lower = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
         let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);

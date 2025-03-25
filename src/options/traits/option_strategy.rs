@@ -560,9 +560,29 @@ pub trait OptionStrategy: OptionPricing {
             check_is_call!(call);
             check_is_put!(put);
 
-            // assert!(put.otm() && call.otm(), "Put and call must be OTM!");
+            assert!(put.otm() && call.otm(), "Put and call must be OTM!");
+
             let price = self.price(put) + self.price(call);
             let payoff = put.payoff(Some(spot_price)) + call.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
+    /// A risk-reversal is an option position that consists of shorting an OTM put and being long in an OTM call expiring on the same expiration date.
+    fn risk_reversal<'a, T: Option>(
+        &'a self,
+        put: &'a T,
+        call: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_same_expiration_date!(put, call);
+            check_is_call!(call);
+            check_is_put!(put);
+
+            assert!(put.otm() && call.otm(), "Put and call must be OTM!");
+
+            let price = self.price(call) - self.price(put);
+            let payoff = call.payoff(Some(spot_price)) - put.payoff(Some(spot_price));
             (payoff, price)
         }
     }
@@ -970,11 +990,5 @@ pub trait OptionStrategy: OptionPricing {
     ) -> impl Fn(f64) -> (f64, f64) {
         log_info!("Ladder strategy is equivalent to the Christmas Tree strategy!");
         self.ladder(long, short1, short2)
-    }
-
-    /// TODO
-    fn risk_reversal<T: Option>(&self, option: &T) -> f64 {
-        log_info!("Risk reversal strategy is equivalent to the Butterfly strategy!");
-        todo!()
     }
 }
