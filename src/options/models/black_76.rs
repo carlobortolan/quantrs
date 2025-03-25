@@ -1,6 +1,7 @@
 //! Module for Black76 option pricing model.
+//! Assumes constant risk-free interest rate r and the futures price F(t) of a particular underlying is log-normal with constant volatility σ.
 
-use crate::options::{Option, OptionGreeks, OptionPricing, OptionStrategy};
+use crate::options::{Instrument, Option, OptionGreeks, OptionPricing, OptionStrategy};
 
 /// Black76 option pricing model.
 #[derive(Debug, Default)]
@@ -18,6 +19,38 @@ impl Black76Model {
             risk_free_rate,
             volatility,
         }
+    }
+
+    /// Calculate d1 and d2 for the Black-76 formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `instrument` - The instrument to calculate d1 and d2 for.
+    /// * `strike` - The strike price of the option.
+    /// * `ttm` - Time to maturity of the option.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing d1 and d2.
+    fn calculate_d1_d2(&self, instrument: &Instrument, strike: f64, ttm: f64) -> (f64, f64) {
+        let sqrt_t = ttm.sqrt();
+        let n_dividends = instrument
+            .dividend_times
+            .iter()
+            .filter(|&&t| t <= ttm)
+            .count() as f64;
+        let adjusted_spot =
+            instrument.spot * (1.0 - instrument.discrete_dividend_yield).powf(n_dividends);
+
+        let d1 = ((adjusted_spot / strike).ln()
+            + (self.risk_free_rate - instrument.continuous_dividend_yield
+                + 0.5 * self.volatility.powi(2))
+                * ttm)
+            / (self.volatility * sqrt_t);
+
+        let d2 = d1 - self.volatility * sqrt_t;
+
+        (d1, d2)
     }
 }
 

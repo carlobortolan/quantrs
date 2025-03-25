@@ -87,6 +87,16 @@ pub struct BinomialTreeModel {
 
 impl BinomialTreeModel {
     /// Create a new `BinomialTreeModel`.
+    ///
+    /// # Arguments
+    ///
+    /// * `risk_free_rate` - Risk-free interest rate (e.g., 0.05 for 5%).
+    /// * `volatility` - Annualized standard deviation of an asset's continuous returns (e.g., 0.2 for 20%).
+    /// * `steps` - The number of steps in the binomial tree.
+    ///
+    /// # Returns
+    ///
+    /// A new `BinomialTreeModel`.
     pub fn new(risk_free_rate: f64, volatility: f64, steps: usize) -> Self {
         Self {
             risk_free_rate,

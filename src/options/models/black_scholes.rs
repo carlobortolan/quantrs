@@ -92,7 +92,6 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `time_to_maturity` - Time horizon (in years).
     /// * `risk_free_rate` - Risk-free interest rate (e.g., 0.05 for 5%).
     /// * `volatility` - Annualized standard deviation of an asset's continuous returns (e.g., 0.2 for 20%).
     ///     
@@ -110,7 +109,9 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `option` - The option to calculate d1 and d2 for.
+    /// * `instrument` - The instrument to calculate d1 and d2 for.
+    /// * `strike` - The strike price of the option.
+    /// * `ttm` - Time to maturity of the option.
     ///
     /// # Returns
     ///
@@ -140,7 +141,8 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `option` - The option to calculate the adjusted spot price for.
+    /// * `instrument` - The instrument to calculate the adjusted spot price for.
+    /// * `ttm` - Time to maturity of the option.
     ///
     /// # Returns
     ///
@@ -158,7 +160,10 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `option` - The call option to price.
+    /// * `instrument` - The instrument to price the call option for.
+    /// * `strike` - The strike price of the option.
+    /// * `ttm` - Time to maturity of the option.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -183,7 +188,10 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `option` - The put option to price.
+    /// * `instrument` - The instrument to price the put option for.
+    /// * `strike` - The strike price of the option.
+    /// * `ttm` - Time to maturity of the option.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -209,6 +217,7 @@ impl BlackScholesModel {
     /// # Arguments
     ///
     /// * `option` - The binary option to price.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -235,6 +244,7 @@ impl BlackScholesModel {
     /// # Arguments
     ///
     /// * `option` - The binary option to price.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -263,6 +273,15 @@ impl BlackScholesModel {
     }
 
     /// Calculate the price of a rainbow call using the Black-Scholes formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to price.
+    /// * `normal` - The standard normal distribution.
+    ///
+    /// # Returns
+    ///
+    /// The price of the option.
     pub fn price_rainbow_call<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
         if matches!(option.style(), OptionStyle::Rainbow(RainbowType::AllITM))
             && option.payoff(None) <= 0.0
@@ -285,6 +304,15 @@ impl BlackScholesModel {
     }
 
     /// Calculate the price of a rainbow put using the Black-Scholes formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to price.
+    /// * `normal` - The standard normal distribution.
+    ///
+    /// # Returns
+    ///
+    /// The price of the option.
     pub fn price_rainbow_put<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
         if matches!(option.style(), OptionStyle::Rainbow(RainbowType::AllOTM))
             && option.payoff(None) <= 0.0
@@ -305,6 +333,7 @@ impl BlackScholesModel {
     ///
     /// * `option` - The option to price.
     /// * `volatility` - The volatility of the underlying asset.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -375,6 +404,15 @@ impl OptionPricing for BlackScholesModel {
     }
 
     /// Calculate the implied volatility of an option using the Newton-Raphson method.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to calculate the implied volatility for.
+    /// * `market_price` - The market price of the option.
+    ///
+    /// # Returns
+    ///
+    /// The implied volatility of the option.
     fn implied_volatility<T: Option>(&self, option: &T, market_price: f64) -> f64 {
         let mut sigma = 0.2; // Initial guess
         let tolerance = 1e-5;
@@ -417,29 +455,6 @@ impl OptionPricing for BlackScholesModel {
     //    res.state().best_param.unwrap()
     //}
 }
-
-// struct TestFunc<F> {
-//     f: F,
-// }
-//
-// impl<F> TestFunc<F> {
-//     fn new(f: F) -> Self {
-//         TestFunc { f }
-//     }
-// }
-//
-// impl<F> CostFunction for TestFunc<F>
-// where
-//     F: Fn(f64) -> f64,
-// {
-//     // one dimensional problem, no vector needed
-//     type Param = f64;
-//     type Output = f64;
-//
-//     fn cost(&self, p: &Self::Param) -> Result<Self::Output, Error> {
-//         Ok((self.f)(*p))
-//     }
-// }
 
 impl OptionGreeks for BlackScholesModel {
     fn delta<T: Option>(&self, option: &T) -> f64 {

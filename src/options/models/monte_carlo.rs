@@ -55,6 +55,18 @@ pub struct MonteCarloModel {
 
 impl MonteCarloModel {
     /// Create a new `MonteCarloModel`.
+    ///
+    /// # Arguments
+    ///
+    /// * `risk_free_rate` - The risk-free interest rate (e.g., 0.05 for 5%).
+    /// * `volatility` - The volatility of the underlying asset (e.g., 0.2 for 20%).
+    /// * `simulations` - The number of simulations to run.
+    /// * `steps` - The number of steps in the simulation.
+    /// * `method` - The method used to average the simulated prices (geometric or arithmetic).
+    ///
+    /// # Returns
+    ///
+    /// A new `MonteCarloModel`.
     pub fn new(
         risk_free_rate: f64,
         volatility: f64,
@@ -72,6 +84,17 @@ impl MonteCarloModel {
     }
 
     /// Create a new `MonteCarloModel` with the geometric averaging method.
+    ///
+    /// # Arguments
+    ///
+    /// * `risk_free_rate` - The risk-free interest rate (e.g., 0.05 for 5%).
+    /// * `volatility` - The volatility of the underlying asset (e.g., 0.2 for 20%).
+    /// * `simulations` - The number of simulations to run.
+    /// * `steps` - The number of steps in the simulation.
+    ///
+    /// # Returns
+    ///
+    /// A new `MonteCarloModel`.
     pub fn geometric(
         risk_free_rate: f64,
         volatility: f64,
@@ -88,6 +111,17 @@ impl MonteCarloModel {
     }
 
     /// Create a new `MonteCarloModel` with the arithmetic averaging method.
+    ///
+    /// # Arguments
+    ///
+    /// * `risk_free_rate` - The risk-free interest rate (e.g., 0.05 for 5%).
+    /// * `volatility` - The volatility of the underlying asset (e.g., 0.2 for 20%).
+    /// * `simulations` - The number of simulations to run.
+    /// * `steps` - The number of steps in the simulation.
+    ///
+    /// # Returns
+    ///
+    /// A new `MonteCarloModel`.
     pub fn arithmetic(
         risk_free_rate: f64,
         volatility: f64,
@@ -104,6 +138,14 @@ impl MonteCarloModel {
     }
 
     /// Simulate price paths and compute the expected discounted payoff.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn simulate_price_paths<T: Option>(&self, option: &T) -> f64 {
         let discount_factor = (-self.risk_free_rate * option.time_to_maturity()).exp();
 
@@ -148,10 +190,28 @@ impl OptionPricing for MonteCarloModel {
 }
 
 impl MonteCarloModel {
+    /// Simulate price paths and compute the expected discounted payoff for European options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The European option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_european<T: Option>(&self, option: &T) -> f64 {
         self.simulate_price_paths(option)
     }
 
+    /// Simulate price paths and compute the expected discounted payoff for Asian options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The Asian option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_asian<T: Option>(&self, option: &T) -> f64 {
         let mut rng: ThreadRng = rand::rng();
         let mut sum = 0.0;
@@ -178,26 +238,80 @@ impl MonteCarloModel {
         sum / self.simulations as f64
     }
 
+    /// Simulate price paths and compute the expected discounted payoff for basket options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The basket option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_basket<T: Option>(&self, option: &T) -> f64 {
         unimplemented!()
     }
 
+    /// Simulate price paths and compute the expected discounted payoff for rainbow options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The rainbow option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_rainbow<T: Option>(&self, option: &T) -> f64 {
         self.simulate_price_paths(option)
     }
 
+    /// Simulate price paths and compute the expected discounted payoff for barrier options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The barrier option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_barrier<T: Option>(&self, option: &T) -> f64 {
         unimplemented!()
     }
 
+    /// Simulate price paths and compute the expected discounted payoff for double barrier options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The double barrier option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_double_barrier<T: Option>(&self, option: &T) -> f64 {
         unimplemented!()
     }
 
+    /// Simulate price paths and compute the expected discounted payoff for lookback options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The lookback option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_lookback<T: Option>(&self, option: &T) -> f64 {
         unimplemented!()
     }
 
+    /// Simulate price paths and compute the expected discounted payoff for binary options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The binary option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
     fn price_binary<T: Option>(&self, option: &T) -> f64 {
         self.simulate_price_paths(option)
     }
