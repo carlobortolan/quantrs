@@ -110,9 +110,9 @@ fn example_monte_carlo() {
 }
 
 fn example_black_76() {
-    let instrument = Instrument::new().with_spot(100.0);
-    let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
-    let model = Black76Model::new(0.05, 0.2);
+    let instrument = Instrument::new().with_spot(2006.0);
+    let option = EuropeanOption::new(instrument, 2100.0, 0.08493, Call);
+    let model = Black76Model::new(0.050067, 0.35);
 
     let call_price = model.price(&option);
     println!("Black-76 Call Price: {}", call_price);

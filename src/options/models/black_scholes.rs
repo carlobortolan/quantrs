@@ -399,7 +399,7 @@ impl OptionPricing for BlackScholesModel {
             (_, OptionStyle::Binary(AssetOrNothing)) => self.price_asset_or_nothing(option, &normal),
             (OptionType::Call, OptionStyle::Rainbow(_)) => self.price_rainbow_call(option, &normal),
             (OptionType::Put, OptionStyle::Rainbow(_)) => self.price_rainbow_put(option, &normal),
-            _ => panic!("Unsupported option type or style"),
+            _ => panic!("BlackScholesModel does not support this option type or style"),
         }
     }
 

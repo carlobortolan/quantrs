@@ -180,7 +180,7 @@ impl OptionPricing for MonteCarloModel {
             OptionStyle::Asian(_) => self.price_asian(option),
             OptionStyle::Lookback(_) => self.price_lookback(option),
             OptionStyle::Binary(_) => self.price_binary(option),
-            _ => panic!("Unsupported option style"),
+            _ => panic!("Monte Carlo model does not support this option style"),
         }
     }
 

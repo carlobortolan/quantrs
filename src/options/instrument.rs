@@ -28,7 +28,7 @@ use rand_distr::{Distribution, Normal};
 /// A struct representing an instrument with dividend properties.
 #[derive(Debug, Default, Clone)]
 pub struct Instrument {
-    /// Current price of the underlying asset.
+    /// Current price of the underlying asset or future price at time 0.
     pub spot: f64,
     /// Maximum spot price of the underlying asset.
     pub max_spot: f64,
@@ -47,7 +47,11 @@ pub struct Instrument {
 }
 
 impl Instrument {
-    /// Create a new `Instrument`.
+    /// Create a new simple `Instrument` with default values.
+    ///
+    /// # Returns
+    ///
+    /// A new `Instrument`.
     pub fn new() -> Self {
         Self {
             spot: 0.0,
@@ -65,7 +69,7 @@ impl Instrument {
     ///
     /// # Arguments
     ///
-    /// * `spot` - The spot price of the instrument.
+    /// * `spot` - The spot price of the instrument (i.e., the current price of the underlying asset or future price at time 0).
     ///
     /// # Returns
     ///
