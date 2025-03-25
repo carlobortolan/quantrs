@@ -36,7 +36,7 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 
 |                             | Black-Scholes   | Black-76 | Lattice      | ³Monte-Carlo | Finite Diff   | Heston |
 | --------------------------- | --------------- | -------- | ------------ | ------------ | ------------- | ------ |
-| European                    | ✅              | ⏳       | ✅           | ✅           | ⏳            | ⏳     |
+| European                    | ✅              | ✅       | ✅           | ✅           | ⏳            | ⏳     |
 | American                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)  | ⏳            | ❌     |
 | Bermudan                    | ❌              | ❌       | ⏳           | ❌ (L. Sq.)  | ❌ (complex)  | ❌     |
 | ¹Basket                     | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
@@ -47,15 +47,17 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 | ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
 | ²Lookback (floating strike) | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
-| ²Binary Cash-or-Nothing     | ✅              | ⏳       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
-| ²Binary Asset-or-Nothing    | ✅              | ⏳       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
-| Greeks (Δ,ν,Θ,ρ,Γ)          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
+| ²Binary Cash-or-Nothing     | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
+| ²Binary Asset-or-Nothing    | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
+| Greeks (Δ,ν,Θ,ρ,Γ)          | ✅              | ✅       | ⏳           | ❌           | ❌            | ❌     |
 | Implied Volatility          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
 
 > ¹ _"Exotic" options with standard exercise style; only differ in their payoff value_\
 > ² _Non-vanilla path-dependent "exotic" options_\
 > ³ _MC simulates underlying price paths based on geometric Brownian motion for Black-Scholes models and geometric average price paths for Asian and Lookback options_\
 > ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
+
+<!--Bachelier and Modified Bachelier-->
 
 </details>
 

@@ -1,8 +1,9 @@
 //! Module for Black76 option pricing model.
 //! Assumes constant risk-free interest rate r and the futures price F(t) of a particular underlying is log-normal with constant volatility σ.
+//! https://en.wikipedia.org/wiki/Black_model
+//! https://www.glynholton.com/notes/black_1976/
 
 use crate::options::{
-    types::BinaryType::{AssetOrNothing, CashOrNothing},
     Instrument, Option, OptionGreeks, OptionPricing, OptionStrategy, OptionStyle, OptionType,
 };
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
@@ -47,15 +48,9 @@ impl Black76Model {
     /// A tuple containing d1 and d2.
     fn calculate_d1_d2(&self, instrument: &Instrument, strike: f64, ttm: f64) -> (f64, f64) {
         let sqrt_t = ttm.sqrt();
-        let n_dividends = instrument
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= ttm)
-            .count() as f64;
-        let adjusted_f =
-            instrument.spot * (1.0 - instrument.discrete_dividend_yield).powf(n_dividends);
 
-        let d1 = ((adjusted_f / strike).ln() + (0.5 * self.volatility.powi(2)) * ttm)
+        let d1 = ((instrument.calculate_adjusted_spot(ttm) / strike).ln()
+            + (0.5 * self.volatility.powi(2)) * ttm)
             / (self.volatility * sqrt_t);
 
         let d2 = d1 - self.volatility * sqrt_t;
@@ -132,23 +127,147 @@ impl OptionPricing for Black76Model {
 
 impl OptionGreeks for Black76Model {
     fn delta<T: Option>(&self, option: &T) -> f64 {
-        panic!("Black76Model does not support delta calculation yet");
+        let (d1, d2) = self.calculate_d1_d2(
+            option.instrument(),
+            option.strike(),
+            option.time_to_maturity(),
+        );
+        let normal = Normal::new(0.0, 1.0).unwrap();
+        match option.style() {
+            OptionStyle::European => match option.option_type() {
+                OptionType::Call => {
+                    (-self.risk_free_rate * option.time_to_maturity()).exp() * normal.cdf(d1)
+                }
+                OptionType::Put => {
+                    (-self.risk_free_rate * option.time_to_maturity()).exp()
+                        * (normal.cdf(d1) - 1.0)
+                }
+            },
+            _ => panic!("Unsupported option style for delta calculation"),
+        }
     }
 
     fn gamma<T: Option>(&self, option: &T) -> f64 {
-        panic!("Black76Model does not support gamma calculation yet");
+        let (d1, d2) = self.calculate_d1_d2(
+            option.instrument(),
+            option.strike(),
+            option.time_to_maturity(),
+        );
+        let adjusted_spot = option
+            .instrument()
+            .calculate_adjusted_spot(option.time_to_maturity());
+        let normal = Normal::new(0.0, 1.0).unwrap();
+
+        match option.style() {
+            OptionStyle::European => {
+                (-self.risk_free_rate * option.time_to_maturity()).exp() * normal.pdf(d1)
+                    / (adjusted_spot * self.volatility * option.time_to_maturity().sqrt())
+            }
+            _ => panic!("Unsupported option style for gamma calculation"),
+        }
     }
 
     fn theta<T: Option>(&self, option: &T) -> f64 {
-        panic!("Black76Model does not support theta calculation yet");
+        let (d1, d2) = self.calculate_d1_d2(
+            option.instrument(),
+            option.strike(),
+            option.time_to_maturity(),
+        );
+        let adjusted_spot = option
+            .instrument()
+            .calculate_adjusted_spot(option.time_to_maturity());
+        let normal = Normal::new(0.0, 1.0).unwrap();
+
+        match option.style() {
+            OptionStyle::European => match option.option_type() {
+                OptionType::Call => {
+                    -adjusted_spot
+                        * (-self.risk_free_rate * option.time_to_maturity()).exp()
+                        * normal.pdf(d1)
+                        * self.volatility
+                        / (2.0 * option.time_to_maturity().sqrt())
+                        + self.risk_free_rate
+                            * adjusted_spot
+                            * (-self.risk_free_rate * option.time_to_maturity()).exp()
+                            * normal.cdf(d1)
+                        - self.risk_free_rate
+                            * option.strike()
+                            * (-self.risk_free_rate * option.time_to_maturity()).exp()
+                            * normal.cdf(d2)
+                }
+                OptionType::Put => {
+                    -adjusted_spot
+                        * (-self.risk_free_rate * option.time_to_maturity()).exp()
+                        * normal.pdf(d1)
+                        * self.volatility
+                        / (2.0 * option.time_to_maturity().sqrt())
+                        - self.risk_free_rate
+                            * adjusted_spot
+                            * (-self.risk_free_rate * option.time_to_maturity()).exp()
+                            * normal.cdf(-d1)
+                        + self.risk_free_rate
+                            * option.strike()
+                            * (-self.risk_free_rate * option.time_to_maturity()).exp()
+                            * normal.cdf(-d2)
+                }
+            },
+            _ => panic!("Unsupported option style for theta calculation"),
+        }
     }
 
     fn vega<T: Option>(&self, option: &T) -> f64 {
-        panic!("Black76Model does not support vega calculation yet");
+        let (d1, d2) = self.calculate_d1_d2(
+            option.instrument(),
+            option.strike(),
+            option.time_to_maturity(),
+        );
+        let adjusted_spot = option
+            .instrument()
+            .calculate_adjusted_spot(option.time_to_maturity());
+        let normal = Normal::new(0.0, 1.0).unwrap();
+
+        match option.style() {
+            OptionStyle::European => {
+                adjusted_spot
+                    * (-self.risk_free_rate * option.time_to_maturity()).exp()
+                    * normal.pdf(d1)
+                    * option.time_to_maturity().sqrt()
+            }
+            _ => panic!("Unsupported option style for vega calculation"),
+        }
     }
 
     fn rho<T: Option>(&self, option: &T) -> f64 {
-        panic!("Black76Model does not support rho calculation yet");
+        let (d1, d2) = self.calculate_d1_d2(
+            option.instrument(),
+            option.strike(),
+            option.time_to_maturity(),
+        );
+        let normal = Normal::new(0.0, 1.0).unwrap();
+
+        match option.style() {
+            OptionStyle::European => match option.option_type() {
+                OptionType::Call => {
+                    -option.time_to_maturity()
+                        * self.price_euro_call(
+                            option.instrument(),
+                            option.strike(),
+                            option.time_to_maturity(),
+                            &normal,
+                        )
+                }
+                OptionType::Put => {
+                    -option.time_to_maturity()
+                        * self.price_euro_put(
+                            option.instrument(),
+                            option.strike(),
+                            option.time_to_maturity(),
+                            &normal,
+                        )
+                }
+            },
+            _ => panic!("Unsupported option style for rho calculation"),
+        }
     }
 }
 

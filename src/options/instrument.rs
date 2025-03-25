@@ -236,6 +236,21 @@ impl Instrument {
         &self.assets.last().unwrap().0
     }
 
+    /// Calculate the adjusted spot price.
+    ///
+    /// # Arguments
+    ///
+    /// * `instrument` - The instrument to calculate the adjusted spot price for.
+    /// * `ttm` - Time to maturity of the option.
+    ///
+    /// # Returns
+    ///
+    /// The adjusted spot price.
+    pub fn calculate_adjusted_spot(&self, ttm: f64) -> f64 {
+        let n_dividends = self.dividend_times.iter().filter(|&&t| t <= ttm).count() as f64;
+        self.spot * (1.0 - self.discrete_dividend_yield).powf(n_dividends)
+    }
+
     /// Simulate random asset prices (Euler method)
     ///
     /// # Arguments
