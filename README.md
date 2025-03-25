@@ -211,6 +211,10 @@ See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
 
 If you find any bugs or have suggestions for improvement, please open a new issue or submit a pull request.
 
+## Disclaimer
+
+This library is not intended for professional use. It is a hobby project and should be treated as such.
+
 ## License
 
 This project is licensed under either of:
