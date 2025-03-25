@@ -424,7 +424,7 @@ pub trait OptionStrategy: OptionPricing {
             check_is_call!(call);
             assert!(
                 stock.spot > 0.0 && call.otm(),
-                "Stock must be ITM and call must be OTM!"
+                "Stock price must be positive and call must be OTM!"
             );
 
             let price = stock.spot - self.price(call);
@@ -443,7 +443,7 @@ pub trait OptionStrategy: OptionPricing {
             check_is_put!(put);
             assert!(
                 stock.spot > 0.0 && put.otm(),
-                "Stock must be ITM and put must be OTM!"
+                "Stock price must be positive and put must be OTM!"
             );
 
             let price = stock.spot + self.price(put);
@@ -452,7 +452,7 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
-    /// The collar strategy involves buying a protective put and selling a covered call with the same expiration date.
+    /// The collar strategy involves owning the underlying, buying a protective put and selling a covered call with the same expiration date.
     fn collar<'a, T: Option>(
         &'a self,
         stock: &'a Instrument,
@@ -460,16 +460,49 @@ pub trait OptionStrategy: OptionPricing {
         otm_call: &'a T,
     ) -> impl Fn(f64) -> (f64, f64) + 'a {
         move |spot_price| {
+            check_same_expiration_date!(otm_put, otm_call);
             check_is_put!(otm_put);
             check_is_call!(otm_call);
+
             assert!(
                 stock.spot > 0.0 && otm_put.otm() && otm_call.otm(),
-                "Stock must be ITM and options must be OTM!"
+                "Stock price must be positive and options must be OTM!"
             );
 
             let price = stock.spot + self.price(otm_put) - self.price(otm_call);
             let payoff =
                 spot_price + otm_put.payoff(Some(spot_price)) - otm_call.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
+    /// The fence strategy consists of a long position in a financial instrument, a long ATM put and short positions in a OTM call and a OTM put.
+    fn fence<'a, T: Option>(
+        &'a self,
+        stock: &'a Instrument,
+        atm_put: &'a T,
+        otm_put: &'a T,
+        otm_call: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_same_expiration_date!(atm_put, otm_put);
+            check_same_expiration_date!(otm_put, otm_call);
+            check_is_put!(atm_put);
+            check_is_put!(otm_put);
+            check_is_call!(otm_call);
+
+            assert!(
+                stock.spot > 0.0 && otm_put.otm() && otm_call.otm() && atm_put.atm(),
+                "Stock price must be positive and options must be OTM and ATM!"
+            );
+
+            let price = stock.spot + self.price(otm_put) + self.price(atm_put)
+                - self.price(otm_put)
+                - self.price(otm_call);
+            let payoff =
+                spot_price + otm_put.payoff(Some(spot_price)) + atm_put.payoff(Some(spot_price))
+                    - otm_put.payoff(Some(spot_price))
+                    - otm_call.payoff(Some(spot_price));
             (payoff, price)
         }
     }
@@ -896,27 +929,9 @@ pub trait OptionStrategy: OptionPricing {
     /* SPREAD */
 
     /// TODO
-    /// The fence strategy involves buying a call and selling a put with the same expiration date, but different strike prices.
-    fn fence<T: Option>(&self, option: &T) -> f64 {
-        panic!("Fence not implemented for this model");
-    }
-
-    /// TODO
     /// The jelly roll strategy involves buying a call and put with the same expiration date, but different strike prices, and selling a call and put with different strike prices.
     fn jelly_roll<T: Option>(&self, option: &T) -> f64 {
         panic!("Jelly roll not implemented for this model");
-    }
-
-    /// TODO
-    /// The strap strategy involves buying two calls and one put with the same expiration date and strike price.
-    fn strap<T: Option>(&self, option: &T) -> f64 {
-        panic!("Strap not implemented for this model");
-    }
-
-    /// TODO
-    /// The strip strategy involves buying two puts and one call with the same expiration date and strike price.
-    fn strip<T: Option>(&self, option: &T) -> f64 {
-        panic!("Strip not implemented for this model");
     }
 
     /// TODO

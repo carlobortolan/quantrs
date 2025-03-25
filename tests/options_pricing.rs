@@ -1692,6 +1692,14 @@ mod test_option_strategies {
             (50.0, 49.733438657383125),
         );
 
+        let atm_put = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Put);
+        let otm_call = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Call);
+        let otm_put = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Put);
+        assert_eq!(
+            model.fence(&instrument, &atm_put, &otm_put, &otm_call)(50.0),
+            (50.0, 52.46292045763692),
+        );
+
         // Simple Strategies
         let itm_call = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
         let itm_put = EuropeanOption::new(instrument.clone(), 60.0, 1.0, OptionType::Put);
