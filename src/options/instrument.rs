@@ -28,7 +28,7 @@ use rand_distr::{Distribution, Normal};
 /// A struct representing an instrument with dividend properties.
 #[derive(Debug, Default, Clone)]
 pub struct Instrument {
-    /// Current price of the underlying asset.
+    /// Current price of the underlying asset or future price at time 0.
     pub spot: f64,
     /// Maximum spot price of the underlying asset.
     pub max_spot: f64,
@@ -47,7 +47,11 @@ pub struct Instrument {
 }
 
 impl Instrument {
-    /// Create a new `Instrument`.
+    /// Create a new simple `Instrument` with default values.
+    ///
+    /// # Returns
+    ///
+    /// A new `Instrument`.
     pub fn new() -> Self {
         Self {
             spot: 0.0,
@@ -62,24 +66,56 @@ impl Instrument {
     }
 
     /// Set the spot price of the instrument.
+    ///
+    /// # Arguments
+    ///
+    /// * `spot` - The spot price of the instrument (i.e., the current price of the underlying asset or future price at time 0).
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the spot price set.
     pub fn with_spot(mut self, spot: f64) -> Self {
         self.spot = spot;
         self
     }
 
     /// Set the maximum spot price of the instrument.
+    ///     
+    /// # Arguments
+    ///
+    /// * `max_spot` - The maximum spot price of the instrument.
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the maximum spot price set.
     pub fn with_max_spot(mut self, max_spot: f64) -> Self {
         self.max_spot = max_spot;
         self
     }
 
     /// Set the minimum spot price of the instrument.
+    ///
+    /// # Arguments
+    ///
+    /// * `min_spot` - The minimum spot price of the instrument.
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the minimum spot price set.
     pub fn with_min_spot(mut self, min_spot: f64) -> Self {
         self.min_spot = min_spot;
         self
     }
 
     /// Set the continuous dividend yield of the instrument.
+    ///
+    /// # Arguments
+    ///
+    /// * `yield_` - The continuous dividend yield of the instrument.
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the continuous dividend yield set.
     pub fn with_continuous_dividend_yield(mut self, yield_: f64) -> Self {
         self.continuous_dividend_yield = yield_;
         self.assets.iter_mut().for_each(|(a, _)| {
@@ -94,18 +130,42 @@ impl Instrument {
     }
 
     /// Set the discrete dividend yield of the instrument.
+    ///
+    /// # Arguments
+    ///
+    /// * `yield_` - The discrete dividend yield of the instrument.
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the discrete dividend yield set.
     pub fn with_discrete_dividend_yield(mut self, yield_: f64) -> Self {
         self.discrete_dividend_yield = yield_;
         self
     }
 
     /// Set the dividend times of the instrument.
+    ///
+    /// # Arguments
+    ///
+    /// * `times` - The dividend times of the instrument.
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the dividend times set.
     pub fn with_dividend_times(mut self, times: Vec<f64>) -> Self {
         self.dividend_times = times;
         self
     }
 
     /// Set the assets of the instrument.
+    ///
+    /// # Arguments
+    ///
+    /// * `assets` - The assets of the instrument.
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the assets set.
     pub fn with_assets(mut self, assets: Vec<Instrument>) -> Self {
         if assets.is_empty() {
             return self;
@@ -119,6 +179,14 @@ impl Instrument {
     }
 
     /// Set the assets and their weights of the instrument.
+    ///
+    /// # Arguments
+    ///
+    /// * `assets` - The assets and their weights of the instrument.
+    ///
+    /// # Returns
+    ///
+    /// The instrument with the assets and their weights set.
     pub fn with_weighted_assets(mut self, assets: Vec<(Instrument, f64)>) -> Self {
         if assets.is_empty() {
             return self;
@@ -138,6 +206,10 @@ impl Instrument {
     }
 
     /// Get best performing asset.
+    ///
+    /// # Returns
+    ///
+    /// The best performing asset.
     pub fn best_performer(&self) -> &Instrument {
         if self.assets.is_empty() {
             return self;
@@ -149,6 +221,10 @@ impl Instrument {
     }
 
     /// Get worst performing asset.
+    ///
+    /// # Returns
+    ///
+    /// The worst performing asset.
     pub fn worst_performer(&self) -> &Instrument {
         if self.assets.is_empty() {
             return self;
@@ -160,7 +236,32 @@ impl Instrument {
         &self.assets.last().unwrap().0
     }
 
+    /// Calculate the adjusted spot price.
+    ///
+    /// # Arguments
+    ///
+    /// * `instrument` - The instrument to calculate the adjusted spot price for.
+    /// * `ttm` - Time to maturity of the option.
+    ///
+    /// # Returns
+    ///
+    /// The adjusted spot price.
+    pub fn calculate_adjusted_spot(&self, ttm: f64) -> f64 {
+        let n_dividends = self.dividend_times.iter().filter(|&&t| t <= ttm).count() as f64;
+        self.spot * (1.0 - self.discrete_dividend_yield).powf(n_dividends)
+    }
+
     /// Simulate random asset prices (Euler method)
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator.
+    /// * `risk_free_rate` - Risk-free rate.
+    /// * `volatility` - Volatility.
+    ///
+    /// # Returns
+    ///
+    /// A vector of simulated asset prices.
     pub fn euler_simulation(
         &self,
         rng: &mut ThreadRng,
@@ -181,6 +282,18 @@ impl Instrument {
     }
 
     /// Simulate random asset prices' logarithms
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator.
+    /// * `volatility` - Volatility.
+    /// * `time_to_maturity` - Time to maturity.
+    /// * `risk_free_rate` - Risk-free rate.
+    /// * `steps` - Number of steps.
+    ///
+    /// # Returns
+    ///
+    /// A vector of simulated asset prices' logarithms.
     pub fn log_simulation(
         &self,
         rng: &mut ThreadRng,
@@ -202,6 +315,19 @@ impl Instrument {
     }
 
     /// Average asset prices
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator.
+    /// * `method` - Simulation method.
+    /// * `volatility` - Volatility.
+    /// * `time_to_maturity` - Time to maturity.
+    /// * `risk_free_rate` - Risk-free rate.
+    /// * `steps` - Number of steps.
+    ///
+    /// # Returns
+    ///
+    /// The average asset price.
     pub fn simulate_arithmetic_average(
         &self,
         rng: &mut ThreadRng,
@@ -227,6 +353,19 @@ impl Instrument {
     }
 
     /// Geometric average asset prices
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator.
+    /// * `method` - Simulation method.
+    /// * `volatility` - Volatility.
+    /// * `time_to_maturity` - Time to maturity.
+    /// * `risk_free_rate` - Risk-free rate.
+    /// * `steps` - Number of steps.
+    ///
+    /// # Returns
+    ///
+    /// The geometric average asset price.
     pub fn simulate_geometric_average(
         &self,
         rng: &mut ThreadRng,
@@ -250,7 +389,19 @@ impl Instrument {
         }
     }
 
-    // Directly simulate the asset price using the geometric Brownian motion formula
+    /// Directly simulate the asset price using the geometric Brownian motion formula
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator.
+    /// * `volatility` - Volatility.
+    /// * `time_to_maturity` - Time to maturity.
+    /// * `risk_free_rate` - Risk-free rate.
+    /// * `steps` - Number of steps.
+    ///
+    /// # Returns
+    ///
+    /// The simulated asset price.
     pub fn simulate_geometric_brownian_motion(
         &self,
         rng: &mut ThreadRng,

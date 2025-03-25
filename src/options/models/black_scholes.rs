@@ -92,7 +92,6 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `time_to_maturity` - Time horizon (in years).
     /// * `risk_free_rate` - Risk-free interest rate (e.g., 0.05 for 5%).
     /// * `volatility` - Annualized standard deviation of an asset's continuous returns (e.g., 0.2 for 20%).
     ///     
@@ -110,22 +109,17 @@ impl BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `option` - The option to calculate d1 and d2 for.
+    /// * `instrument` - The instrument to calculate d1 and d2 for.
+    /// * `strike` - The strike price of the option.
+    /// * `ttm` - Time to maturity of the option.
     ///
     /// # Returns
     ///
     /// A tuple containing d1 and d2.
     fn calculate_d1_d2(&self, instrument: &Instrument, strike: f64, ttm: f64) -> (f64, f64) {
         let sqrt_t = ttm.sqrt();
-        let n_dividends = instrument
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= ttm)
-            .count() as f64;
-        let adjusted_spot =
-            instrument.spot * (1.0 - instrument.discrete_dividend_yield).powf(n_dividends);
 
-        let d1 = ((adjusted_spot / strike).ln()
+        let d1 = ((instrument.calculate_adjusted_spot(ttm) / strike).ln()
             + (self.risk_free_rate - instrument.continuous_dividend_yield
                 + 0.5 * self.volatility.powi(2))
                 * ttm)
@@ -136,29 +130,14 @@ impl BlackScholesModel {
         (d1, d2)
     }
 
-    /// Calculate the adjusted spot price.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The option to calculate the adjusted spot price for.
-    ///
-    /// # Returns
-    ///
-    /// The adjusted spot price.
-    fn calculate_adjusted_spot(&self, instrument: &Instrument, ttm: f64) -> f64 {
-        let n_dividends = instrument
-            .dividend_times
-            .iter()
-            .filter(|&&t| t <= ttm)
-            .count() as f64;
-        instrument.spot * (1.0 - instrument.discrete_dividend_yield).powf(n_dividends)
-    }
-
     /// Calculate the price of an European call option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `option` - The call option to price.
+    /// * `instrument` - The instrument to price the call option for.
+    /// * `strike` - The strike price of the option.
+    /// * `ttm` - Time to maturity of the option.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -171,19 +150,20 @@ impl BlackScholesModel {
         normal: &Normal,
     ) -> f64 {
         let (d1, d2) = self.calculate_d1_d2(instrument, strike, ttm);
-        let nd1 = normal.cdf(d1);
-        let nd2 = normal.cdf(d2);
-        let adjusted_spot = self.calculate_adjusted_spot(instrument, ttm);
-
-        adjusted_spot * (-instrument.continuous_dividend_yield * ttm).exp() * nd1
-            - strike * (-self.risk_free_rate * ttm).exp() * nd2
+        instrument.calculate_adjusted_spot(ttm)
+            * (-instrument.continuous_dividend_yield * ttm).exp()
+            * normal.cdf(d1)
+            - strike * (-self.risk_free_rate * ttm).exp() * normal.cdf(d2)
     }
 
     /// Calculate the price of an European put option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `option` - The put option to price.
+    /// * `instrument` - The instrument to price the put option for.
+    /// * `strike` - The strike price of the option.
+    /// * `ttm` - Time to maturity of the option.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -196,12 +176,10 @@ impl BlackScholesModel {
         normal: &Normal,
     ) -> f64 {
         let (d1, d2) = self.calculate_d1_d2(instrument, strike, ttm);
-        let nd1 = normal.cdf(-d1);
-        let nd2 = normal.cdf(-d2);
-        let adjusted_spot = self.calculate_adjusted_spot(instrument, ttm);
-
-        strike * (-self.risk_free_rate * ttm).exp() * nd2
-            - adjusted_spot * (-instrument.continuous_dividend_yield * ttm).exp() * nd1
+        strike * (-self.risk_free_rate * ttm).exp() * normal.cdf(-d2)
+            - instrument.calculate_adjusted_spot(ttm)
+                * (-instrument.continuous_dividend_yield * ttm).exp()
+                * normal.cdf(-d1)
     }
 
     /// Calculate the price of a binary cash-or-nothing European option using the Black-Scholes formula.
@@ -209,6 +187,7 @@ impl BlackScholesModel {
     /// # Arguments
     ///
     /// * `option` - The binary option to price.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -235,6 +214,7 @@ impl BlackScholesModel {
     /// # Arguments
     ///
     /// * `option` - The binary option to price.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -263,6 +243,15 @@ impl BlackScholesModel {
     }
 
     /// Calculate the price of a rainbow call using the Black-Scholes formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to price.
+    /// * `normal` - The standard normal distribution.
+    ///
+    /// # Returns
+    ///
+    /// The price of the option.
     pub fn price_rainbow_call<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
         if matches!(option.style(), OptionStyle::Rainbow(RainbowType::AllITM))
             && option.payoff(None) <= 0.0
@@ -285,6 +274,15 @@ impl BlackScholesModel {
     }
 
     /// Calculate the price of a rainbow put using the Black-Scholes formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to price.
+    /// * `normal` - The standard normal distribution.
+    ///
+    /// # Returns
+    ///
+    /// The price of the option.
     pub fn price_rainbow_put<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
         if matches!(option.style(), OptionStyle::Rainbow(RainbowType::AllOTM))
             && option.payoff(None) <= 0.0
@@ -305,6 +303,7 @@ impl BlackScholesModel {
     ///
     /// * `option` - The option to price.
     /// * `volatility` - The volatility of the underlying asset.
+    /// * `normal` - The standard normal distribution.
     ///
     /// # Returns
     ///
@@ -370,11 +369,20 @@ impl OptionPricing for BlackScholesModel {
             (_, OptionStyle::Binary(AssetOrNothing)) => self.price_asset_or_nothing(option, &normal),
             (OptionType::Call, OptionStyle::Rainbow(_)) => self.price_rainbow_call(option, &normal),
             (OptionType::Put, OptionStyle::Rainbow(_)) => self.price_rainbow_put(option, &normal),
-            _ => panic!("Unsupported option type or style"),
+            _ => panic!("BlackScholesModel does not support this option type or style"),
         }
     }
 
     /// Calculate the implied volatility of an option using the Newton-Raphson method.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to calculate the implied volatility for.
+    /// * `market_price` - The market price of the option.
+    ///
+    /// # Returns
+    ///
+    /// The implied volatility of the option.
     fn implied_volatility<T: Option>(&self, option: &T, market_price: f64) -> f64 {
         let mut sigma = 0.2; // Initial guess
         let tolerance = 1e-5;
@@ -418,29 +426,6 @@ impl OptionPricing for BlackScholesModel {
     //}
 }
 
-// struct TestFunc<F> {
-//     f: F,
-// }
-//
-// impl<F> TestFunc<F> {
-//     fn new(f: F) -> Self {
-//         TestFunc { f }
-//     }
-// }
-//
-// impl<F> CostFunction for TestFunc<F>
-// where
-//     F: Fn(f64) -> f64,
-// {
-//     // one dimensional problem, no vector needed
-//     type Param = f64;
-//     type Output = f64;
-//
-//     fn cost(&self, p: &Self::Param) -> Result<Self::Output, Error> {
-//         Ok((self.f)(*p))
-//     }
-// }
-
 impl OptionGreeks for BlackScholesModel {
     fn delta<T: Option>(&self, option: &T) -> f64 {
         let (d1, d2) = self.calculate_d1_d2(
@@ -449,6 +434,7 @@ impl OptionGreeks for BlackScholesModel {
             option.time_to_maturity(),
         );
         let normal = Normal::new(0.0, 1.0).unwrap();
+
         match option.style() {
             OptionStyle::European => match option.option_type() {
                 OptionType::Call => {
@@ -506,8 +492,9 @@ impl OptionGreeks for BlackScholesModel {
             option.strike(),
             option.time_to_maturity(),
         );
-        let adjusted_spot =
-            self.calculate_adjusted_spot(option.instrument(), option.time_to_maturity());
+        let adjusted_spot = option
+            .instrument()
+            .calculate_adjusted_spot(option.time_to_maturity());
         let normal = Normal::new(0.0, 1.0).unwrap();
 
         match option.style() {
@@ -552,31 +539,29 @@ impl OptionGreeks for BlackScholesModel {
             option.strike(),
             option.time_to_maturity(),
         );
+        let adjusted_spot = option
+            .instrument()
+            .calculate_adjusted_spot(option.time_to_maturity());
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let nd1 = normal.cdf(d1);
-        let nd2 = normal.cdf(d2);
-        let pdf_d1 = normal.pdf(d1);
-        let adjusted_spot =
-            self.calculate_adjusted_spot(option.instrument(), option.time_to_maturity());
 
         match option.style() {
             OptionStyle::European => match option.option_type() {
                 OptionType::Call => {
-                    adjusted_spot * pdf_d1 * self.volatility
+                    adjusted_spot * normal.pdf(d1) * self.volatility
                         / (2.0 * option.time_to_maturity().sqrt())
                         + self.risk_free_rate
                             * option.strike()
                             * (-self.risk_free_rate * option.time_to_maturity()).exp()
-                            * nd2
+                            * normal.cdf(d2)
                         - option.instrument().continuous_dividend_yield
                             * adjusted_spot
                             * (-option.instrument().continuous_dividend_yield
                                 * option.time_to_maturity())
                             .exp()
-                            * nd1
+                            * normal.cdf(d1)
                 }
                 OptionType::Put => {
-                    adjusted_spot * pdf_d1 * self.volatility
+                    adjusted_spot * normal.pdf(d1) * self.volatility
                         / (2.0 * option.time_to_maturity().sqrt())
                         - self.risk_free_rate
                             * option.strike()
@@ -603,7 +588,7 @@ impl OptionGreeks for BlackScholesModel {
                                     - option.instrument().continuous_dividend_yield
                                     - self.volatility.powi(2) * 0.5)
                                     * option.time_to_maturity())
-                            + self.risk_free_rate * nd2)
+                            + self.risk_free_rate * normal.cdf(d2))
                 }
                 OptionType::Put => {
                     -(-self.risk_free_rate * option.time_to_maturity()).exp()
@@ -636,7 +621,7 @@ impl OptionGreeks for BlackScholesModel {
                                     - option.instrument().continuous_dividend_yield
                                     + 0.5 * self.volatility.powi(2))
                                     * option.time_to_maturity())
-                            + option.instrument().continuous_dividend_yield * nd1)
+                            + option.instrument().continuous_dividend_yield * normal.cdf(d1))
                 }
                 OptionType::Put => {
                     option.instrument().spot
@@ -653,7 +638,7 @@ impl OptionGreeks for BlackScholesModel {
                                     - option.instrument().continuous_dividend_yield
                                     + 0.5 * self.volatility.powi(2))
                                     * option.time_to_maturity())
-                            + option.instrument().continuous_dividend_yield * -nd1)
+                            + option.instrument().continuous_dividend_yield * -normal.cdf(d1))
                 }
             },
             _ => panic!("Unsupported option style for theta calculation"),
@@ -666,9 +651,10 @@ impl OptionGreeks for BlackScholesModel {
             option.strike(),
             option.time_to_maturity(),
         );
+        let adjusted_spot = option
+            .instrument()
+            .calculate_adjusted_spot(option.time_to_maturity());
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let adjusted_spot =
-            self.calculate_adjusted_spot(option.instrument(), option.time_to_maturity());
 
         match option.style() {
             OptionStyle::European => {
@@ -712,6 +698,7 @@ impl OptionGreeks for BlackScholesModel {
             option.time_to_maturity(),
         );
         let normal = Normal::new(0.0, 1.0).unwrap();
+
         match option.style() {
             OptionStyle::European => match option.option_type() {
                 OptionType::Call => {

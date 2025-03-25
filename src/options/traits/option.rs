@@ -137,7 +137,6 @@ pub trait Option: Clone + Send + Sync {
     /// # Returns
     ///
     /// True if the option is a call, false otherwise.
-    ///
     fn is_call(&self) -> bool {
         matches!(self.option_type(), OptionType::Call)
     }

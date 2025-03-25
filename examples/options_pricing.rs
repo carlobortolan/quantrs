@@ -1,8 +1,8 @@
 // Run:  cargo run --release --example options_pricing
 
 use quantrs::options::{
-    AsianOption, BinaryOption, BinomialTreeModel, BlackScholesModel, EuropeanOption, Greeks,
-    Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionStrategy,
+    AsianOption, BinaryOption, BinomialTreeModel, Black76Model, BlackScholesModel, EuropeanOption,
+    Greeks, Instrument, MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionStrategy,
     OptionType::*, RainbowOption,
 };
 
@@ -11,6 +11,7 @@ fn main() {
     example_black_scholes();
     example_binomial_tree();
     example_monte_carlo();
+    example_black_76();
     example_greeks();
     example_asian();
     example_rainbow();
@@ -58,15 +59,15 @@ fn example_black_scholes() {
 }
 
 fn example_binomial_tree() {
-    //let instrument = Instrument::new().with_spot(100.0);
-    //let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
-    //let model = BinomialTreeModel::new(0.05, 0.2, 100);
-    //
-    //let call_price = model.price(&option);
-    //println!("Binomial Tree Call Price: {}", call_price);
-    //
-    //let put_price = model.price(&option.flip());
-    //println!("Binomial Tree Put Price: {}", put_price);
+    let instrument = Instrument::new().with_spot(100.0);
+    let option = EuropeanOption::new(instrument, 100.0, 1.0, Call);
+    let model = BinomialTreeModel::new(0.05, 0.2, 100);
+
+    let call_price = model.price(&option);
+    println!("Binomial Tree Call Price: {}", call_price);
+
+    let put_price = model.price(&option.flip());
+    println!("Binomial Tree Put Price: {}", put_price);
     //
     //let market_price = 10.0; // Example market price
     //let implied_volatility = model.implied_volatility(&option, market_price);
@@ -106,6 +107,22 @@ fn example_monte_carlo() {
         "[Monte Carlo] Asian Put: {}",
         model.price(&asian_option.flip())
     );
+}
+
+fn example_black_76() {
+    let instrument = Instrument::new().with_spot(2006.0);
+    let option = EuropeanOption::new(instrument, 2100.0, 0.08493, Call);
+    let model = Black76Model::new(0.050067, 0.35);
+
+    let call_price = model.price(&option);
+    println!("Black-76 Call Price: {}", call_price);
+
+    let put_price = model.price(&option.flip());
+    println!("Black-76 Put Price: {}", put_price);
+
+    let market_price = 10.0; // Example market price
+    let implied_volatility = model.implied_volatility(&option, market_price);
+    println!("Implied Volatility: {}\n", implied_volatility);
 }
 
 fn example_greeks() {
