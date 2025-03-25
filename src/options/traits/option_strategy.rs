@@ -424,7 +424,7 @@ pub trait OptionStrategy: OptionPricing {
             check_is_call!(call);
             assert!(
                 stock.spot > 0.0 && call.otm(),
-                "Stock must be ITM and call must be OTM!"
+                "Stock price must be positive and call must be OTM!"
             );
 
             let price = stock.spot - self.price(call);
@@ -443,11 +443,66 @@ pub trait OptionStrategy: OptionPricing {
             check_is_put!(put);
             assert!(
                 stock.spot > 0.0 && put.otm(),
-                "Stock must be ITM and put must be OTM!"
+                "Stock price must be positive and put must be OTM!"
             );
 
             let price = stock.spot + self.price(put);
             let payoff = spot_price + put.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
+    /// The collar strategy involves owning the underlying, buying a protective put and selling a covered call with the same expiration date.
+    fn collar<'a, T: Option>(
+        &'a self,
+        stock: &'a Instrument,
+        otm_put: &'a T,
+        otm_call: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_same_expiration_date!(otm_put, otm_call);
+            check_is_put!(otm_put);
+            check_is_call!(otm_call);
+
+            assert!(
+                stock.spot > 0.0 && otm_put.otm() && otm_call.otm(),
+                "Stock price must be positive and options must be OTM!"
+            );
+
+            let price = stock.spot + self.price(otm_put) - self.price(otm_call);
+            let payoff =
+                spot_price + otm_put.payoff(Some(spot_price)) - otm_call.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
+    /// The fence strategy consists of a long position in a financial instrument, a long ATM put and short positions in a OTM call and a OTM put.
+    fn fence<'a, T: Option>(
+        &'a self,
+        stock: &'a Instrument,
+        atm_put: &'a T,
+        otm_put: &'a T,
+        otm_call: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_same_expiration_date!(atm_put, otm_put);
+            check_same_expiration_date!(otm_put, otm_call);
+            check_is_put!(atm_put);
+            check_is_put!(otm_put);
+            check_is_call!(otm_call);
+
+            assert!(
+                stock.spot > 0.0 && otm_put.otm() && otm_call.otm() && atm_put.atm(),
+                "Stock price must be positive and options must be OTM and ATM!"
+            );
+
+            let price = stock.spot + self.price(otm_put) + self.price(atm_put)
+                - self.price(otm_put)
+                - self.price(otm_call);
+            let payoff =
+                spot_price + otm_put.payoff(Some(spot_price)) + atm_put.payoff(Some(spot_price))
+                    - otm_put.payoff(Some(spot_price))
+                    - otm_call.payoff(Some(spot_price));
             (payoff, price)
         }
     }
@@ -505,9 +560,29 @@ pub trait OptionStrategy: OptionPricing {
             check_is_call!(call);
             check_is_put!(put);
 
-            // assert!(put.otm() && call.otm(), "Put and call must be OTM!");
+            assert!(put.otm() && call.otm(), "Put and call must be OTM!");
+
             let price = self.price(put) + self.price(call);
             let payoff = put.payoff(Some(spot_price)) + call.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
+    /// A risk-reversal is an option position that consists of shorting an OTM put and being long in an OTM call expiring on the same expiration date.
+    fn risk_reversal<'a, T: Option>(
+        &'a self,
+        put: &'a T,
+        call: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_same_expiration_date!(put, call);
+            check_is_call!(call);
+            check_is_put!(put);
+
+            assert!(put.otm() && call.otm(), "Put and call must be OTM!");
+
+            let price = self.price(call) - self.price(put);
+            let payoff = call.payoff(Some(spot_price)) - put.payoff(Some(spot_price));
             (payoff, price)
         }
     }
@@ -771,6 +846,41 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
+    /// The ladder strategy, also known as a Christmas tree, is a combination of three options of the same type (all calls or all puts) at three different strike prices.
+    fn ladder<'a, T: Option>(
+        &'a self,
+        long: &'a T,
+        short1: &'a T,
+        short2: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) + 'a {
+        move |spot_price| {
+            check_same_expiration_date!(long, short1);
+            check_same_expiration_date!(short1, short2);
+
+            if long.is_call() {
+                check_is_call!(short1);
+                check_is_call!(short2);
+                assert!(
+                    long.atm() && short1.otm() && short2.otm(),
+                    "Long call must be ATM and short calls must be OTM!"
+                );
+            } else {
+                check_is_put!(short1);
+                check_is_put!(short2);
+                assert!(
+                    long.atm() && short1.otm() && short2.otm(),
+                    "Long put must be ATM and short puts must be OTM!"
+                );
+            }
+
+            let price = self.price(long) - self.price(short1) - self.price(short2);
+            let payoff = long.payoff(Some(spot_price))
+                - short1.payoff(Some(spot_price))
+                - short2.payoff(Some(spot_price));
+            (payoff, price)
+        }
+    }
+
     /// Short an ATM (at the money) call/put near-term expiration ("front-month") and long an ATM call/put with expiration one month later ("back-month").
     /// Used when a trader expects a gradual or sideways movement in the short term and has more direction bias over the life of the longer-dated option.
     fn calendar_spread<'a, T: Option>(
@@ -871,61 +981,14 @@ pub trait OptionStrategy: OptionPricing {
         }
     }
 
-    /* SPREAD */
-
-    /// TODO
-    /// The collar strategy involves buying a protective put and selling a covered call with the same expiration date.
-    fn collar<T: Option>(&self, option: &T) -> f64 {
-        panic!("Collar not implemented for this model");
-    }
-
-    /// TODO
-    /// The fence strategy involves buying a call and selling a put with the same expiration date, but different strike prices.
-    fn fence<T: Option>(&self, option: &T) -> f64 {
-        panic!("Fence not implemented for this model");
-    }
-
-    /// TODO
-    /// The jelly roll strategy involves buying a call and put with the same expiration date, but different strike prices, and selling a call and put with different strike prices.
-    fn jelly_roll<T: Option>(&self, option: &T) -> f64 {
-        panic!("Jelly roll not implemented for this model");
-    }
-
-    /// TODO
-    /// The strap strategy involves buying two calls and one put with the same expiration date and strike price.
-    fn strap<T: Option>(&self, option: &T) -> f64 {
-        panic!("Strap not implemented for this model");
-    }
-
-    /// TODO
-    /// The strip strategy involves buying two puts and one call with the same expiration date and strike price.
-    fn strip<T: Option>(&self, option: &T) -> f64 {
-        panic!("Strip not implemented for this model");
-    }
-
-    /// TODO
-    /// The christmas tree strategy involves buying one call and two puts with the same expiration date and strike price.
-    fn christmas_tree<T: Option>(&self, option: &T) -> f64 {
-        panic!("Christmas tree not implemented for this model");
-    }
-
     /* ALIASES */
-
-    /// TODO
-    fn ladder<T: Option>(&self, option: &T) -> f64 {
+    fn christmas_tree<'a, T: Option>(
+        &'a self,
+        long: &'a T,
+        short1: &'a T,
+        short2: &'a T,
+    ) -> impl Fn(f64) -> (f64, f64) {
         log_info!("Ladder strategy is equivalent to the Christmas Tree strategy!");
-        self.christmas_tree(option)
-    }
-
-    /// TODO
-    fn risk_reversal<T: Option>(&self, option: &T) -> f64 {
-        log_info!("Risk reversal strategy is equivalent to the Butterfly strategy!");
-        todo!()
-    }
-
-    /// TODO
-    fn synthetic_long<T: Option>(&self, option: &T) -> f64 {
-        log_info!("Synthetic long strategy is equivalent to the Long Call strategy!");
-        todo!()
+        self.ladder(long, short1, short2)
     }
 }
