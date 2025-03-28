@@ -21,6 +21,7 @@ impl OptionPricing for MockModel {
 fn assert_implements_option_trait<T: Option>(option: &T) {
     // This function does nothing but ensures that T implements the Option trait and required methods
     option.instrument();
+    option.clone().instrument_mut();
     option.clone().set_instrument(Instrument::new());
     option.clone().set_time_to_maturity(1.0);
     option.strike();
@@ -1023,7 +1024,7 @@ mod monte_carlo_tests {
         fn test_itm() {
             let instrument = Instrument::new().with_spot(110.0);
             let option = EuropeanOption::new(instrument, 100.0, 0.7, OptionType::Call);
-            let model = MonteCarloModel::arithmetic(0.03, 0.2, 2_000, 20);
+            let model = MonteCarloModel::brownian(0.03, 0.2, 2_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 14.575, epsilon = 1.0);
@@ -1036,7 +1037,7 @@ mod monte_carlo_tests {
         fn test_otm() {
             let instrument = Instrument::new().with_spot(85.0);
             let option = EuropeanOption::new(instrument, 70.0, 0.7, OptionType::Call);
-            let model = MonteCarloModel::arithmetic(0.05, 0.3, 2_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.3, 2_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 19.264, epsilon = 1.0);
@@ -1051,7 +1052,7 @@ mod monte_carlo_tests {
                 .with_spot(105.0)
                 .with_continuous_dividend_yield(0.05);
             let option = EuropeanOption::new(instrument, 100.0, 1.2, OptionType::Call);
-            let model = MonteCarloModel::arithmetic(0.04, 0.1, 2_000, 1);
+            let model = MonteCarloModel::brownian(0.04, 0.1, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 6.2640, epsilon = 0.5);
@@ -1066,7 +1067,7 @@ mod monte_carlo_tests {
                 .with_spot(70.0)
                 .with_continuous_dividend_yield(0.05);
             let option = EuropeanOption::new(instrument, 72.0, 0.43, OptionType::Call);
-            let model = MonteCarloModel::arithmetic(0.02, 0.2, 2_000, 1);
+            let model = MonteCarloModel::brownian(0.02, 0.2, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 2.3985, epsilon = 0.5);
@@ -1079,7 +1080,7 @@ mod monte_carlo_tests {
         fn test_edge() {
             let instrument = Instrument::new().with_spot(100.0);
             let option = EuropeanOption::new(instrument, 100.0, 2.0, OptionType::Call);
-            let model = MonteCarloModel::arithmetic(0.05, 0.2, 2_000, 1);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 2_000, 1);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 16.127, epsilon = 1.5);
@@ -1089,7 +1090,7 @@ mod monte_carlo_tests {
 
             let instrument = Instrument::new().with_spot(0.0);
             let option = EuropeanOption::new(instrument, 0.0, 0.0, OptionType::Call);
-            let model = MonteCarloModel::arithmetic(0.0, 0.0, 2_000, 1);
+            let model = MonteCarloModel::brownian(0.0, 0.0, 2_000, 1);
 
             let price = model.price(&option);
             assert!(price.is_nan() || price.is_zero());
@@ -1130,10 +1131,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::arithmetic(0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 12.0, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 12.0, epsilon = 1.0);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 0.595, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 0.595, epsilon = 1.0);
         }
 
         #[test]
@@ -1149,7 +1150,6 @@ mod monte_carlo_tests {
             assert_abs_diff_eq!(price, 6.474, epsilon = 1.0);
         }
 
-        // TODO: Fix flaky tests
         #[test]
         fn test_floating_itm() {
             let instrument = Instrument::new().with_spot(110.0);
@@ -1157,10 +1157,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::geometric(0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 4.951, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 5.878, epsilon = 1.0);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 3.44, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 4.222, epsilon = 1.0);
         }
 
         #[test]
@@ -1170,10 +1170,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::arithmetic(0.05, 0.4, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 8.378, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 8.378, epsilon = 1.0);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 6.685, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 6.685, epsilon = 1.0);
         }
     }
 
@@ -1186,7 +1186,7 @@ mod monte_carlo_tests {
                 .with_spot(110.0)
                 .with_continuous_dividend_yield(0.05);
             let option = BinaryOption::asset_or_nothing(instrument, 100.0, 0.7, OptionType::Call);
-            let model = MonteCarloModel::geometric(0.03, 0.2, 4_000, 20);
+            let model = MonteCarloModel::brownian(0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 76.0002, epsilon = 2.5);
@@ -1201,7 +1201,7 @@ mod monte_carlo_tests {
                 .with_spot(85.0)
                 .with_continuous_dividend_yield(0.01);
             let option = BinaryOption::asset_or_nothing(instrument, 90.0, 0.7, OptionType::Call);
-            let model = MonteCarloModel::geometric(0.05, 0.3, 4_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.3, 4_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 42.5177, epsilon = 2.0);
@@ -1216,7 +1216,7 @@ mod monte_carlo_tests {
                 .with_spot(120.0)
                 .with_continuous_dividend_yield(0.01);
             let option = BinaryOption::cash_or_nothing(instrument, 115.0, 4.0, OptionType::Call);
-            let model = MonteCarloModel::geometric(0.05, 0.3, 4_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.3, 4_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.4216, epsilon = 0.1);
@@ -1231,7 +1231,7 @@ mod monte_carlo_tests {
                 .with_spot(70.0)
                 .with_continuous_dividend_yield(0.02);
             let option = BinaryOption::cash_or_nothing(instrument, 85.0, 4.0, OptionType::Call);
-            let model = MonteCarloModel::geometric(0.05, 0.3, 4_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.3, 4_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.2750, epsilon = 0.1);
@@ -1250,7 +1250,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::best_of(Instrument::new().with_assets(vec![i1, i2]), 105.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 118.0372, epsilon = 2.0);
@@ -1262,7 +1262,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::worst_of(Instrument::new().with_assets(vec![i1, i2]), 105.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 83.5883, epsilon = 2.0);
@@ -1274,7 +1274,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::call_on_max(Instrument::new().with_assets(vec![i1, i2]), 105.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 18.1580, epsilon = 2.0);
@@ -1289,7 +1289,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::put_on_max(Instrument::new().with_assets(vec![i1, i2]), 120.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 8.6920, epsilon = 2.0);
@@ -1304,7 +1304,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::call_on_min(Instrument::new().with_assets(vec![i1, i2]), 120.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.6952, epsilon = 2.0);
@@ -1319,7 +1319,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::put_on_min(Instrument::new().with_assets(vec![i1, i2]), 105.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 16.2908, epsilon = 2.0);
@@ -1334,7 +1334,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::call_on_avg(Instrument::new().with_assets(vec![i1, i2]), 100.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 10.7675, epsilon = 2.0);
@@ -1349,7 +1349,7 @@ mod monte_carlo_tests {
             let i2 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::put_on_avg(Instrument::new().with_assets(vec![i1, i2]), 110.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 10.4088, epsilon = 2.0);
@@ -1365,7 +1365,7 @@ mod monte_carlo_tests {
             let i3 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::all_itm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.0, epsilon = 2.0);
@@ -1378,7 +1378,7 @@ mod monte_carlo_tests {
             let i3 = Instrument::new().with_spot(86.0);
             let option =
                 RainbowOption::all_otm(Instrument::new().with_assets(vec![i1, i2, i3]), 105.0, 1.0);
-            let model = MonteCarloModel::geometric(0.05, 0.2, 1_000, 20);
+            let model = MonteCarloModel::brownian(0.05, 0.2, 1_000, 20);
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.0, epsilon = 2.0);
@@ -1634,10 +1634,30 @@ mod instrument_tests {
 
     #[test]
     fn test_instrument() {
-        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
+        let mut instrument = Instrument::new()
+            .with_cont_yield(0.01)
+            .with_spots(vec![99.0, 103.0, 87.0]);
 
-        assert_eq!(instrument.spot, 100.0);
+        assert_eq!(instrument.spot(), 99.0);
+        assert_eq!(instrument.terminal_spot(), 87.0);
         assert_eq!(instrument.continuous_dividend_yield, 0.01);
+        assert_eq!(instrument.spot.len(), 3);
+
+        instrument = instrument.with_assets(vec![
+            Instrument::new().with_spot(12.0),
+            Instrument::new().with_spot(34.0),
+            Instrument::new().with_spot(56.0),
+        ]);
+
+        instrument.sorted = false;
+        assert!(std::panic::catch_unwind(|| {
+            _ = instrument.best_performer();
+        })
+        .is_err(),);
+        assert!(std::panic::catch_unwind(|| {
+            _ = instrument.worst_performer();
+        })
+        .is_err(),);
     }
 
     #[test]
@@ -1650,8 +1670,8 @@ mod instrument_tests {
         assert_eq!(prices.len(), 252);
 
         // Average price should be 100.0
-        let rand_price = (prices.iter().sum::<f64>() / prices.len() as f64).exp();
-        assert_abs_diff_eq!(rand_price, 100.0, epsilon = 100.0 * 0.25);
+        let rand_price = prices.iter().sum::<f64>() / prices.len() as f64;
+        assert_abs_diff_eq!(rand_price, 100f64, epsilon = 100.0 * 0.25);
     }
 
     #[test]
@@ -1698,7 +1718,7 @@ mod instrument_tests {
             (asset3.clone()),
         ]);
 
-        assert_abs_diff_eq!(instrument.spot, 101.6666, epsilon = 0.001);
+        assert_abs_diff_eq!(instrument.spot(), 101.6666, epsilon = 0.001);
 
         assert_eq!(instrument.best_performer().spot, asset1.spot);
         assert_eq!(instrument.worst_performer().spot, asset3.spot);
@@ -1720,7 +1740,7 @@ mod instrument_tests {
             (asset3.clone(), 0.2),
         ]);
 
-        assert_abs_diff_eq!(instrument.spot, 105.9, epsilon = 0.001);
+        assert_abs_diff_eq!(instrument.spot(), 105.9, epsilon = 0.001);
 
         assert_eq!(instrument.best_performer().spot, asset1.spot);
         assert_eq!(instrument.worst_performer().spot, asset3.spot);

@@ -423,11 +423,11 @@ pub trait OptionStrategy: OptionPricing {
         move |spot_price| {
             check_is_call!(call);
             assert!(
-                stock.spot > 0.0 && call.otm(),
+                stock.spot() > 0.0 && call.otm(),
                 "Stock price must be positive and call must be OTM!"
             );
 
-            let price = stock.spot - self.price(call);
+            let price = stock.spot() - self.price(call);
             let payoff = spot_price - call.payoff(Some(spot_price));
             (payoff, price)
         }
@@ -442,11 +442,11 @@ pub trait OptionStrategy: OptionPricing {
         move |spot_price| {
             check_is_put!(put);
             assert!(
-                stock.spot > 0.0 && put.otm(),
+                stock.spot() > 0.0 && put.otm(),
                 "Stock price must be positive and put must be OTM!"
             );
 
-            let price = stock.spot + self.price(put);
+            let price = stock.spot() + self.price(put);
             let payoff = spot_price + put.payoff(Some(spot_price));
             (payoff, price)
         }
@@ -465,11 +465,11 @@ pub trait OptionStrategy: OptionPricing {
             check_is_call!(otm_call);
 
             assert!(
-                stock.spot > 0.0 && otm_put.otm() && otm_call.otm(),
+                stock.spot() > 0.0 && otm_put.otm() && otm_call.otm(),
                 "Stock price must be positive and options must be OTM!"
             );
 
-            let price = stock.spot + self.price(otm_put) - self.price(otm_call);
+            let price = stock.spot() + self.price(otm_put) - self.price(otm_call);
             let payoff =
                 spot_price + otm_put.payoff(Some(spot_price)) - otm_call.payoff(Some(spot_price));
             (payoff, price)
@@ -492,11 +492,11 @@ pub trait OptionStrategy: OptionPricing {
             check_is_call!(otm_call);
 
             assert!(
-                stock.spot > 0.0 && otm_put.otm() && otm_call.otm() && atm_put.atm(),
+                stock.spot() > 0.0 && otm_put.otm() && otm_call.otm() && atm_put.atm(),
                 "Stock price must be positive and options must be OTM and ATM!"
             );
 
-            let price = stock.spot + self.price(otm_put) + self.price(atm_put)
+            let price = stock.spot() + self.price(otm_put) + self.price(atm_put)
                 - self.price(otm_put)
                 - self.price(otm_call);
             let payoff =

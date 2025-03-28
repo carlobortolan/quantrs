@@ -13,6 +13,13 @@ pub trait Option: Clone + Send + Sync {
     /// The underlying instrument of the option.
     fn instrument(&self) -> &Instrument;
 
+    /// Get the underlying instrument of the option (mutable).
+    ///
+    /// # Returns
+    ///
+    /// The underlying instrument of the option.
+    fn instrument_mut(&mut self) -> &mut Instrument;
+
     /// Set the underlying instrument of the option.
     ///
     /// # Arguments
@@ -72,7 +79,7 @@ pub trait Option: Clone + Send + Sync {
     ///
     /// The payoff of the option.
     fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
-        let spot_price = spot.unwrap_or_else(|| self.instrument().spot);
+        let spot_price = spot.unwrap_or_else(|| self.instrument().spot());
         match self.option_type() {
             OptionType::Call => (spot_price - self.strike()).max(0.0),
             OptionType::Put => (self.strike() - spot_price).max(0.0),
@@ -157,8 +164,8 @@ pub trait Option: Clone + Send + Sync {
     /// True if the option is ATM, false otherwise.
     fn atm(&self) -> bool {
         match self.option_type() {
-            OptionType::Call => self.instrument().spot == self.strike(),
-            OptionType::Put => self.instrument().spot == self.strike(),
+            OptionType::Call => self.instrument().spot() == self.strike(),
+            OptionType::Put => self.instrument().spot() == self.strike(),
         }
     }
 
@@ -169,8 +176,8 @@ pub trait Option: Clone + Send + Sync {
     /// True if the option is ITM, false otherwise.
     fn itm(&self) -> bool {
         match self.option_type() {
-            OptionType::Call => self.instrument().spot > self.strike(),
-            OptionType::Put => self.instrument().spot < self.strike(),
+            OptionType::Call => self.instrument().spot() > self.strike(),
+            OptionType::Put => self.instrument().spot() < self.strike(),
         }
     }
 
@@ -181,8 +188,8 @@ pub trait Option: Clone + Send + Sync {
     /// True if the option is OTM, false otherwise.
     fn otm(&self) -> bool {
         match self.option_type() {
-            OptionType::Call => self.instrument().spot < self.strike(),
-            OptionType::Put => self.instrument().spot > self.strike(),
+            OptionType::Call => self.instrument().spot() < self.strike(),
+            OptionType::Put => self.instrument().spot() > self.strike(),
         }
     }
 

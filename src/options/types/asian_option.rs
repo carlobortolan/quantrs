@@ -97,6 +97,10 @@ impl Option for AsianOption {
         &self.instrument
     }
 
+    fn instrument_mut(&mut self) -> &mut Instrument {
+        &mut self.instrument
+    }
+
     fn set_instrument(&mut self, instrument: Instrument) {
         self.instrument = instrument;
     }
@@ -122,7 +126,7 @@ impl Option for AsianOption {
     }
 
     fn payoff(&self, avg_price: std::option::Option<f64>) -> f64 {
-        let avg_price = avg_price.unwrap_or(self.instrument.spot);
+        let avg_price = avg_price.unwrap_or(self.instrument.spot());
         match self.asian_type {
             Permutation::Fixed => match self.option_type {
                 OptionType::Call => (avg_price - self.strike).max(0.0),
@@ -130,8 +134,8 @@ impl Option for AsianOption {
             },
             Permutation::Floating => match self.option_type {
                 // spot is the price at maturity
-                OptionType::Call => (self.instrument.spot - avg_price).max(0.0),
-                OptionType::Put => (avg_price - self.instrument.spot).max(0.0),
+                OptionType::Call => (self.instrument.terminal_spot() - avg_price).max(0.0),
+                OptionType::Put => (avg_price - self.instrument.terminal_spot()).max(0.0),
             },
         }
     }

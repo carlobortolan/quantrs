@@ -228,13 +228,13 @@ impl BlackScholesModel {
 
         match option.option_type() {
             OptionType::Call => {
-                option.instrument().spot
+                option.instrument().spot()
                     * (-option.instrument().continuous_dividend_yield * option.time_to_maturity())
                         .exp()
                     * normal.cdf(d1)
             }
             OptionType::Put => {
-                option.instrument().spot
+                option.instrument().spot()
                     * (-option.instrument().continuous_dividend_yield * option.time_to_maturity())
                         .exp()
                     * normal.cdf(-d1)
@@ -321,7 +321,7 @@ impl BlackScholesModel {
             .iter()
             .filter(|&&t| t <= option.time_to_maturity())
             .count() as f64;
-        let adjusted_spot = option.instrument().spot
+        let adjusted_spot = option.instrument().spot()
             * (1.0 - option.instrument().discrete_dividend_yield).powf(n_dividends);
 
         let d1 = ((adjusted_spot / option.strike()).ln()
@@ -452,7 +452,7 @@ impl OptionGreeks for BlackScholesModel {
                 let delta = (-self.risk_free_rate * option.time_to_maturity()).exp()
                     * normal.pdf(d2)
                     / (self.volatility
-                        * option.instrument().spot
+                        * option.instrument().spot()
                         * option.time_to_maturity().sqrt());
 
                 match option.option_type() {
@@ -506,7 +506,7 @@ impl OptionGreeks for BlackScholesModel {
                 let gamma =
                     -(-self.risk_free_rate * option.time_to_maturity()).exp() * normal.pdf(d2) * d1
                         / (self.volatility.powi(2)
-                            * option.instrument().spot.powi(2)
+                            * option.instrument().spot().powi(2)
                             * option.time_to_maturity());
 
                 match option.option_type() {
@@ -520,7 +520,7 @@ impl OptionGreeks for BlackScholesModel {
                 .exp()
                     * normal.pdf(d1)
                     * d2
-                    / (option.instrument().spot
+                    / (option.instrument().spot()
                         * self.volatility.powi(2)
                         * option.time_to_maturity());
 
@@ -583,7 +583,7 @@ impl OptionGreeks for BlackScholesModel {
                                 * option.time_to_maturity()
                                 * self.volatility
                                 * option.time_to_maturity().sqrt())
-                            * ((option.instrument().spot / option.strike()).ln()
+                            * ((option.instrument().spot() / option.strike()).ln()
                                 - (self.risk_free_rate
                                     - option.instrument().continuous_dividend_yield
                                     - self.volatility.powi(2) * 0.5)
@@ -597,7 +597,7 @@ impl OptionGreeks for BlackScholesModel {
                                 * option.time_to_maturity()
                                 * self.volatility
                                 * option.time_to_maturity().sqrt())
-                            * ((option.instrument().spot / option.strike()).ln()
+                            * ((option.instrument().spot() / option.strike()).ln()
                                 - (self.risk_free_rate
                                     - option.instrument().continuous_dividend_yield
                                     - self.volatility.powi(2) * 0.5)
@@ -607,7 +607,7 @@ impl OptionGreeks for BlackScholesModel {
             },
             OptionStyle::Binary(AssetOrNothing) => match option.option_type() {
                 OptionType::Call => {
-                    option.instrument().spot
+                    option.instrument().spot()
                         * (-option.instrument().continuous_dividend_yield
                             * option.time_to_maturity())
                         .exp()
@@ -616,7 +616,7 @@ impl OptionGreeks for BlackScholesModel {
                                 * option.time_to_maturity()
                                 * self.volatility
                                 * option.time_to_maturity().sqrt())
-                            * ((option.instrument().spot / option.strike()).ln()
+                            * ((option.instrument().spot() / option.strike()).ln()
                                 - (self.risk_free_rate
                                     - option.instrument().continuous_dividend_yield
                                     + 0.5 * self.volatility.powi(2))
@@ -624,7 +624,7 @@ impl OptionGreeks for BlackScholesModel {
                             + option.instrument().continuous_dividend_yield * normal.cdf(d1))
                 }
                 OptionType::Put => {
-                    option.instrument().spot
+                    option.instrument().spot()
                         * (-option.instrument().continuous_dividend_yield
                             * option.time_to_maturity())
                         .exp()
@@ -633,7 +633,7 @@ impl OptionGreeks for BlackScholesModel {
                                 * option.time_to_maturity()
                                 * self.volatility
                                 * option.time_to_maturity().sqrt())
-                            * ((option.instrument().spot / option.strike()).ln()
+                            * ((option.instrument().spot() / option.strike()).ln()
                                 - (self.risk_free_rate
                                     - option.instrument().continuous_dividend_yield
                                     + 0.5 * self.volatility.powi(2))
@@ -675,7 +675,7 @@ impl OptionGreeks for BlackScholesModel {
                 }
             }
             OptionStyle::Binary(AssetOrNothing) => {
-                let vega = -option.instrument().spot
+                let vega = -option.instrument().spot()
                     * (-option.instrument().continuous_dividend_yield * option.time_to_maturity())
                         .exp()
                     * d2
@@ -727,7 +727,7 @@ impl OptionGreeks for BlackScholesModel {
                 }
             },
             OptionStyle::Binary(AssetOrNothing) => {
-                let rho = option.instrument().spot
+                let rho = option.instrument().spot()
                     * (-option.instrument().continuous_dividend_yield * option.time_to_maturity())
                         .exp()
                     * option.time_to_maturity().sqrt()

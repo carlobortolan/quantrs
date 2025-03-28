@@ -80,7 +80,7 @@ impl Black76Model {
         let (d1, d2) = self.calculate_d1_d2(instrument, strike, ttm);
 
         (-self.risk_free_rate * ttm).exp()
-            * (instrument.spot * normal.cdf(d1) - strike * normal.cdf(d2))
+            * (instrument.spot() * normal.cdf(d1) - strike * normal.cdf(d2))
     }
 
     /// Calculate the price of a European put option using the Black-76 formula.
@@ -105,7 +105,7 @@ impl Black76Model {
         let (d1, d2) = self.calculate_d1_d2(instrument, strike, ttm);
 
         (-self.risk_free_rate * ttm).exp()
-            * (strike * normal.cdf(-d2) - instrument.spot * normal.cdf(-d1))
+            * (strike * normal.cdf(-d2) - instrument.spot() * normal.cdf(-d1))
     }
 }
 

@@ -127,7 +127,7 @@ impl OptionPricing for BinomialTreeModel {
         let mut option_values: Vec<f64> = (0..=self.steps)
             .map(|i| {
                 option.payoff(Some(
-                    option.instrument().spot * u.powi(i as i32) * d.powi((self.steps - i) as i32),
+                    option.instrument().spot() * u.powi(i as i32) * d.powi((self.steps - i) as i32),
                 ))
             })
             .collect();
@@ -140,7 +140,7 @@ impl OptionPricing for BinomialTreeModel {
 
                 if matches!(option.style(), OptionStyle::American) {
                     let early_exercise = option.payoff(Some(
-                        option.instrument().spot * u.powi(i as i32) * d.powi((step - i) as i32),
+                        option.instrument().spot() * u.powi(i as i32) * d.powi((step - i) as i32),
                     ));
                     option_values[i] = expected_value.max(early_exercise);
                 } else {
@@ -150,7 +150,7 @@ impl OptionPricing for BinomialTreeModel {
         }
 
         if matches!(option.style(), OptionStyle::American) {
-            option_values[0].max(option.strike() - option.instrument().spot) // TODO: Change to max(0.0, self.payoff(Some(self.spot)))
+            option_values[0].max(option.strike() - option.instrument().spot()) // TODO: Change to max(0.0, self.payoff(Some(self.spot)))
         } else {
             option_values[0] // Return the root node value
         }

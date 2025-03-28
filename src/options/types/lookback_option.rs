@@ -42,6 +42,10 @@ impl Option for LookbackOption {
         &self.instrument
     }
 
+    fn instrument_mut(&mut self) -> &mut Instrument {
+        &mut self.instrument
+    }
+
     fn set_instrument(&mut self, instrument: Instrument) {
         self.instrument = instrument;
     }
@@ -55,7 +59,7 @@ impl Option for LookbackOption {
     }
 
     fn strike(&self) -> f64 {
-        self.instrument.spot
+        self.instrument.spot()
     }
 
     fn option_type(&self) -> OptionType {
@@ -67,7 +71,7 @@ impl Option for LookbackOption {
     }
 
     fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
-        let spot_price = spot.unwrap_or(self.instrument.spot);
+        let spot_price = spot.unwrap_or(self.instrument.spot());
         match self.lookback_type {
             Permutation::Fixed => match self.option_type {
                 OptionType::Call => (spot_price - self.strike()).max(0.0),

@@ -278,7 +278,7 @@ fn example_strategy() {
     println!(
         "[Covered Call: {:?}], given stock: {}, call: {}",
         model.covered_call(&instrument, &call)(50.0),
-        instrument.spot,
+        instrument.spot(),
         model.price(&call)
     );
 
@@ -286,7 +286,7 @@ fn example_strategy() {
     println!(
         "[Protective Put: {:?}], given stock: {}, put: {}",
         model.protective_put(&instrument, &put)(50.0),
-        instrument.spot,
+        instrument.spot(),
         model.price(&put)
     );
 
@@ -295,7 +295,7 @@ fn example_strategy() {
     println!(
         "[Collar: {:?}], given stock: {}, put: {}, call: {}",
         model.collar(&instrument, &otm_put, &otm_call)(50.0),
-        instrument.spot,
+        instrument.spot(),
         model.price(&otm_put),
         model.price(&otm_call)
     );
@@ -306,7 +306,7 @@ fn example_strategy() {
     println!(
         "[Fence: {:?}], given stock: {}, put: {}, put: {}, call: {}",
         model.fence(&instrument, &atm_put, &otm_put, &otm_call)(50.0),
-        instrument.spot,
+        instrument.spot(),
         model.price(&atm_put),
         model.price(&otm_call),
         model.price(&otm_put)
