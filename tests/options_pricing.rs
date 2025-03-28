@@ -1643,6 +1643,12 @@ mod instrument_tests {
         assert_eq!(instrument.continuous_dividend_yield, 0.01);
         assert_eq!(instrument.spot.len(), 3);
 
+        instrument = instrument.with_assets(vec![
+            Instrument::new().with_spot(12.0),
+            Instrument::new().with_spot(34.0),
+            Instrument::new().with_spot(56.0),
+        ]);
+
         instrument.sorted = false;
         assert!(std::panic::catch_unwind(|| {
             _ = instrument.best_performer();
