@@ -131,7 +131,7 @@ Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17
 
 Quantrs also supports plotting option prices and strategies using the `plotters` backend.
 
-E.g., Plot the P/L of a slightly skewed Condor spread using the Monte-Carlo model:
+E.g., Plot the P/L of a slightly skewed Condor spread consisting of fixed-strike Asian calls using the Monte-Carlo model with the geometric average price path:
 
 <details>
 <summary><i>Click to see example code</i></summary>
@@ -142,20 +142,20 @@ use quantrs::options::*;
 // Create a new instrument with a spot price of 100 and a dividend yield of 2%
 let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
-// Create a vector of European call options with different strike prices
+// Create a vector of fixed-strike Asian calls options with different strike prices
 let options = vec![
-    EuropeanOption::new(instrument.clone(), 85.0, 1.0, Call),
-    EuropeanOption::new(instrument.clone(), 95.0, 1.0, Call),
-    EuropeanOption::new(instrument.clone(), 102.0, 1.0, Call),
-    EuropeanOption::new(instrument.clone(), 115.0, 1.0, Call),
+    AsianOption::fixed(instrument.clone(), 85.0, 1.0, Call),
+    AsianOption::fixed(instrument.clone(), 95.0, 1.0, Call),
+    AsianOption::fixed(instrument.clone(), 102.0, 1.0, Call),
+    AsianOption::fixed(instrument.clone(), 115.0, 1.0, Call),
 ];
 
 // Create a new Monte-Carlo model with:
 // - Risk-free interest rate (r) = 5%
 // - Volatility (σ) = 20%
 // - Number of simulations = 10,000
-// - Number of time steps = 365
-let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 365);
+// - Number of time steps = 252
+let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 252);
 
 // Plot a breakdown of the Condor spread with a spot price range of [80,120]
 model.plot_strategy_breakdown(
