@@ -1634,10 +1634,24 @@ mod instrument_tests {
 
     #[test]
     fn test_instrument() {
-        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
+        let mut instrument = Instrument::new()
+            .with_cont_yield(0.01)
+            .with_spots(vec![99.0, 103.0, 87.0]);
 
-        assert_eq!(instrument.spot(), 100.0);
+        assert_eq!(instrument.spot(), 99.0);
+        assert_eq!(instrument.terminal_spot(), 87.0);
         assert_eq!(instrument.continuous_dividend_yield, 0.01);
+        assert_eq!(instrument.spot.len(), 3);
+
+        instrument.sorted = false;
+        assert!(std::panic::catch_unwind(|| {
+            _ = instrument.best_performer();
+        })
+        .is_err(),);
+        assert!(std::panic::catch_unwind(|| {
+            _ = instrument.worst_performer();
+        })
+        .is_err(),);
     }
 
     #[test]
