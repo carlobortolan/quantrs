@@ -394,6 +394,74 @@ impl Instrument {
     ///
     /// The average asset price.
     pub fn simulate_arithmetic_average(
+        &self,
+        rng: &mut ThreadRng,
+        method: SimMethod,
+        volatility: f64,
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        steps: usize,
+    ) -> f64 {
+        let prices = match method {
+            SimMethod::Milstein => unimplemented!("Milstein method not implemented"),
+            SimMethod::Euler => self.euler_simulation(rng, risk_free_rate, volatility, steps),
+            SimMethod::Log => {
+                self.log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
+            }
+        };
+
+        prices.iter().sum::<f64>() / (prices.len()) as f64
+    }
+
+    /// Geometric average asset prices
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator.
+    /// * `method` - Simulation method.
+    /// * `volatility` - Volatility.
+    /// * `time_to_maturity` - Time to maturity.
+    /// * `risk_free_rate` - Risk-free rate.
+    /// * `steps` - Number of steps.
+    ///
+    /// # Returns
+    ///
+    /// The geometric average asset price.
+    pub fn simulate_geometric_average(
+        &self,
+        rng: &mut ThreadRng,
+        method: SimMethod,
+        volatility: f64,
+        time_to_maturity: f64,
+        risk_free_rate: f64,
+        steps: usize,
+    ) -> f64 {
+        let prices = match method {
+            SimMethod::Milstein => unimplemented!("Milstein method not implemented"),
+            SimMethod::Euler => self.euler_simulation(rng, risk_free_rate, volatility, steps),
+            SimMethod::Log => {
+                self.log_simulation(rng, volatility, time_to_maturity, risk_free_rate, steps)
+            }
+        };
+
+        (self.spot.iter().map(|price| price.ln()).sum::<f64>() / self.spot.len() as f64).exp()
+    }
+
+    /// Average asset prices (mutates the underlying instrument)
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator.
+    /// * `method` - Simulation method.
+    /// * `volatility` - Volatility.
+    /// * `time_to_maturity` - Time to maturity.
+    /// * `risk_free_rate` - Risk-free rate.
+    /// * `steps` - Number of steps.
+    ///
+    /// # Returns
+    ///
+    /// The average asset price.
+    pub fn simulate_arithmetic_average_mut(
         &mut self,
         rng: &mut ThreadRng,
         method: SimMethod,
@@ -413,7 +481,7 @@ impl Instrument {
         self.spot.iter().sum::<f64>() / (self.spot.len()) as f64
     }
 
-    /// Geometric average asset prices
+    /// Geometric asset prices (mutates the underlying instrument)
     ///
     /// # Arguments
     ///
@@ -427,7 +495,7 @@ impl Instrument {
     /// # Returns
     ///
     /// The geometric average asset price.
-    pub fn simulate_geometric_average(
+    pub fn simulate_geometric_average_mut(
         &mut self,
         rng: &mut ThreadRng,
         method: SimMethod,

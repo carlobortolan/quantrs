@@ -250,7 +250,7 @@ impl MonteCarloModel {
             let avg_price = {
                 let instrument = option_clone.instrument_mut();
                 match self.method {
-                    AvgMethod::Geometric => instrument.simulate_geometric_average(
+                    AvgMethod::Geometric => instrument.simulate_geometric_average_mut(
                         &mut rng,
                         SimMethod::Log,
                         self.volatility,
@@ -258,7 +258,7 @@ impl MonteCarloModel {
                         self.risk_free_rate,
                         self.steps,
                     ),
-                    AvgMethod::Arithmetic => instrument.simulate_arithmetic_average(
+                    AvgMethod::Arithmetic => instrument.simulate_arithmetic_average_mut(
                         &mut rng,
                         SimMethod::Log,
                         self.volatility,
