@@ -169,6 +169,14 @@ impl Option for RainbowOption {
         }
     }
 
+    fn instrument_mut(&mut self) -> &mut Instrument {
+        match self.rainbow_option_type() {
+            BestOf | CallOnMax | PutOnMax => self.instrument.best_performer_mut(),
+            WorstOf | CallOnMin | PutOnMin => self.instrument.worst_performer_mut(),
+            _ => &mut self.instrument,
+        }
+    }
+
     fn set_instrument(&mut self, instrument: Instrument) {
         self.instrument = instrument;
     }
@@ -222,7 +230,7 @@ impl Option for RainbowOption {
     }
 
     fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
-        let spot_price: f64 = spot.unwrap_or_else(|| self.instrument().spot);
+        let spot_price: f64 = spot.unwrap_or_else(|| self.instrument().spot());
 
         match self.rainbow_option_type() {
             BestOf => spot_price.max(self.strike),
@@ -234,14 +242,14 @@ impl Option for RainbowOption {
             CallOnAvg => (spot_price - self.strike).max(0.0),
             PutOnAvg => (self.strike - spot_price).max(0.0),
             AllITM => {
-                if self.instrument().worst_performer().spot > self.strike {
+                if self.instrument().worst_performer().spot() > self.strike {
                     spot_price
                 } else {
                     0.0
                 }
             }
             AllOTM => {
-                if self.instrument().best_performer().spot < self.strike {
+                if self.instrument().best_performer().spot() < self.strike {
                     spot_price
                 } else {
                     0.0

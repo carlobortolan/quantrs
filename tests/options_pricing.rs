@@ -1130,10 +1130,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::arithmetic(0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 12.0, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 12.0, epsilon = 1.0);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 0.595, epsilon = 1.5);
+            assert_abs_diff_eq!(price, 0.595, epsilon = 1.0);
         }
 
         #[test]
@@ -1149,7 +1149,6 @@ mod monte_carlo_tests {
             assert_abs_diff_eq!(price, 6.474, epsilon = 1.0);
         }
 
-        // TODO: Fix flaky tests
         #[test]
         fn test_floating_itm() {
             let instrument = Instrument::new().with_spot(110.0);
@@ -1157,10 +1156,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::geometric(0.03, 0.2, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 4.951, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 5.878, epsilon = 0.5);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 3.44, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 4.222, epsilon = 0.5);
         }
 
         #[test]
@@ -1170,10 +1169,10 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::arithmetic(0.05, 0.4, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 8.378, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 8.378, epsilon = 0.5);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 6.685, epsilon = f64::MAX);
+            assert_abs_diff_eq!(price, 6.685, epsilon = 0.5);
         }
     }
 
@@ -1636,7 +1635,7 @@ mod instrument_tests {
     fn test_instrument() {
         let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
 
-        assert_eq!(instrument.spot, 100.0);
+        assert_eq!(instrument.spot(), 100.0);
         assert_eq!(instrument.continuous_dividend_yield, 0.01);
     }
 
@@ -1650,13 +1649,13 @@ mod instrument_tests {
         assert_eq!(prices.len(), 252);
 
         // Average price should be 100.0
-        let rand_price = (prices.iter().sum::<f64>() / prices.len() as f64).exp();
-        assert_abs_diff_eq!(rand_price, 100.0, epsilon = 100.0 * 0.25);
+        let rand_price = prices.iter().sum::<f64>() / prices.len() as f64;
+        assert_abs_diff_eq!(rand_price, 100f64, epsilon = 100.0 * 0.2);
     }
 
     #[test]
     fn test_arithmetic_avg() {
-        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
+        let mut instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
 
         let price = instrument.simulate_arithmetic_average(
             &mut rand::rng(),
@@ -1672,7 +1671,7 @@ mod instrument_tests {
 
     #[test]
     fn test_geometric_avg() {
-        let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
+        let mut instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.01);
 
         let price = instrument.simulate_geometric_average(
             &mut rand::rng(),
@@ -1698,7 +1697,7 @@ mod instrument_tests {
             (asset3.clone()),
         ]);
 
-        assert_abs_diff_eq!(instrument.spot, 101.6666, epsilon = 0.001);
+        assert_abs_diff_eq!(instrument.spot(), 101.6666, epsilon = 0.001);
 
         assert_eq!(instrument.best_performer().spot, asset1.spot);
         assert_eq!(instrument.worst_performer().spot, asset3.spot);
@@ -1720,7 +1719,7 @@ mod instrument_tests {
             (asset3.clone(), 0.2),
         ]);
 
-        assert_abs_diff_eq!(instrument.spot, 105.9, epsilon = 0.001);
+        assert_abs_diff_eq!(instrument.spot(), 105.9, epsilon = 0.001);
 
         assert_eq!(instrument.best_performer().spot, asset1.spot);
         assert_eq!(instrument.worst_performer().spot, asset3.spot);

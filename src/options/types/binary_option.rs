@@ -109,6 +109,10 @@ impl Option for BinaryOption {
         &self.instrument
     }
 
+    fn instrument_mut(&mut self) -> &mut Instrument {
+        &mut self.instrument
+    }
+
     fn set_instrument(&mut self, instrument: Instrument) {
         self.instrument = instrument;
     }
@@ -153,7 +157,7 @@ impl Option for BinaryOption {
 
     #[rustfmt::skip]
     fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
-        let spot = spot.unwrap_or(self.instrument.spot);
+        let spot = spot.unwrap_or(self.instrument.spot());
         match self.binary_option_type() {
             BinaryType::CashOrNothing => match self.option_type {
                 OptionType::Call => if spot > self.strike { 1.0 } else { 0.0 },

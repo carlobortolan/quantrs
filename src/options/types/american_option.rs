@@ -62,6 +62,10 @@ impl Option for AmericanOption {
         &self.instrument
     }
 
+    fn instrument_mut(&mut self) -> &mut Instrument {
+        &mut self.instrument
+    }
+
     fn set_instrument(&mut self, instrument: Instrument) {
         self.instrument = instrument;
     }
