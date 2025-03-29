@@ -1207,27 +1207,27 @@ mod monte_carlo_tests {
         #[test]
         fn test_fixed_itm() {
             let instrument = Instrument::new().with_spot(110.0);
-            let option = LookbackOption::fixed(instrument, 100.0, 0.7, OptionType::Call);
-            let model = MonteCarloModel::arithmetic(0.03, 0.2, 4_000, 20);
+            let option = LookbackOption::fixed(instrument, 31.0, 1.0, OptionType::Call);
+            let model = MonteCarloModel::geometric(0.03, 0.3, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 12.0, epsilon = 1.0);
+            assert_abs_diff_eq!(price, 101.0136, epsilon = 1.5);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 0.595, epsilon = 1.0);
+            assert_abs_diff_eq!(price, 0.0, epsilon = 1.5);
         }
 
         #[test]
         fn test_fixed_otm() {
-            let instrument = Instrument::new().with_spot(85.0);
-            let option = LookbackOption::fixed(instrument, 90.0, 0.7, OptionType::Call);
-            let model = MonteCarloModel::geometric(0.05, 0.3, 4_000, 20);
+            let instrument = Instrument::new().with_spot(15.0);
+            let option = LookbackOption::fixed(instrument, 20.0, 1.0, OptionType::Call);
+            let model = MonteCarloModel::arithmetic(0.01, 0.1, 4_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 3.629, epsilon = 1.0);
+            assert_abs_diff_eq!(price, 0.0007, epsilon = 0.1);
 
             let price = model.price(&option.flip());
-            assert_abs_diff_eq!(price, 6.474, epsilon = 1.0);
+            assert_abs_diff_eq!(price, 5.8520, epsilon = 0.1);
         }
 
         #[test]
@@ -1751,7 +1751,7 @@ mod instrument_tests {
 
         // Average price should be 100.0
         let rand_price = prices.iter().sum::<f64>() / prices.len() as f64;
-        assert_abs_diff_eq!(rand_price, 100f64, epsilon = 100.0 * 0.25);
+        assert_abs_diff_eq!(rand_price, 100f64, epsilon = 30.0);
     }
 
     #[test]

@@ -7,15 +7,15 @@ use quantrs::options::{
 };
 
 fn main() {
-    // example_from_readme();
-    // example_black_scholes();
-    // example_binomial_tree();
-    // example_monte_carlo();
-    // example_black_76();
-    // example_greeks();
-    // example_asian();
-    // example_rainbow();
-    // example_strategy();
+    example_from_readme();
+    example_black_scholes();
+    example_binomial_tree();
+    example_monte_carlo();
+    example_black_76();
+    example_greeks();
+    example_asian();
+    example_rainbow();
+    example_strategy();
     example_plots();
 }
 
