@@ -7,7 +7,10 @@
 use std::any::Any;
 
 use super::{OptionStyle, OptionType};
-use crate::options::{Instrument, Option};
+use crate::{
+    log_warn,
+    options::{Instrument, Option},
+};
 
 /// A struct representing an Bermudan option.
 #[derive(Clone, Debug)]
@@ -31,14 +34,15 @@ impl BermudanOption {
         strike: f64,
         expiration_dates: Vec<f64>,
         option_type: OptionType,
-    ) -> Result<Self, &'static str> {
-        Ok(Self {
+    ) -> Self {
+        Self {
             instrument,
             strike,
             time_to_maturity: if let Some(&last_date) = expiration_dates.last() {
                 last_date
             } else {
-                return Err("expiration_dates cannot be empty");
+                log_warn!("Expiration dates are empty, setting time to maturity to 0.0");
+                0.0
             },
             expiration_dates,
             option_type,
