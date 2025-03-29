@@ -45,8 +45,8 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 | ²Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ❌ (complex)  | ⏳     |
 | ²Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Lookback (fixed strike)    | ⏳              | ❌       | ❌           | ⏳           | ⏳            | ⏳     |
-| ²Lookback (floating strike) | ⏳              | ❌       | ❌           | ✅           | ⏳            | ⏳     |
+| ²Lookback (fixed strike)    | ❌              | ❌       | ❌           | ✅           | ⏳            | ⏳     |
+| ²Lookback (floating strike) | ✅              | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Binary Cash-or-Nothing     | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
 | ²Binary Asset-or-Nothing    | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
 | Greeks (Δ,ν,Θ,ρ,Γ)          | ✅              | ✅       | ⏳           | ❌           | ❌            | ❌     |
@@ -95,7 +95,7 @@ Add this to your `Cargo.toml`:
 quantrs = "0.1.6"
 ```
 
-Now if you want to e.g., model binary call options using the Black-Scholes model, you can:
+Now if you want to e.g., calculate the arbitrage-free price of a binary cash-or-nothing call using the Black-Scholes model, you can:
 
 ```rust
 use quantrs::options::*;

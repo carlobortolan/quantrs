@@ -664,6 +664,47 @@ mod black_scholes_tests {
         }
     }
 
+    mod lookback_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_basis() {
+            let instrument = Instrument::new().with_spots(vec![100.0, 90.0, 110.0, 95.0]);
+            let option = LookbackOption::floating(instrument, 1.0, OptionType::Call);
+            let model = BlackScholesModel::new(0.1, 0.3);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 27.382, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 21.6149, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_edge() {
+            let option =
+                LookbackOption::floating(Instrument::new().with_spot(100.0), 1.0, OptionType::Call);
+            let model = BlackScholesModel::new(0.05, 0.2);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 17.2168, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 14.2905, epsilon = 0.0001);
+
+            let result = std::panic::catch_unwind(|| {
+                let option = LookbackOption::floating(
+                    Instrument::new().with_spot(0.0),
+                    0.0,
+                    OptionType::Call,
+                );
+                let model = BlackScholesModel::new(0.0, 0.0);
+                let _ = model.price(&option);
+            });
+            assert!(result.is_err(), "Expected panic for zero spot price");
+        }
+    }
+
     #[test]
     fn test_black_scholes_iv() {
         let option = EuropeanOption::new(
@@ -1189,7 +1230,7 @@ mod monte_carlo_tests {
             let arithmetic_model = MonteCarloModel::arithmetic(0.08, 0.3, 4_000, 20);
             let geometric_model = MonteCarloModel::geometric(0.08, 0.3, 4_000, 20);
 
-            let sd = 0.3f64.exp2();
+            let sd = 1.0;
 
             let price = arithmetic_model.price(&option);
             assert_abs_diff_eq!(price, 6.636, epsilon = sd);
