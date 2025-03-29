@@ -30,10 +30,6 @@ use rand_distr::{Distribution, Normal};
 pub struct Instrument {
     /// Current price of the underlying asset or future price at time 0.
     pub spot: Vec<f64>,
-    /// Maximum spot price of the underlying asset.
-    pub max_spot: f64,
-    /// Minimum spot price of the underlying asset.
-    pub min_spot: f64,
     /// Continuous dividend yield where the dividend amount is proportional to the level of the underlying asset (e.g., 0.02 for 2%).
     pub continuous_dividend_yield: f64,
     /// Discrete proportional dividend yield (e.g., 0.02 for 2%).
@@ -55,8 +51,6 @@ impl Instrument {
     pub fn new() -> Self {
         Self {
             spot: vec![0.0],
-            max_spot: 0.0,
-            min_spot: 0.0,
             continuous_dividend_yield: 0.0,
             discrete_dividend_yield: 0.0,
             dividend_times: Vec::new(),
@@ -93,32 +87,22 @@ impl Instrument {
         self
     }
 
-    /// Set the maximum spot price of the instrument.
+    /// Get the maximum spot price of the instrument.
     ///     
-    /// # Arguments
-    ///
-    /// * `max_spot` - The maximum spot price of the instrument.
-    ///
     /// # Returns
     ///
-    /// The instrument with the maximum spot price set.
-    pub fn with_max_spot(mut self, max_spot: f64) -> Self {
-        self.max_spot = max_spot;
-        self
+    /// The maximum spot price of the instrument.
+    pub fn max_spot(&self) -> f64 {
+        *self.spot.iter().max_by(|x, y| x.total_cmp(y)).unwrap()
     }
 
-    /// Set the minimum spot price of the instrument.
-    ///
-    /// # Arguments
-    ///
-    /// * `min_spot` - The minimum spot price of the instrument.
+    /// Get the minimum spot price of the instrument.
     ///
     /// # Returns
     ///
-    /// The instrument with the minimum spot price set.
-    pub fn with_min_spot(mut self, min_spot: f64) -> Self {
-        self.min_spot = min_spot;
-        self
+    /// The minimum spot price of the instrument.
+    pub fn min_spot(&self) -> f64 {
+        *self.spot.iter().min_by(|x, y| x.total_cmp(y)).unwrap()
     }
 
     /// Set the continuous dividend yield of the instrument.

@@ -88,7 +88,7 @@ impl AsianOption {
             time_to_maturity,
             option_type,
             Permutation::Floating,
-        ) // strike is not used for floating
+        )
     }
 }
 
@@ -133,7 +133,6 @@ impl Option for AsianOption {
                 OptionType::Put => (self.strike - avg_price).max(0.0),
             },
             Permutation::Floating => match self.option_type {
-                // spot is the price at maturity
                 OptionType::Call => (self.instrument.terminal_spot() - avg_price).max(0.0),
                 OptionType::Put => (avg_price - self.instrument.terminal_spot()).max(0.0),
             },

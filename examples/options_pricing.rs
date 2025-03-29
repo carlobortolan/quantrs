@@ -711,23 +711,23 @@ fn example_strategy() {
 }
 
 fn example_plots() {
+    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
+    let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
+
+    // Create a vector of fixed-strike Asian calls options with different strike prices
+    let options = vec![
+        AsianOption::fixed(instrument.clone(), 85.0, 1.0, Call),
+        AsianOption::fixed(instrument.clone(), 95.0, 1.0, Call),
+        AsianOption::fixed(instrument.clone(), 102.0, 1.0, Call),
+        AsianOption::fixed(instrument.clone(), 115.0, 1.0, Call),
+    ];
+
     // Create a new Monte-Carlo model with:
     // - Risk-free interest rate (r) = 5%
     // - Volatility (σ) = 20%
     // - Number of simulations = 10,000
-    // - Number of time steps = 365
-    let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 365);
-
-    // Create a new instrument with a spot price of 100 and a dividend yield of 2%
-    let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
-
-    // Create a vector of European call options with different strike prices
-    let options = vec![
-        EuropeanOption::new(instrument.clone(), 85.0, 1.0, Call),
-        EuropeanOption::new(instrument.clone(), 95.0, 1.0, Call),
-        EuropeanOption::new(instrument.clone(), 102.0, 1.0, Call),
-        EuropeanOption::new(instrument.clone(), 115.0, 1.0, Call),
-    ];
+    // - Number of time steps = 252
+    let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 252);
 
     // Plot a breakdown of the Condor spread with a spot price range of [80,120]
     let _ = model.plot_strategy_breakdown(

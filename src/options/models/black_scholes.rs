@@ -15,48 +15,14 @@
 //! including the current price of the underlying asset, the strike price of the option, the time to expiration, the risk-free interest rate,
 //! and the volatility of the underlying asset.
 //!
-//! ## Formula
-//!
-//! The price of an option using the Black-Scholes model is calculated as follows:
-//!
-//! ```text
-//! C = S * N(d1) - X * e^(-rT) * N(d2) for a call option
-//! P = X * e^(-rT) * N(-d2) - S * N(-d1) for a put option
-//! ```
-//!
-//! where:
-//! - `C` is the price of the call option.
-//! - `P` is the price of the put option.
-//! - `S` is the current price of the underlying asset.
-//! - `X` is the strike price of the option.
-//! - `r` is the risk-free interest rate.
-//! - `T` is the time to maturity.
-//! - `N` is the cumulative distribution function of the standard normal distribution.
-//! - `d1` and `d2` are calculated as follows:
-//!     ```text
-//!     d1 = (ln(S / X) + (r + 0.5 * σ^2) * T) / (σ * sqrt(T))
-//!     d2 = d1 - σ * sqrt(T)
-//!     ```
-//! - `σ` is the volatility of the underlying asset.
-//!
-//! The payoff of the option is calculated as:
-//!
-//! ```text
-//! payoff = max(ST - K, 0) for a call option
-//! payoff = max(K - ST, 0) for a put option
-//! ```
-//!
-//! where:
-//! - `ST` is the price of the underlying asset at maturity.
-//! - `K` is the strike price of the option.
-//! - `max` is the maximum function.
-//!
 //! ## References
 //!
 //! - [Wikipedia - Black-Scholes model](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model)
 //! - [Black-Scholes Calculator](https://www.math.drexel.edu/~pg/fin/VanillaCalculator.html)
 //! - [Cash or Nothing Options' Greeks](https://quantpie.co.uk/bsm_bin_c_formula/bs_bin_c_summary.php)
 //! - [Asset or Nothing Options' Greeks](https://quantpie.co.uk/bsm_bin_a_formula/bs_bin_a_summary.php)
+//! - Musiela, M., Rutkowski, M. Martingale Methods in Financial Modelling, 2nd Ed Springer, 2007
+//! - Joshi, M. The Concepts and Practice of Mathematical Finance, 2nd Ed Cambridge University Press, 2008
 //!
 //! ## Example
 //!
@@ -74,8 +40,9 @@
 use crate::options::{
     types::BinaryType::{AssetOrNothing, CashOrNothing},
     Instrument, Option, OptionGreeks, OptionPricing, OptionStrategy, OptionStyle, OptionType,
-    RainbowType,
+    Permutation, RainbowType,
 };
+use rand_distr::num_traits::Pow;
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
 /// A struct representing a Black-Scholes model.
@@ -297,6 +264,57 @@ impl BlackScholesModel {
         )
     }
 
+    /// Calculate the price of a lookback option using the Black-Scholes formula.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The option to price.
+    /// * `normal` - The standard normal distribution.
+    ///
+    /// # Returns
+    ///
+    /// The price of the option.
+    pub fn price_lookback<T: Option>(&self, option: &T, normal: &Normal) -> f64 {
+        let max = option.instrument().max_spot();
+        let min = option.instrument().min_spot();
+        let sqrt_t = option.time_to_maturity().sqrt();
+        let s = option.instrument().spot();
+        let r = self.risk_free_rate;
+        let t = option.time_to_maturity();
+        let vola = self.volatility;
+
+        assert!(s > 0.0 && max > 0.0 && min > 0.0, "Spot prices must be > 0");
+
+        println!("max: {}, min: {}", max, min);
+
+        let a1 = |s: f64, h: f64| ((s / h).ln() + (r + 0.5 * vola.powi(2)) * t) / (vola * sqrt_t);
+        let a2 = |s: f64, h: f64| a1(s, h) - vola * sqrt_t;
+        let a3 = |s: f64, h: f64| a1(s, h) - 2.0 * r * sqrt_t / vola;
+
+        let phi = |x: f64| normal.cdf(x);
+
+        match option.option_type() {
+            OptionType::Call => {
+                s * phi(a1(s, min))
+                    - min * (-r * t).exp() * phi(a2(s, min))
+                    - (0.5 * s * vola.powi(2)) / (r)
+                        * (phi(-a1(s, min))
+                            - (-r * t).exp()
+                                * (min / s).pow((2f64 * r) / (vola.powi(2)))
+                                * phi(-a3(s, min)))
+            }
+            OptionType::Put => {
+                -s * phi(-a1(s, max))
+                    + max * (-r * t).exp() * phi(-a2(s, max))
+                    + (0.5 * s * vola.powi(2)) / (r)
+                        * (phi(a1(s, max))
+                            - (-r * t).exp()
+                                * (max / s).pow((2f64 * r) / (vola.powi(2)))
+                                * phi(a3(s, max)))
+            }
+        }
+    }
+
     /// Calculate the option price using the Black-Scholes formula with a given volatility.
     ///
     /// # Arguments
@@ -369,6 +387,7 @@ impl OptionPricing for BlackScholesModel {
             (_, OptionStyle::Binary(AssetOrNothing)) => self.price_asset_or_nothing(option, &normal),
             (OptionType::Call, OptionStyle::Rainbow(_)) => self.price_rainbow_call(option, &normal),
             (OptionType::Put, OptionStyle::Rainbow(_)) => self.price_rainbow_put(option, &normal),
+            (_, OptionStyle::Lookback(Permutation::Floating)) => self.price_lookback(option, &normal),
             _ => panic!("BlackScholesModel does not support this option type or style"),
         }
     }

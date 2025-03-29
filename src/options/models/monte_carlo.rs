@@ -182,13 +182,32 @@ impl MonteCarloModel {
             .into_par_iter() // Rayon parallel iterator
             .map(|_| {
                 let mut rng = rand::rng();
-                let simulated_price = option.instrument().simulate_geometric_brownian_motion(
-                    &mut rng,
-                    self.volatility,
-                    option.time_to_maturity(),
-                    self.risk_free_rate,
-                    self.steps,
-                );
+                let simulated_price = match self.method {
+                    AvgMethod::Geometric => option.instrument().simulate_geometric_average(
+                        &mut rng,
+                        SimMethod::Log,
+                        self.volatility,
+                        option.time_to_maturity(),
+                        self.risk_free_rate,
+                        self.steps,
+                    ),
+                    AvgMethod::Arithmetic => option.instrument().simulate_arithmetic_average(
+                        &mut rng,
+                        SimMethod::Log,
+                        self.volatility,
+                        option.time_to_maturity(),
+                        self.risk_free_rate,
+                        self.steps,
+                    ),
+                    AvgMethod::Brownian => option.instrument().simulate_geometric_brownian_motion(
+                        &mut rng,
+                        self.volatility,
+                        option.time_to_maturity(),
+                        self.risk_free_rate,
+                        self.steps,
+                    ),
+                };
+
                 option.payoff(Some(simulated_price))
             })
             .sum();
@@ -200,14 +219,14 @@ impl MonteCarloModel {
 impl OptionPricing for MonteCarloModel {
     fn price<T: Option>(&self, option: &T) -> f64 {
         match option.style() {
-            OptionStyle::European => self.price_european(option),
-            OptionStyle::Basket => self.price_basket(option),
-            OptionStyle::Rainbow(_) => self.price_rainbow(option),
-            OptionStyle::Barrier(_) => self.price_barrier(option),
-            OptionStyle::DoubleBarrier(_, _) => self.price_double_barrier(option),
+            OptionStyle::European => self.simulate_price_paths(option),
+            OptionStyle::Basket => self.simulate_price_paths(option),
+            OptionStyle::Rainbow(_) => self.simulate_price_paths(option),
+            OptionStyle::Barrier(_) => self.simulate_price_paths(option),
+            OptionStyle::DoubleBarrier(_, _) => self.simulate_price_paths(option),
             OptionStyle::Asian(_) => self.price_asian(option),
-            OptionStyle::Lookback(_) => self.price_lookback(option),
-            OptionStyle::Binary(_) => self.price_binary(option),
+            OptionStyle::Lookback(_) => self.price_asian(option),
+            OptionStyle::Binary(_) => self.simulate_price_paths(option),
             _ => panic!("Monte Carlo model does not support this option style"),
         }
     }
@@ -218,19 +237,6 @@ impl OptionPricing for MonteCarloModel {
 }
 
 impl MonteCarloModel {
-    /// Simulate price paths and compute the expected discounted payoff for European options.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The European option to price.
-    ///
-    /// # Returns
-    ///
-    /// The expected discounted payoff of the option.
-    fn price_european<T: Option>(&self, option: &T) -> f64 {
-        self.simulate_price_paths(option)
-    }
-
     /// Simulate price paths and compute the expected discounted payoff for Asian options.
     ///
     /// # Arguments
@@ -279,84 +285,6 @@ impl MonteCarloModel {
 
         // Return average payoff
         sum / self.simulations as f64
-    }
-
-    /// Simulate price paths and compute the expected discounted payoff for basket options.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The basket option to price.
-    ///
-    /// # Returns
-    ///
-    /// The expected discounted payoff of the option.
-    fn price_basket<T: Option>(&self, option: &T) -> f64 {
-        unimplemented!()
-    }
-
-    /// Simulate price paths and compute the expected discounted payoff for rainbow options.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The rainbow option to price.
-    ///
-    /// # Returns
-    ///
-    /// The expected discounted payoff of the option.
-    fn price_rainbow<T: Option>(&self, option: &T) -> f64 {
-        self.simulate_price_paths(option)
-    }
-
-    /// Simulate price paths and compute the expected discounted payoff for barrier options.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The barrier option to price.
-    ///
-    /// # Returns
-    ///
-    /// The expected discounted payoff of the option.
-    fn price_barrier<T: Option>(&self, option: &T) -> f64 {
-        unimplemented!()
-    }
-
-    /// Simulate price paths and compute the expected discounted payoff for double barrier options.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The double barrier option to price.
-    ///
-    /// # Returns
-    ///
-    /// The expected discounted payoff of the option.
-    fn price_double_barrier<T: Option>(&self, option: &T) -> f64 {
-        unimplemented!()
-    }
-
-    /// Simulate price paths and compute the expected discounted payoff for lookback options.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The lookback option to price.
-    ///
-    /// # Returns
-    ///
-    /// The expected discounted payoff of the option.
-    fn price_lookback<T: Option>(&self, option: &T) -> f64 {
-        unimplemented!()
-    }
-
-    /// Simulate price paths and compute the expected discounted payoff for binary options.
-    ///
-    /// # Arguments
-    ///
-    /// * `option` - The binary option to price.
-    ///
-    /// # Returns
-    ///
-    /// The expected discounted payoff of the option.
-    fn price_binary<T: Option>(&self, option: &T) -> f64 {
-        self.simulate_price_paths(option)
     }
 }
 
