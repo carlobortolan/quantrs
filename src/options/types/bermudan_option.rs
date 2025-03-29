@@ -31,11 +31,15 @@ impl BermudanOption {
         strike: f64,
         expiration_dates: Vec<f64>,
         option_type: OptionType,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, &'static str> {
+        Ok(Self {
             instrument,
             strike,
-            time_to_maturity: *expiration_dates.last().unwrap(),
+            time_to_maturity: if let Some(&last_date) = expiration_dates.last() {
+                last_date
+            } else {
+                return Err("expiration_dates cannot be empty");
+            },
             expiration_dates,
             option_type,
         }
