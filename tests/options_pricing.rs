@@ -1,8 +1,8 @@
 use approx::assert_abs_diff_eq;
 use quantrs::options::{
-    AmericanOption, AsianOption, BinaryOption, BinomialTreeModel, Black76Model, BlackScholesModel,
-    EuropeanOption, Greeks, Instrument, LookbackOption, MonteCarloModel, Option, OptionGreeks,
-    OptionPricing, OptionType, RainbowOption,
+    AmericanOption, AsianOption, BermudanOption, BinaryOption, BinomialTreeModel, Black76Model,
+    BlackScholesModel, EuropeanOption, Greeks, Instrument, LookbackOption, MonteCarloModel, Option,
+    OptionGreeks, OptionPricing, OptionType, RainbowOption,
 };
 
 struct MockModel {}
@@ -779,6 +779,32 @@ mod binomial_tree_tests {
         fn test_otm() {
             let instrument = Instrument::new().with_spot(50.0);
             let option = AmericanOption::new(instrument, 60.0, 2.0, OptionType::Call);
+            let model = BinomialTreeModel::new(0.05, 0.182321557, 2);
+
+            assert_abs_diff_eq!(model.price(&option), 10.0000, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option.flip()), 10.0000, epsilon = 0.0001);
+        }
+    }
+
+    mod bermudan_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_itm() {
+            let instrument = Instrument::new().with_spot(52.0);
+            let expiration_dates = vec![1.0, 1.5, 2.0];
+            let option = BermudanOption::new(instrument, 50.0, expiration_dates, OptionType::Call);
+            let model = BinomialTreeModel::new(0.05, 0.182321557, 2);
+
+            assert_abs_diff_eq!(model.price(&option), 8.8258, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option.flip()), 2.5722, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_otm() {
+            let instrument = Instrument::new().with_spot(50.0);
+            let expiration_dates = vec![1.0, 1.5, 2.0];
+            let option = BermudanOption::new(instrument, 60.0, expiration_dates, OptionType::Call);
             let model = BinomialTreeModel::new(0.05, 0.182321557, 2);
 
             assert_abs_diff_eq!(model.price(&option), 10.0000, epsilon = 0.0001);
