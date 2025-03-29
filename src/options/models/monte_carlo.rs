@@ -225,7 +225,7 @@ impl OptionPricing for MonteCarloModel {
             OptionStyle::Barrier(_) => self.simulate_price_paths(option),
             OptionStyle::DoubleBarrier(_, _) => self.simulate_price_paths(option),
             OptionStyle::Asian(_) => self.price_asian(option),
-            OptionStyle::Lookback(_) => self.simulate_price_paths(option),
+            OptionStyle::Lookback(_) => self.price_asian(option),
             OptionStyle::Binary(_) => self.simulate_price_paths(option),
             _ => panic!("Monte Carlo model does not support this option style"),
         }

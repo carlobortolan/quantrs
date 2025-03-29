@@ -1177,6 +1177,86 @@ mod monte_carlo_tests {
         }
     }
 
+    mod lookback_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_avg() {
+            let instrument = Instrument::new()
+                .with_spot(30.0)
+                .with_continuous_dividend_yield(0.02);
+            let option = LookbackOption::floating(instrument, 1.0, OptionType::Call);
+            let arithmetic_model = MonteCarloModel::arithmetic(0.08, 0.3, 4_000, 20);
+            let geometric_model = MonteCarloModel::geometric(0.08, 0.3, 4_000, 20);
+
+            let sd = 0.3f64.exp2();
+
+            let price = arithmetic_model.price(&option);
+            assert_abs_diff_eq!(price, 6.636, epsilon = sd);
+
+            let price = arithmetic_model.price(&option.flip());
+            assert_abs_diff_eq!(price, 5.304, epsilon = sd);
+
+            let price = geometric_model.price(&option);
+            assert_abs_diff_eq!(price, 6.636, epsilon = sd);
+
+            let price = geometric_model.price(&option.flip());
+            assert_abs_diff_eq!(price, 5.304, epsilon = sd);
+        }
+
+        #[test]
+        fn test_fixed_itm() {
+            let instrument = Instrument::new().with_spot(110.0);
+            let option = LookbackOption::fixed(instrument, 100.0, 0.7, OptionType::Call);
+            let model = MonteCarloModel::arithmetic(0.03, 0.2, 4_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 12.0, epsilon = 1.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.595, epsilon = 1.0);
+        }
+
+        #[test]
+        fn test_fixed_otm() {
+            let instrument = Instrument::new().with_spot(85.0);
+            let option = LookbackOption::fixed(instrument, 90.0, 0.7, OptionType::Call);
+            let model = MonteCarloModel::geometric(0.05, 0.3, 4_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 3.629, epsilon = 1.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 6.474, epsilon = 1.0);
+        }
+
+        #[test]
+        fn test_floating_itm() {
+            let instrument = Instrument::new().with_spot(110.0);
+            let option = LookbackOption::floating(instrument, 1.0, OptionType::Call);
+            let model = MonteCarloModel::geometric(0.03, 0.3, 4_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 22.225, epsilon = 1.5);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 21.917, epsilon = 1.5);
+        }
+
+        #[test]
+        fn test_floating_otm() {
+            let instrument = Instrument::new().with_spot(15.0);
+            let option = LookbackOption::floating(instrument, 1.0, OptionType::Call);
+            let model = MonteCarloModel::arithmetic(0.01, 0.1, 4_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 1.068, epsilon = 0.1);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.965, epsilon = 0.1);
+        }
+    }
+
     mod binary_option_tests {
         use super::*;
 
@@ -1801,9 +1881,25 @@ mod option_trait_tests {
             OptionType::Put,
         );
         assert_implements_option_trait(&opt);
-        let opt = LookbackOption::fixed(Instrument::new().with_spot(100.0), 1.0, OptionType::Call);
+        let opt = LookbackOption::fixed(
+            Instrument::new().with_spot(100.0),
+            99.0,
+            1.0,
+            OptionType::Call,
+        );
         assert_implements_option_trait(&opt);
-        let opt = LookbackOption::fixed(Instrument::new().with_spot(100.0), 1.0, OptionType::Put);
+        let opt = LookbackOption::fixed(
+            Instrument::new().with_spot(100.0),
+            99.0,
+            1.0,
+            OptionType::Put,
+        );
+        assert_implements_option_trait(&opt);
+        let opt =
+            LookbackOption::floating(Instrument::new().with_spot(100.0), 1.0, OptionType::Call);
+        assert_implements_option_trait(&opt);
+        let opt =
+            LookbackOption::floating(Instrument::new().with_spot(100.0), 1.0, OptionType::Put);
         assert_implements_option_trait(&opt);
         let opt = BinaryOption::cash_or_nothing(
             Instrument::new().with_spot(100.0),
