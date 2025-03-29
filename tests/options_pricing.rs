@@ -26,6 +26,7 @@ fn assert_implements_option_trait<T: Option>(option: &T) {
     option.clone().set_time_to_maturity(1.0);
     option.strike();
     option.time_to_maturity();
+    option.expiration_dates();
     option.option_type();
     option.style();
     option.flip();
@@ -1931,6 +1932,20 @@ mod option_trait_tests {
             Instrument::new().with_spot(100.0),
             100.0,
             1.0,
+            OptionType::Put,
+        );
+        assert_implements_option_trait(&opt);
+        let opt = BermudanOption::new(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            vec![1.0],
+            OptionType::Call,
+        );
+        assert_implements_option_trait(&opt);
+        let opt = BermudanOption::new(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            vec![1.0],
             OptionType::Put,
         );
         assert_implements_option_trait(&opt);

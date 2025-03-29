@@ -76,7 +76,7 @@ impl Option for BermudanOption {
     }
 
     fn style(&self) -> &OptionStyle {
-        &OptionStyle::American
+        &OptionStyle::Bermudan
     }
 
     fn flip(&self) -> Self {
