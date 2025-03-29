@@ -793,7 +793,7 @@ mod binomial_tree_tests {
         #[test]
         fn test_itm() {
             let instrument = Instrument::new().with_spot(52.0);
-            let expiration_dates = vec![1.0, 1.5, 2.0];
+            let expiration_dates = vec![0.0, 1.0, 2.0];
             let option = BermudanOption::new(instrument, 50.0, expiration_dates, OptionType::Call);
             let model = BinomialTreeModel::new(0.05, 0.182321557, 2);
 
@@ -804,7 +804,7 @@ mod binomial_tree_tests {
         #[test]
         fn test_otm() {
             let instrument = Instrument::new().with_spot(50.0);
-            let expiration_dates = vec![1.0, 1.5, 2.0];
+            let expiration_dates = vec![0.0, 1.0, 2.0];
             let option = BermudanOption::new(instrument, 60.0, expiration_dates, OptionType::Call);
             let model = BinomialTreeModel::new(0.05, 0.182321557, 2);
 
