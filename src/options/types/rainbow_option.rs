@@ -58,7 +58,6 @@
 
 use super::{OptionStyle, OptionType, RainbowType, RainbowType::*};
 use crate::options::{Instrument, Option};
-use core::panic;
 use std::any::Any;
 
 /// A struct representing a Rainbow option.
@@ -73,7 +72,7 @@ pub struct RainbowOption {
     /// Type of the option (Call or Put).
     pub option_type: OptionType,
     /// Style of the option (Rainbow with specific type).
-    pub option_style: OptionStyle,
+    pub rainbow_type: RainbowType,
 }
 
 impl RainbowOption {
@@ -83,14 +82,14 @@ impl RainbowOption {
         strike: f64,
         time_to_maturity: f64,
         option_type: OptionType,
-        rainbow_option_type: RainbowType,
+        rainbow_type: RainbowType,
     ) -> Self {
         Self {
             instrument,
             strike,
             time_to_maturity,
             option_type,
-            option_style: OptionStyle::Rainbow(rainbow_option_type),
+            rainbow_type,
         }
     }
 
@@ -149,20 +148,11 @@ impl RainbowOption {
     pub fn all_otm(instrument: Instrument, strike: f64, ttm: f64) -> Self {
         Self::new(instrument, strike, ttm, OptionType::Put, AllOTM)
     }
-
-    /// Get the Rainbow option type.
-    pub fn rainbow_option_type(&self) -> &RainbowType {
-        if let OptionStyle::Rainbow(ref rainbow_option_type) = self.option_style {
-            rainbow_option_type
-        } else {
-            panic!("Not a rainbow option")
-        }
-    }
 }
 
 impl Option for RainbowOption {
     fn instrument(&self) -> &Instrument {
-        match self.rainbow_option_type() {
+        match self.rainbow_type {
             BestOf | CallOnMax | PutOnMax => self.instrument.best_performer(),
             WorstOf | CallOnMin | PutOnMin => self.instrument.worst_performer(),
             _ => &self.instrument,
@@ -170,7 +160,7 @@ impl Option for RainbowOption {
     }
 
     fn instrument_mut(&mut self) -> &mut Instrument {
-        match self.rainbow_option_type() {
+        match self.rainbow_type {
             BestOf | CallOnMax | PutOnMax => self.instrument.best_performer_mut(),
             WorstOf | CallOnMin | PutOnMin => self.instrument.worst_performer_mut(),
             _ => &mut self.instrument,
@@ -197,8 +187,8 @@ impl Option for RainbowOption {
         self.option_type
     }
 
-    fn style(&self) -> &OptionStyle {
-        &self.option_style
+    fn style(&self) -> OptionStyle {
+        OptionStyle::Rainbow(self.rainbow_type)
     }
 
     fn flip(&self) -> Self {
@@ -207,7 +197,7 @@ impl Option for RainbowOption {
             OptionType::Put => OptionType::Call,
         };
 
-        let flipped_option_style = match self.rainbow_option_type() {
+        let flipped_rainbow_type = match self.rainbow_type {
             BestOf => BestOf,
             WorstOf => WorstOf,
             CallOnMax => PutOnMax,
@@ -225,14 +215,14 @@ impl Option for RainbowOption {
             self.strike,
             self.time_to_maturity,
             flipped_option_type,
-            flipped_option_style,
+            flipped_rainbow_type,
         )
     }
 
     fn payoff(&self, spot: std::option::Option<f64>) -> f64 {
         let spot_price: f64 = spot.unwrap_or_else(|| self.instrument().spot());
 
-        match self.rainbow_option_type() {
+        match self.rainbow_type {
             BestOf => spot_price.max(self.strike),
             WorstOf => spot_price.min(self.strike),
             CallOnMax => (spot_price - self.strike).max(0.0),

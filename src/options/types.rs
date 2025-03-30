@@ -6,6 +6,7 @@
 
 pub use american_option::AmericanOption;
 pub use asian_option::AsianOption;
+pub use barrier_option::BarrierOption;
 pub use bermudan_option::BermudanOption;
 pub use binary_option::BinaryOption;
 pub use european_option::EuropeanOption;
@@ -14,6 +15,7 @@ pub use rainbow_option::RainbowOption;
 
 mod american_option;
 mod asian_option;
+mod barrier_option;
 mod bermudan_option;
 mod binary_option;
 mod european_option;

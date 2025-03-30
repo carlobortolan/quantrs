@@ -69,7 +69,7 @@ pub trait Option: Clone + Send + Sync {
     /// # Returns
     ///
     /// The style of the option.
-    fn style(&self) -> &OptionStyle;
+    fn style(&self) -> OptionStyle;
 
     /// Flip the option type (Call to Put or Put to Call).
     ///

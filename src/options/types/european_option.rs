@@ -86,8 +86,8 @@ impl Option for EuropeanOption {
         self.option_type
     }
 
-    fn style(&self) -> &OptionStyle {
-        &OptionStyle::European
+    fn style(&self) -> OptionStyle {
+        OptionStyle::European
     }
 
     fn flip(&self) -> Self {
