@@ -41,6 +41,15 @@ pub trait Option: Clone + Send + Sync {
     /// The time horizon (in years).
     fn time_to_maturity(&self) -> f64;
 
+    /// Get the expiration dates of the option.
+    ///     
+    /// # Returns
+    ///
+    /// The expiration dates of the option. (Only for Bermudan options)
+    fn expiration_dates(&self) -> std::option::Option<&Vec<f64>> {
+        None
+    }
+
     /// Set the time horizon (in years).
     ///
     /// # Arguments
