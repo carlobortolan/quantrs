@@ -144,8 +144,34 @@ impl Option for BarrierOption {
         OptionStyle::Barrier(self.barrier_type)
     }
 
+    #[rustfmt::skip]
     fn payoff(&self, avg_price: std::option::Option<f64>) -> f64 {
-        todo!("Implement payoff calculation for BarrierOption");
+        let terminal = self.instrument.terminal_spot();
+        let above = self.instrument.spot.iter().any(|&a| a >= self.barrier);
+        let below = self.instrument.spot.iter().any(|&a| a <= self.barrier);
+        let payoff = match self.option_type {
+            OptionType::Call => (terminal - self.strike).max(0.0),
+            OptionType::Put => (self.strike - terminal).max(0.0),
+        };
+
+        match self.barrier_type {
+            BarrierType::DownAndIn => match self.option_type {
+                OptionType::Call => if below { payoff } else { 0.0 },
+                OptionType::Put => if below { payoff } else { 0.0 },
+            },
+            BarrierType::DownAndOut => match self.option_type {
+                OptionType::Call => if below { payoff } else { 0.0 },
+                OptionType::Put => if below { payoff } else { 0.0 },
+            },
+            BarrierType::UpAndIn => match self.option_type {
+                OptionType::Call => if above { 0.0 } else { payoff },
+                OptionType::Put => if above { 0.0 } else { payoff },
+            },
+            BarrierType::UpAndOut => match self.option_type {
+                OptionType::Call => if above { 0.0 } else { payoff },
+                OptionType::Put => if above { 0.0 } else { payoff },
+            },
+        }
     }
 
     fn flip(&self) -> Self {
