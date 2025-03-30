@@ -41,12 +41,12 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 | Bermudan                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)  | ❌ (complex)  | ❌     |
 | ¹Basket                     | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
 | ¹Rainbow                    | ✅ (∀component) | ❌       | ✅           | ✅           | ❌            | ❌     |
-| ²Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ⏳            | ⏳     |
+| ²Barrier                    | ❌ (mod. BSM)   | ❌       | ✅           | ✅           | ⏳            | ⏳     |
 | ²Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ❌ (complex)  | ⏳     |
 | ²Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Lookback (fixed strike)    | ❌              | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Lookback (floating strike) | ✅              | ❌       | ❌           | ✅           | ⏳            | ⏳     |
+| ²Lookback (floating strike) | ✅ (!spots)     | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Binary Cash-or-Nothing     | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
 | ²Binary Asset-or-Nothing    | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
 | Greeks (Δ,ν,Θ,ρ,Γ)          | ✅              | ✅       | ⏳           | ❌           | ❌            | ❌     |

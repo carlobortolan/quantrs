@@ -740,6 +740,7 @@ mod black_scholes_tests {
 // Binomial Tree Model Tests
 mod binomial_tree_tests {
     use super::*;
+
     mod european_option_tests {
         use super::*;
         #[test]
@@ -1062,6 +1063,63 @@ mod binomial_tree_tests {
 
             let price = model.price(&option.flip());
             assert_abs_diff_eq!(price, 0.6697, epsilon = 0.0001);
+        }
+    }
+
+    mod barrier_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_down_and_in() {
+            let instrument = Instrument::new().with_spot(42.0).with_continuous_dividend_yield(0.08);
+            let option = BarrierOption::down_and_in(instrument, 42.0, 42.0, 1.5, OptionType::Call);
+            let model = BinomialTreeModel::new(0.05, 0.2, 252);
+
+            let price: f64 = model.price(&option);
+            assert_abs_diff_eq!(price, 2.9158, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 4.6304, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_down_and_out() {
+            let instrument = Instrument::new().with_spot(42.0);
+            let option =
+                BarrierOption::down_and_out(instrument, 100.0, 100.0, 2.0, OptionType::Call);
+            let model = BinomialTreeModel::new(0.05, 0.2, 252);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_up_and_in() {
+            let instrument = Instrument::new().with_spot(42.0).with_continuous_dividend_yield(0.08);
+            let option = BarrierOption::up_and_in(instrument, 100.0, 100.0, 2.0, OptionType::Call);
+            let model = BinomialTreeModel::new(0.05, 0.2, 252);
+
+            let price: f64 = model.price(&option);
+            assert_abs_diff_eq!(price, 2.9158, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 4.6304, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_up_and_out() {
+            let instrument = Instrument::new().with_spot(42.0);
+            let option = BarrierOption::up_and_out(instrument, 100.0, 100.0, 2.0, OptionType::Call);
+            let model = BinomialTreeModel::new(0.05, 0.2, 252);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 0.0001);
         }
     }
 
@@ -1530,6 +1588,63 @@ mod monte_carlo_tests {
 
             let price = model.price(&option);
             assert_abs_diff_eq!(price, 0.0, epsilon = 2.0);
+        }
+    }
+
+    mod barrier_option_tests {
+        use super::*;
+
+        #[test]
+        fn test_down_and_in() {
+            let instrument = Instrument::new().with_spot(42.0);
+            let option = BarrierOption::down_and_in(instrument, 42.0, 42.0, 1.5, OptionType::Call);
+            let model = MonteCarloModel::geometric(0.05, 0.2, 4_000, 20);
+
+            let price: f64 = model.price(&option);
+            assert_abs_diff_eq!(price, 5.65, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 2.61, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_down_and_out() {
+            let instrument = Instrument::new().with_spot(42.0);
+            let option =
+                BarrierOption::down_and_out(instrument, 100.0, 100.0, 2.0, OptionType::Call);
+            let model = MonteCarloModel::geometric(0.05, 0.2, 4_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 1.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 1.0);
+        }
+
+        #[test]
+        fn test_up_and_in() {
+            let instrument = Instrument::new().with_spot(42.0);
+            let option = BarrierOption::up_and_in(instrument, 100.0, 100.0, 2.0, OptionType::Call);
+            let model = MonteCarloModel::geometric(0.05, 0.2, 4_000, 20);
+
+            let price: f64 = model.price(&option);
+            assert_abs_diff_eq!(price, 5.65, epsilon = 0.0001);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 2.61, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_up_and_out() {
+            let instrument = Instrument::new().with_spot(42.0);
+            let option = BarrierOption::up_and_out(instrument, 100.0, 100.0, 2.0, OptionType::Call);
+            let model = MonteCarloModel::geometric(0.05, 0.2, 4_000, 20);
+
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 1.0);
+
+            let price = model.price(&option.flip());
+            assert_abs_diff_eq!(price, 0.0000, epsilon = 1.0);
         }
     }
 }

@@ -72,7 +72,7 @@
 //! println!("Option price: {}", price);
 //! ```
 
-use crate::options::{Option, OptionPricing, OptionStrategy, OptionStyle};
+use crate::options::{BarrierOption, Option, OptionPricing, OptionStrategy, OptionStyle};
 
 /// Binomial tree option pricing model.
 #[derive(Debug, Default)]
@@ -135,9 +135,15 @@ impl OptionPricing for BinomialTreeModel {
         // Backward induction
         for step in (0..self.steps).rev() {
             for i in 0..=step {
+                let mut path = vec![];
+                let spot =
+                    option.instrument().spot() * u.powi(i as i32) * d.powi((step - i) as i32);
+                path.push(spot);
+
                 let expected_value =
                     discount_factor * (p * option_values[i + 1] + (1.0 - p) * option_values[i]);
 
+                // Check if the option can be exercised early
                 if matches!(option.style(), OptionStyle::American)
                     || matches!(option.style(), OptionStyle::Bermudan)
                         && option

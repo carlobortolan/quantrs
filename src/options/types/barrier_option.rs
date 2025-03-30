@@ -109,6 +109,22 @@ impl BarrierOption {
             BarrierType::UpAndOut,
         )
     }
+
+    pub fn is_knocked_out(&self, spot: f64) -> bool {
+        match self.barrier_type {
+            BarrierType::DownAndOut => spot <= self.barrier,
+            BarrierType::UpAndOut => spot >= self.barrier,
+            _ => false, // In-options are never knocked out
+        }
+    }
+
+    pub fn is_activated(&self, path: &[f64]) -> bool {
+        match self.barrier_type {
+            BarrierType::DownAndIn => path.iter().any(|&s| s <= self.barrier),
+            BarrierType::UpAndIn => path.iter().any(|&s| s >= self.barrier),
+            _ => true, // Out-options don't require activation
+        }
+    }
 }
 
 impl Option for BarrierOption {
@@ -145,32 +161,20 @@ impl Option for BarrierOption {
     }
 
     #[rustfmt::skip]
-    fn payoff(&self, avg_price: std::option::Option<f64>) -> f64 {
-        let terminal = self.instrument.terminal_spot();
+    fn payoff(&self, terminal: std::option::Option<f64>) -> f64 {
+        let terminal = terminal.unwrap_or_else(|| self.instrument.terminal_spot()); 
         let above = self.instrument.spot.iter().any(|&a| a >= self.barrier);
         let below = self.instrument.spot.iter().any(|&a| a <= self.barrier);
         let payoff = match self.option_type {
             OptionType::Call => (terminal - self.strike).max(0.0),
             OptionType::Put => (self.strike - terminal).max(0.0),
         };
-
+    
         match self.barrier_type {
-            BarrierType::DownAndIn => match self.option_type {
-                OptionType::Call => if below { payoff } else { 0.0 },
-                OptionType::Put => if below { payoff } else { 0.0 },
-            },
-            BarrierType::DownAndOut => match self.option_type {
-                OptionType::Call => if below { payoff } else { 0.0 },
-                OptionType::Put => if below { payoff } else { 0.0 },
-            },
-            BarrierType::UpAndIn => match self.option_type {
-                OptionType::Call => if above { 0.0 } else { payoff },
-                OptionType::Put => if above { 0.0 } else { payoff },
-            },
-            BarrierType::UpAndOut => match self.option_type {
-                OptionType::Call => if above { 0.0 } else { payoff },
-                OptionType::Put => if above { 0.0 } else { payoff },
-            },
+            BarrierType::DownAndIn  => if below { payoff } else { 0.0 },
+            BarrierType::DownAndOut => if below { 0.0 } else { payoff },
+            BarrierType::UpAndIn    => if above { payoff } else { 0.0 },
+            BarrierType::UpAndOut   => if above { 0.0 } else { payoff },
         }
     }
 
