@@ -138,7 +138,13 @@ impl OptionPricing for BinomialTreeModel {
                 let expected_value =
                     discount_factor * (p * option_values[i + 1] + (1.0 - p) * option_values[i]);
 
-                if matches!(option.style(), OptionStyle::American) {
+                if matches!(option.style(), OptionStyle::American)
+                    || matches!(option.style(), OptionStyle::Bermudan)
+                        && option
+                            .expiration_dates()
+                            .unwrap()
+                            .contains(&(step as f64 * dt))
+                {
                     let early_exercise = option.payoff(Some(
                         option.instrument().spot() * u.powi(i as i32) * d.powi((step - i) as i32),
                     ));
@@ -149,7 +155,10 @@ impl OptionPricing for BinomialTreeModel {
             }
         }
 
-        if matches!(option.style(), OptionStyle::American) {
+        if matches!(option.style(), OptionStyle::American)
+            || matches!(option.style(), OptionStyle::Bermudan)
+                && option.expiration_dates().unwrap().contains(&0.0)
+        {
             option_values[0].max(option.strike() - option.instrument().spot()) // TODO: Change to max(0.0, self.payoff(Some(self.spot)))
         } else {
             option_values[0] // Return the root node value
