@@ -1,8 +1,8 @@
 use approx::assert_abs_diff_eq;
 use quantrs::options::{
-    AmericanOption, AsianOption, BermudanOption, BinaryOption, BinomialTreeModel, Black76Model,
-    BlackScholesModel, EuropeanOption, Greeks, Instrument, LookbackOption, MonteCarloModel, Option,
-    OptionGreeks, OptionPricing, OptionType, RainbowOption,
+    AmericanOption, AsianOption, BarrierOption, BermudanOption, BinaryOption, BinomialTreeModel,
+    Black76Model, BlackScholesModel, EuropeanOption, Greeks, Instrument, LookbackOption,
+    MonteCarloModel, Option, OptionGreeks, OptionPricing, OptionType, RainbowOption,
 };
 
 struct MockModel {}
@@ -1982,6 +1982,22 @@ mod option_trait_tests {
         assert_implements_option_trait(&opt);
         let opt =
             LookbackOption::floating(Instrument::new().with_spot(100.0), 1.0, OptionType::Put);
+        assert_implements_option_trait(&opt);
+        let opt = BarrierOption::down_and_in(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            110.0,
+            1.0,
+            OptionType::Put,
+        );
+        assert_implements_option_trait(&opt);
+        let opt = BarrierOption::down_and_in(
+            Instrument::new().with_spot(100.0),
+            100.0,
+            110.0,
+            1.0,
+            OptionType::Put,
+        );
         assert_implements_option_trait(&opt);
         let opt = BinaryOption::cash_or_nothing(
             Instrument::new().with_spot(100.0),

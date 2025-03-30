@@ -41,6 +41,74 @@ impl BarrierOption {
             barrier_type,
         }
     }
+
+    pub fn down_and_in(
+        instrument: Instrument,
+        strike: f64,
+        barrier: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            strike,
+            barrier,
+            time_to_maturity,
+            option_type,
+            BarrierType::DownAndIn,
+        )
+    }
+
+    pub fn down_and_out(
+        instrument: Instrument,
+        strike: f64,
+        barrier: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            strike,
+            barrier,
+            time_to_maturity,
+            option_type,
+            BarrierType::DownAndOut,
+        )
+    }
+
+    pub fn up_and_in(
+        instrument: Instrument,
+        strike: f64,
+        barrier: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            strike,
+            barrier,
+            time_to_maturity,
+            option_type,
+            BarrierType::UpAndIn,
+        )
+    }
+
+    pub fn up_and_out(
+        instrument: Instrument,
+        strike: f64,
+        barrier: f64,
+        time_to_maturity: f64,
+        option_type: OptionType,
+    ) -> Self {
+        Self::new(
+            instrument,
+            strike,
+            barrier,
+            time_to_maturity,
+            option_type,
+            BarrierType::UpAndOut,
+        )
+    }
 }
 
 impl Option for BarrierOption {
