@@ -1,11 +1,13 @@
 //! Module for Barrier option type.
+//!
+//! https://coggit.com/freetools
 
 use std::any::Any;
 
 use super::{BarrierType, OptionStyle, OptionType};
 use crate::options::{Instrument, Option};
 
-/// A struct representing an Bermudan option.
+/// A struct representing a Barrier option.
 #[derive(Clone, Debug)]
 pub struct BarrierOption {
     /// The underlying instrument.

@@ -12,7 +12,7 @@ use crate::{
     options::{Instrument, Option},
 };
 
-/// A struct representing an Bermudan option.
+/// A struct representing a Bermudan option.
 #[derive(Clone, Debug)]
 pub struct BermudanOption {
     /// The underlying instrument.

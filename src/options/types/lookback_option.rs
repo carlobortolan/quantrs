@@ -1,5 +1,8 @@
+//! Module for Lookback option type.
+
 use crate::options::{types::Permutation, Instrument, Option, OptionStyle, OptionType};
 
+/// A struct representing a Lookback option.
 #[derive(Clone, Debug)]
 pub struct LookbackOption {
     /// The underlying instrument.
