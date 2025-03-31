@@ -222,7 +222,7 @@ impl OptionPricing for MonteCarloModel {
             OptionStyle::European => self.simulate_price_paths(option),
             OptionStyle::Basket => self.simulate_price_paths(option),
             OptionStyle::Rainbow(_) => self.simulate_price_paths(option),
-            OptionStyle::Barrier(_) => self.simulate_price_paths(option),
+            OptionStyle::Barrier(_) => self.price_barrier(option),
             OptionStyle::DoubleBarrier(_, _) => self.simulate_price_paths(option),
             OptionStyle::Asian(_) => self.price_asian(option),
             OptionStyle::Lookback(_) => self.price_asian(option),
@@ -277,10 +277,56 @@ impl MonteCarloModel {
             };
 
             // Now call payoff after the mutable borrow is done
-            sum += (-(self.risk_free_rate - option_clone.instrument().continuous_dividend_yield)
-                * option_clone.time_to_maturity())
-            .exp()
+            sum += (-self.risk_free_rate * option_clone.time_to_maturity()).exp()
                 * option_clone.payoff(Some(avg_price));
+        }
+
+        // Return average payoff
+        sum / self.simulations as f64
+    }
+
+    /// Simulate price paths and compute the expected discounted payoff for Barrier options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - The Barrier option to price.
+    ///
+    /// # Returns
+    ///
+    /// The expected discounted payoff of the option.
+    fn price_barrier<T: Option>(&self, option: &T) -> f64 {
+        let mut rng: ThreadRng = rand::rng();
+        let mut sum = 0.0;
+        let mut option_clone = option.clone();
+
+        for _ in 0..self.simulations {
+            // Get a mutable reference to the instrument
+            let avg_price = {
+                let instrument = option_clone.instrument_mut();
+                match self.method {
+                    AvgMethod::Geometric => instrument.simulate_geometric_average_mut(
+                        &mut rng,
+                        SimMethod::Log,
+                        self.volatility,
+                        option.time_to_maturity(),
+                        self.risk_free_rate,
+                        self.steps,
+                    ),
+                    AvgMethod::Arithmetic => instrument.simulate_arithmetic_average_mut(
+                        &mut rng,
+                        SimMethod::Log,
+                        self.volatility,
+                        option.time_to_maturity(),
+                        self.risk_free_rate,
+                        self.steps,
+                    ),
+                    _ => panic!("Invalid averaging method"),
+                }
+            };
+
+            // Now call payoff after the mutable borrow is done
+            sum += (-self.risk_free_rate * option_clone.time_to_maturity()).exp()
+                * option_clone.payoff(None);
         }
 
         // Return average payoff

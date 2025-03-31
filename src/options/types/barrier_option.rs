@@ -125,6 +125,27 @@ impl BarrierOption {
             _ => true, // Out-options don't require activation
         }
     }
+
+    pub fn is_barrier_breached(&self, spot: f64) -> bool {
+        match self.barrier_type {
+            BarrierType::DownAndIn | BarrierType::DownAndOut => spot <= self.barrier,
+            BarrierType::UpAndIn | BarrierType::UpAndOut => spot >= self.barrier,
+        }
+    }
+
+    pub fn is_in(&self) -> bool {
+        match self.barrier_type {
+            BarrierType::DownAndIn | BarrierType::UpAndIn => true,
+            BarrierType::DownAndOut | BarrierType::UpAndOut => false,
+        }
+    }
+
+    pub fn is_out(&self) -> bool {
+        match self.barrier_type {
+            BarrierType::DownAndIn | BarrierType::UpAndIn => false,
+            BarrierType::DownAndOut | BarrierType::UpAndOut => true,
+        }
+    }
 }
 
 impl Option for BarrierOption {
@@ -162,14 +183,14 @@ impl Option for BarrierOption {
 
     #[rustfmt::skip]
     fn payoff(&self, terminal: std::option::Option<f64>) -> f64 {
-        let terminal = terminal.unwrap_or_else(|| self.instrument.terminal_spot()); 
+        let terminal = terminal.unwrap_or_else(|| self.instrument.terminal_spot());
         let above = self.instrument.spot.iter().any(|&a| a >= self.barrier);
         let below = self.instrument.spot.iter().any(|&a| a <= self.barrier);
         let payoff = match self.option_type {
             OptionType::Call => (terminal - self.strike).max(0.0),
             OptionType::Put => (self.strike - terminal).max(0.0),
         };
-    
+
         match self.barrier_type {
             BarrierType::DownAndIn  => if below { payoff } else { 0.0 },
             BarrierType::DownAndOut => if below { 0.0 } else { payoff },
