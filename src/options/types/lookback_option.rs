@@ -1,13 +1,20 @@
+//! Module for Lookback option type.
+
 use crate::options::{types::Permutation, Instrument, Option, OptionStyle, OptionType};
 
+/// A struct representing a Lookback option.
 #[derive(Clone, Debug)]
 pub struct LookbackOption {
+    /// The underlying instrument.
     pub instrument: Instrument,
-    pub time_to_maturity: f64,
+    /// Strike price of the option (aka exercise price).
     pub strike: f64,
+    /// The time horizon (in years).
+    pub time_to_maturity: f64,
+    /// Type of the option (Call or Put).
     pub option_type: OptionType,
-    pub option_style: OptionStyle,
-    pub lookback_type: Permutation,
+    /// Style of the option (Lookback with specific type).
+    pub permutation: Permutation,
 }
 
 impl LookbackOption {
@@ -17,15 +24,14 @@ impl LookbackOption {
         strike: f64,
         time_to_maturity: f64,
         option_type: OptionType,
-        lookback_type: Permutation,
+        permutation: Permutation,
     ) -> Self {
         Self {
             instrument,
             time_to_maturity,
             strike,
             option_type,
-            option_style: OptionStyle::Lookback(lookback_type),
-            lookback_type,
+            permutation,
         }
     }
 
@@ -90,15 +96,15 @@ impl Option for LookbackOption {
         self.option_type
     }
 
-    fn style(&self) -> &OptionStyle {
-        &self.option_style
+    fn style(&self) -> OptionStyle {
+        OptionStyle::Lookback(self.permutation)
     }
 
     fn payoff(&self, avg_price: std::option::Option<f64>) -> f64 {
         let avg_price = avg_price.unwrap_or(self.instrument.spot());
         let max_spot = self.instrument.max_spot();
 
-        match self.lookback_type {
+        match self.permutation {
             Permutation::Fixed => match self.option_type {
                 OptionType::Call => (self.instrument.max_spot() - self.strike).max(0.0),
                 OptionType::Put => (self.strike - self.instrument.min_spot()).max(0.0),
@@ -124,7 +130,7 @@ impl Option for LookbackOption {
             self.strike,
             self.time_to_maturity,
             flipped_option_type,
-            self.lookback_type,
+            self.permutation,
         )
     }
 

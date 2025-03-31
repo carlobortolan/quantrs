@@ -72,7 +72,7 @@
 //! println!("Option price: {}", price);
 //! ```
 
-use crate::options::{Option, OptionPricing, OptionStrategy, OptionStyle};
+use crate::options::{BarrierOption, Option, OptionPricing, OptionStrategy, OptionStyle};
 
 /// Binomial tree option pricing model.
 #[derive(Debug, Default)]
@@ -104,10 +104,82 @@ impl BinomialTreeModel {
             steps,
         }
     }
+
+    fn price_barrier<T: Option>(&self, option: &T) -> f64 {
+        let dt = option.time_to_maturity() / self.steps as f64;
+        let u = (self.volatility * dt.sqrt()).exp();
+        let d = 1.0 / u;
+        let p = (((self.risk_free_rate - option.instrument().continuous_dividend_yield) * dt)
+            .exp()
+            - d)
+            / (u - d);
+        let discount_factor = (-self.risk_free_rate * dt).exp();
+
+        let barrier_option = option.as_any().downcast_ref::<BarrierOption>();
+        let is_barrier = barrier_option.is_some();
+
+        // Initialize option values at maturity
+        let mut option_values: Vec<(f64, bool)> = (0..=self.steps)
+            .map(|i| {
+                let mut path = vec![];
+                let spot =
+                    option.instrument().spot() * u.powi(i as i32) * d.powi((self.steps - i) as i32);
+                path.push(spot);
+
+                let mut value = option.payoff(Some(spot));
+                let mut activated = false;
+
+                if let Some(barrier_opt) = &barrier_option {
+                    if barrier_opt.is_knocked_out(spot) {
+                        value = 0.0; // Knocked-out options are worthless
+                    } else if barrier_opt.is_activated(&path) {
+                        activated = true; // Track knock-in activation
+                    } else if barrier_opt.is_in() && !activated {
+                        value = 0.0; // Knock-in options are worthless unless activated
+                    }
+                }
+
+                (value, activated)
+            })
+            .collect();
+
+        // Backward induction
+        for step in (0..self.steps).rev() {
+            for i in 0..=step {
+                let mut path = vec![];
+                let spot =
+                    option.instrument().spot() * u.powi(i as i32) * d.powi((step - i) as i32);
+                path.push(spot);
+
+                let expected_value =
+                    discount_factor * (p * option_values[i + 1].0 + (1.0 - p) * option_values[i].0);
+
+                if let Some(barrier_opt) = &barrier_option {
+                    if barrier_opt.is_knocked_out(spot) {
+                        option_values[i] = (0.0, false); // Knocked-out options are worthless
+                    } else if barrier_opt.is_activated(&path) {
+                        option_values[i] = (expected_value, true);
+                    } else if barrier_opt.is_in() && !option_values[i].1 {
+                        option_values[i] = (0.0, false); // Knock-in options are worthless unless activated
+                    } else {
+                        option_values[i] = (expected_value, option_values[i].1);
+                    }
+                } else {
+                    option_values[i] = (expected_value, false);
+                }
+            }
+        }
+
+        option_values[0].0
+    }
 }
 
 impl OptionPricing for BinomialTreeModel {
     fn price<T: Option>(&self, option: &T) -> f64 {
+        if matches!(option.style(), OptionStyle::Barrier(_)) {
+            return self.price_barrier(option);
+        }
+
         // Multiplicative up-/downward movements of an asset in a single step of the binomial tree
         let dt = option.time_to_maturity() / self.steps as f64;
         let u = (self.volatility * dt.sqrt()).exp();
@@ -135,9 +207,13 @@ impl OptionPricing for BinomialTreeModel {
         // Backward induction
         for step in (0..self.steps).rev() {
             for i in 0..=step {
+                let spot =
+                    option.instrument().spot() * u.powi(i as i32) * d.powi((step - i) as i32);
+
                 let expected_value =
                     discount_factor * (p * option_values[i + 1] + (1.0 - p) * option_values[i]);
 
+                // Check if the option can be exercised early
                 if matches!(option.style(), OptionStyle::American)
                     || matches!(option.style(), OptionStyle::Bermudan)
                         && option

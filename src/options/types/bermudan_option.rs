@@ -83,8 +83,8 @@ impl Option for BermudanOption {
         self.option_type
     }
 
-    fn style(&self) -> &OptionStyle {
-        &OptionStyle::Bermudan
+    fn style(&self) -> OptionStyle {
+        OptionStyle::Bermudan
     }
 
     fn flip(&self) -> Self {

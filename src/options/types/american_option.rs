@@ -34,9 +34,9 @@ pub struct AmericanOption {
     pub instrument: Instrument,
     /// Strike price of the option (aka exercise price).
     pub strike: f64,
-    /// Type of the option (Call or Put).
     /// The time horizon (in years).
     pub time_to_maturity: f64,
+    /// Type of the option (Call or Put).
     pub option_type: OptionType,
 }
 
@@ -86,8 +86,8 @@ impl Option for AmericanOption {
         self.option_type
     }
 
-    fn style(&self) -> &OptionStyle {
-        &OptionStyle::American
+    fn style(&self) -> OptionStyle {
+        OptionStyle::American
     }
 
     fn flip(&self) -> Self {

@@ -41,7 +41,7 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 | Bermudan                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)  | ❌ (complex)  | ❌     |
 | ¹Basket                     | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
 | ¹Rainbow                    | ✅ (∀component) | ❌       | ✅           | ✅           | ❌            | ❌     |
-| ²Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ⏳            | ⏳     |
+| ²Barrier                    | ❌ (mod. BSM)   | ❌       | ✅ (flaky)   | ✅           | ⏳            | ⏳     |
 | ²Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ❌ (complex)  | ⏳     |
 | ²Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
 | ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |

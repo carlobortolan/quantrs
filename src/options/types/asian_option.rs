@@ -35,10 +35,8 @@ pub struct AsianOption {
     pub time_to_maturity: f64,
     /// Type of the option (Call or Put).
     pub option_type: OptionType,
-    /// The style of the option (Asian).
-    pub option_style: OptionStyle,
-    /// The type of the Asian option (Fixed or Floating).
-    pub asian_type: Permutation,
+    /// Style of the option (Asian with specific type).
+    pub permutation: Permutation,
 }
 
 impl AsianOption {
@@ -48,15 +46,14 @@ impl AsianOption {
         strike: f64,
         time_to_maturity: f64,
         option_type: OptionType,
-        asian_type: Permutation,
+        permutation: Permutation,
     ) -> Self {
         Self {
             instrument,
             strike,
             time_to_maturity,
             option_type,
-            option_style: OptionStyle::Asian(asian_type),
-            asian_type,
+            permutation,
         }
     }
 
@@ -121,13 +118,13 @@ impl Option for AsianOption {
         self.option_type
     }
 
-    fn style(&self) -> &OptionStyle {
-        &self.option_style
+    fn style(&self) -> OptionStyle {
+        OptionStyle::Asian(self.permutation)
     }
 
     fn payoff(&self, avg_price: std::option::Option<f64>) -> f64 {
         let avg_price = avg_price.unwrap_or(self.instrument.spot());
-        match self.asian_type {
+        match self.permutation {
             Permutation::Fixed => match self.option_type {
                 OptionType::Call => (avg_price - self.strike).max(0.0),
                 OptionType::Put => (self.strike - avg_price).max(0.0),
@@ -149,7 +146,7 @@ impl Option for AsianOption {
             self.strike,
             self.time_to_maturity,
             flipped_option_type,
-            self.asian_type,
+            self.permutation,
         )
     }
 

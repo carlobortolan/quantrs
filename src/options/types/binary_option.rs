@@ -51,14 +51,14 @@ impl BinaryOption {
         strike: f64,
         time_to_maturity: f64,
         option_type: OptionType,
-        binary_option_type: BinaryType,
+        binary_type: BinaryType,
     ) -> Self {
         Self {
             instrument,
             strike,
             time_to_maturity,
             option_type,
-            option_style: OptionStyle::Binary(binary_option_type),
+            option_style: OptionStyle::Binary(binary_type),
         }
     }
 
@@ -133,8 +133,8 @@ impl Option for BinaryOption {
         self.option_type
     }
 
-    fn style(&self) -> &OptionStyle {
-        &self.option_style
+    fn style(&self) -> OptionStyle {
+        self.option_style
     }
 
     fn flip(&self) -> Self {
