@@ -20,7 +20,7 @@ rust-version = "1.77.0"
 [dependencies]
 chrono = "0.4.40"
 plotters = "0.3.7"
-rand = "0.9.0"
+rand = "0.9.1"
 rand_distr = "0.5.1"
 rayon = "1.10.0"
 statrs = "0.18.0"
