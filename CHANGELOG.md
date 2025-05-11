@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-05-11
+
+### Added
+
+- Add Black-76 pricing model
+- Implement lookback options
+- Implement bermudan options
+
+### Changed
+
+- Updated dependencies to latest versions
+
+### Fixed
+
+- Fix time spread and flaky strategies
+
 ## [0.1.6] - 2025-03-22
 
 ### Added
@@ -28,5 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolved issues with fontconfig in CI pipeline
 - Fixed margin spacing in plot visualization
 
-[Unreleased]: https://github.com/carlobortolan/quantrs/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/carlobortolan/quantrs/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/carlobortolan/quantrs/releases/tag/v0.1.7
 [0.1.6]: https://github.com/carlobortolan/quantrs/releases/tag/v0.1.6
