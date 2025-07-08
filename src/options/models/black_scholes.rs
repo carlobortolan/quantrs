@@ -34,7 +34,7 @@
 //! let model = BlackScholesModel::new(0.05, 0.2);
 //!
 //! let price = model.price(&option);
-//! println!("Option price: {}", price);
+//! println!("Option price: {price}");
 //! ```
 
 use crate::options::{

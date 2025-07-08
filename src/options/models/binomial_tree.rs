@@ -69,7 +69,7 @@
 //! let model = BinomialTreeModel::new(0.05, 0.2, 100);
 //!
 //! let price = model.price(&option);
-//! println!("Option price: {}", price);
+//! println!("Option price: {price}");
 //! ```
 
 use crate::options::{Option, OptionPricing, OptionStrategy, OptionStyle};

@@ -23,7 +23,7 @@
 //! let model = MonteCarloModel::geometric(0.05, 0.2, 10_000, 252);
 //!
 //! let price = model.price(&option);
-//! println!("Monte Carlo Call Price: {}", price);
+//! println!("Monte Carlo Call Price: {price}");
 //! ```
 
 use crate::options::{Option, OptionPricing, OptionStrategy, OptionStyle, SimMethod};
