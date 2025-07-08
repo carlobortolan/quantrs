@@ -38,4 +38,5 @@ mod macros {
     pub mod validation_macros;
 }
 
+pub mod data;
 pub mod options;
