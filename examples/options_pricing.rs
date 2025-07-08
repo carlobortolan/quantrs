@@ -48,14 +48,14 @@ fn example_black_scholes() {
     let model = BlackScholesModel::new(0.05, 0.2);
 
     let call_price = model.price(&option);
-    println!("Black-Scholes Call Price: {}", call_price);
+    println!("Black-Scholes Call Price: {call_price}");
 
     let put_price = model.price(&option.flip());
-    println!("Black-Scholes Put Price: {}", put_price);
+    println!("Black-Scholes Put Price: {put_price}");
 
     let market_price = 10.0; // Example market price
     let implied_volatility = model.implied_volatility(&option, market_price);
-    println!("Implied Volatility: {}\n", implied_volatility);
+    println!("Implied Volatility: {implied_volatility}\n");
 }
 
 fn example_binomial_tree() {
@@ -64,14 +64,14 @@ fn example_binomial_tree() {
     let model = BinomialTreeModel::new(0.05, 0.2, 100);
 
     let call_price = model.price(&option);
-    println!("Binomial Tree Call Price: {}", call_price);
+    println!("Binomial Tree Call Price: {call_price}");
 
     let put_price = model.price(&option.flip());
-    println!("Binomial Tree Put Price: {}", put_price);
+    println!("Binomial Tree Put Price: {put_price}");
     //
     //let market_price = 10.0; // Example market price
     //let implied_volatility = model.implied_volatility(&option, market_price);
-    //println!("Implied Volatility: {}\n", implied_volatility);
+    //println!("Implied Volatility: {implied_volatility}\n");
 }
 
 fn example_monte_carlo() {
@@ -115,14 +115,14 @@ fn example_black_76() {
     let model = Black76Model::new(0.050067, 0.35);
 
     let call_price = model.price(&option);
-    println!("Black-76 Call Price: {}", call_price);
+    println!("Black-76 Call Price: {call_price}");
 
     let put_price = model.price(&option.flip());
-    println!("Black-76 Put Price: {}", put_price);
+    println!("Black-76 Put Price: {put_price}");
 
     let market_price = 10.0; // Example market price
     let implied_volatility = model.implied_volatility(&option, market_price);
-    println!("Implied Volatility: {}\n", implied_volatility);
+    println!("Implied Volatility: {implied_volatility}\n");
 }
 
 fn example_greeks() {
@@ -155,16 +155,16 @@ fn example_asian() {
     let geometric_model = MonteCarloModel::geometric(0.03, 0.2, 4_000, 20);
 
     let price = arithmetic_model.price(&option);
-    println!("Arithmetic Call Price: {}", price);
+    println!("Arithmetic Call Price: {price}");
 
     let price = arithmetic_model.price(&option.flip());
-    println!("Arithmetic Put Price: {}", price);
+    println!("Arithmetic Put Price: {price}");
 
     let price = geometric_model.price(&option);
-    println!("Geometric Call Price: {}", price);
+    println!("Geometric Call Price: {price}");
 
     let price = geometric_model.price(&option.flip());
-    println!("Geometric Put Price: {}", price);
+    println!("Geometric Put Price: {price}");
 }
 
 fn example_rainbow() {

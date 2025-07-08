@@ -253,7 +253,7 @@ pub trait OptionStrategy: OptionPricing {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut chart = ChartBuilder::on(upper)
             .caption(
-                format!("{} Strategy - Payoff & P/L", strategy_name),
+                format!("{strategy_name} Strategy - Payoff & P/L"),
                 ("Inter", 60, FontStyle::Bold).into_font().color(&WHITE),
             )
             .margin(60)

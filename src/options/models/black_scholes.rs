@@ -34,7 +34,7 @@
 //! let model = BlackScholesModel::new(0.05, 0.2);
 //!
 //! let price = model.price(&option);
-//! println!("Option price: {}", price);
+//! println!("Option price: {price}");
 //! ```
 
 use crate::options::{
@@ -285,7 +285,7 @@ impl BlackScholesModel {
 
         assert!(s > 0.0 && max > 0.0 && min > 0.0, "Spot prices must be > 0");
 
-        println!("max: {}, min: {}", max, min);
+        println!("max: {max}, min: {min}");
 
         let a1 = |s: f64, h: f64| ((s / h).ln() + (r + 0.5 * vola.powi(2)) * t) / (vola * sqrt_t);
         let a2 = |s: f64, h: f64| a1(s, h) - vola * sqrt_t;
