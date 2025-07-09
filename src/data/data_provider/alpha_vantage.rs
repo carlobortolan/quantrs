@@ -16,7 +16,7 @@ impl AlphaVantageSource {
     pub fn new(user_key: &str) -> Self {
         AlphaVantageSource {
             base_url: "https://www.alphavantage.co/query".to_string(),
-            api_key: String::from(user_key),
+            api_key: String::from(apiKey),
         }
     }
 }
