@@ -8,6 +8,8 @@
 //!
 //! - Historical and Quote stock price retrieval.
 
+pub use data_provider::DataProvider;
+
 mod data_models;
 mod data_provider;
 mod traits;

@@ -1,7 +1,7 @@
 //! Module listing supported data providers.
 
-enum DataProvider {
-    alpha_vantage,
+pub enum DataProvider {
+    AlphaVantage,
 }
 
 mod alpha_vantage;
