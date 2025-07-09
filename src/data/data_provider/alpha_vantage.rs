@@ -6,10 +6,10 @@ pub struct AlphaVantageSource {
 }
 
 impl AlphaVantageSource {
-    pub fn new(apiKey: &str) -> Self {
+    pub fn new(user_key: &str) -> Self {
         AlphaVantageSource {
             base_url: "https://www.alphavantage.co/query".to_string(),
-            api_key: String::from(apiKey),
+            api_key: String::from(user_key),
         }
     }
 }
