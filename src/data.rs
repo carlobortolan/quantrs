@@ -8,7 +8,7 @@
 //!
 //! - Historical and Quote stock price retrieval.
 
-pub use data_provider::DataProvider;
+pub use data_provider::{AlphaVantageSource, DataProvider};
 
 mod data_models;
 mod data_provider;
