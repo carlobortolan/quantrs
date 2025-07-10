@@ -1,7 +1,6 @@
 //! Module holds data models and structs for deserializig from JSON responses.
 
 use serde::{Deserialize, Serialize};
-
 #[allow(dead_code)]
 pub enum Resolution {
     Intraday,
