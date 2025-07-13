@@ -47,3 +47,37 @@ impl StocksSource for AlphaVantageSource {
         }
     }
 }
+
+impl DataSource for AlphaVantageSource {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    // Implement methods required by the DataSource trait
+}
+
+impl StocksSource for AlphaVantageSource {
+    async fn get_stock_quote(&self, symbol: &str) -> Result<GlobalQuote, Error> {
+        // Construct the request URL
+        let url = format!(
+            "{}?function=GLOBAL_QUOTE&symbol={}&apikey={}",
+            self.base_url, symbol, self.api_key
+        );
+
+        let response = reqwest::get(&url).await.unwrap();
+
+        match response.status() {
+            reqwest::StatusCode::OK => match response.json::<GlobalQuote>().await {
+                Ok(quote) => Ok(quote),
+                Err(_) => Err(Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Failed to parse JSON",
+                )),
+            },
+            _ => Err(Error::new(
+                std::io::ErrorKind::Other,
+                "Failed to fetch stock quote",
+            )),
+        }
+    }
+}
