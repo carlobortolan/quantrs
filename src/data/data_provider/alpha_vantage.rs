@@ -13,7 +13,6 @@ pub struct AlphaVantageSource {
 }
 
 impl AlphaVantageSource {
-    #[allow(dead_code)]
     pub fn new(user_key: &str) -> Self {
         AlphaVantageSource {
             base_url: "https://www.alphavantage.co/query".to_string(),
@@ -48,14 +47,6 @@ impl StocksSource for AlphaVantageSource {
     }
 }
 
-impl DataSource for AlphaVantageSource {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    // Implement methods required by the DataSource trait
-}
-
 impl StocksSource for AlphaVantageSource {
     async fn get_stock_quote(&self, symbol: &str) -> Result<GlobalQuote, Error> {
         // Construct the request URL
@@ -67,8 +58,8 @@ impl StocksSource for AlphaVantageSource {
         let response = reqwest::get(&url).await.unwrap();
 
         match response.status() {
-            reqwest::StatusCode::OK => match response.json::<GlobalQuote>().await {
-                Ok(quote) => Ok(quote),
+            reqwest::StatusCode::OK => match response.json::<GlobalQuoteResponse>().await {
+                Ok(quote) => Ok(quote.global_quote),
                 Err(_) => Err(Error::new(
                     std::io::ErrorKind::InvalidData,
                     "Failed to parse JSON",
