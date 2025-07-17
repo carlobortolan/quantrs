@@ -23,6 +23,7 @@ pub struct GlobalQuoteResponse {
 
 /// Represents a global stock quote.
 #[derive(Debug, Serialize, Deserialize)]
+<<<<<<< HEAD
 pub struct GlobalQuote {
     #[serde(rename = "01. symbol")]
     symbol: String,
@@ -278,4 +279,33 @@ impl fmt::Display for GlobalQuote {
         writeln!(f, "│ Trading Day:   {:>11} │", self.latest_trading_day)?;
         write!(f, "└─────────────────────────┘")
     }
+=======
+pub struct GlobalQuoteResponse {
+    #[serde(rename = "Global Quote")]
+    pub global_quote: GlobalQuote,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GlobalQuote {
+    #[serde(rename = "01. symbol")]
+    symbol: String,
+    #[serde(rename = "02. open")]
+    open: String,
+    #[serde(rename = "03. high")]
+    high: String,
+    #[serde(rename = "04. low")]
+    low: String,
+    #[serde(rename = "05. price")]
+    price: String,
+    #[serde(rename = "06. volume")]
+    volume: String,
+    #[serde(rename = "07. latest trading day")]
+    latest_trading_day: String,
+    #[serde(rename = "08. previous close")]
+    previous_close: String,
+    #[serde(rename = "09. change")]
+    change: String,
+    #[serde(rename = "10. change percent")]
+    change_percent: String,
+>>>>>>> 93b2ad5 (feat: fetch global quote for alpha vantage)
 }
