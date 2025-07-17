@@ -11,14 +11,31 @@ pub enum Resolution {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct GlobalQuoteResponse {
+    #[serde(rename = "Global Quote")]
+    pub global_quote: GlobalQuote,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GlobalQuote {
+    #[serde(rename = "01. symbol")]
     symbol: String,
-    open: f32,
-    high: f32,
-    low: f32,
-    price: f32,
-    volume: f32,
+    #[serde(rename = "02. open")]
+    open: String,
+    #[serde(rename = "03. high")]
+    high: String,
+    #[serde(rename = "04. low")]
+    low: String,
+    #[serde(rename = "05. price")]
+    price: String,
+    #[serde(rename = "06. volume")]
+    volume: String,
+    #[serde(rename = "07. latest trading day")]
     latest_trading_day: String,
-    previous_close: f32,
-    change_percent: f32,
+    #[serde(rename = "08. previous close")]
+    previous_close: String,
+    #[serde(rename = "09. change")]
+    change: String,
+    #[serde(rename = "10. change percent")]
+    change_percent: String,
 }

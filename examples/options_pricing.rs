@@ -6,17 +6,32 @@ use quantrs::options::{
     OptionType::*, RainbowOption,
 };
 
-fn main() {
-    example_from_readme();
-    example_black_scholes();
-    example_binomial_tree();
-    example_monte_carlo();
-    example_black_76();
-    example_greeks();
-    example_asian();
-    example_rainbow();
-    example_strategy();
-    example_plots();
+#[tokio::main]
+async fn main() {
+    // example_from_readme();
+    // example_black_scholes();
+    // example_binomial_tree();
+    // example_monte_carlo();
+    // example_black_76();
+    // example_greeks();
+    // example_asian();
+    // example_rainbow();
+    // example_strategy();
+    // example_plots();
+    example_data_module().await;
+}
+
+async fn example_data_module() {
+    // This example demonstrates how to use the DataProvider to fetch stock quotes.
+    use quantrs::data::DataProvider;
+
+    // Create a new DataProvider instance using Alpha Vantage.
+    // Replace "demo" with your actual Alpha Vantage API key.
+    let dp = DataProvider::AlphaVantage(String::from("demo"));
+
+    // Fetch the stock quote for IBM.
+    let quote = dp.get_stock_quote("IBM").await.unwrap();
+    println!("IBM Quote: {:?}", quote);
 }
 
 fn example_from_readme() {

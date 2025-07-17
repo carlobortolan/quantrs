@@ -4,31 +4,21 @@ use reqwest;
 
 use std::io::Error;
 
-use crate::data::traits::{DataSource, StocksSource};
-use crate::data::GlobalQuote;
+use crate::data::traits::StocksSource;
+use crate::data::{GlobalQuote, GlobalQuoteResponse};
 
-#[allow(dead_code)]
 pub struct AlphaVantageSource {
     base_url: String,
     api_key: String,
 }
 
 impl AlphaVantageSource {
-    #[allow(dead_code)]
     pub fn new(user_key: &str) -> Self {
         AlphaVantageSource {
             base_url: "https://www.alphavantage.co/query".to_string(),
             api_key: String::from(user_key),
         }
     }
-}
-
-impl DataSource for AlphaVantageSource {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    // Implement methods required by the DataSource trait
 }
 
 impl StocksSource for AlphaVantageSource {
@@ -42,8 +32,8 @@ impl StocksSource for AlphaVantageSource {
         let response = reqwest::get(&url).await.unwrap();
 
         match response.status() {
-            reqwest::StatusCode::OK => match response.json::<GlobalQuote>().await {
-                Ok(quote) => Ok(quote),
+            reqwest::StatusCode::OK => match response.json::<GlobalQuoteResponse>().await {
+                Ok(quote) => Ok(quote.global_quote),
                 Err(_) => Err(Error::new(
                     std::io::ErrorKind::InvalidData,
                     "Failed to parse JSON",

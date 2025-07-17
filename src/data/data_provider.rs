@@ -1,18 +1,27 @@
 //! Module listing supported data providers.
 
-use super::traits::DataSource;
+use crate::data::GlobalQuote;
+
+use super::traits::StocksSource;
+
+use std::io::Error;
 
 pub use alpha_vantage::AlphaVantageSource;
+
+/// Enum representing different data providers.
 pub enum DataProvider {
-    AlphaVantage,
+    AlphaVantage(String),
 }
 
 mod alpha_vantage;
 
+/// Implementation on the DataProvider enum to perform actions based on the provider type.
 impl DataProvider {
-    pub fn new(provider: DataProvider, user_key: &str) -> Box<dyn DataSource> {
-        match provider {
-            DataProvider::AlphaVantage => Box::new(AlphaVantageSource::new(user_key)),
+    pub async fn get_stock_quote(&self, symbol: &str) -> Result<GlobalQuote, Error> {
+        match self {
+            DataProvider::AlphaVantage(key) => {
+                AlphaVantageSource::new(key).get_stock_quote(symbol).await
+            }
         }
     }
 }
