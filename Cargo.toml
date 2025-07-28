@@ -30,7 +30,7 @@ tokio = { version = "1.46.1", features = ["full"] }
 
 [dev-dependencies]
 approx = "0.5.1"
-criterion = { version = "0.6", features = ["html_reports"] }
+criterion = { version = "0.7", features = ["html_reports"] }
 
 [[bench]]
 name = "option_pricing_bench"
