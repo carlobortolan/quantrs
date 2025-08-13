@@ -9,12 +9,16 @@ pub enum Resolution {
     Monthly,
 }
 
+/// Represents a global stock quote response.
+/// This struct is used to deserialize the JSON response from the Alpha Vantage API.
+/// It contains the `GlobalQuote` field which holds the actual stock quote data.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlobalQuoteResponse {
     #[serde(rename = "Global Quote")]
     pub global_quote: GlobalQuote,
 }
 
+/// Represents a global stock quote.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlobalQuote {
     #[serde(rename = "01. symbol")]

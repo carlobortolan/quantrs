@@ -2,7 +2,7 @@
 
 use crate::data::GlobalQuote;
 
-use super::traits::StocksSource;
+use super::traits::QuoteProvider;
 
 use std::io::Error;
 

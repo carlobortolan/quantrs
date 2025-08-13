@@ -4,17 +4,22 @@ use reqwest;
 
 use std::io::Error;
 
-use crate::data::traits::StocksSource;
+use crate::data::traits::QuoteProvider;
 use crate::data::{GlobalQuote, GlobalQuoteResponse};
 
+// Struct representing the Alpha Vantage data provider
+// It contains the base URL and the API key for making requests.
 pub struct AlphaVantageSource {
+    client: reqwest::Client,
     base_url: String,
     api_key: String,
 }
 
+// Implementation of the Alpha Vantage data provider
 impl AlphaVantageSource {
     pub fn new(user_key: &str) -> Self {
         AlphaVantageSource {
+            client: reqwest::Client::new(),
             base_url: "https://www.alphavantage.co/query".to_string(),
             api_key: String::from(apiKey),
         }
@@ -47,7 +52,8 @@ impl StocksSource for AlphaVantageSource {
     }
 }
 
-impl StocksSource for AlphaVantageSource {
+// Implementation of the StocksSource trait for AlphaVantageSource
+impl QuoteProvider for AlphaVantageSource {
     async fn get_stock_quote(&self, symbol: &str) -> Result<GlobalQuote, Error> {
         // Construct the request URL
         let url = format!(
@@ -55,8 +61,12 @@ impl StocksSource for AlphaVantageSource {
             self.base_url, symbol, self.api_key
         );
 
-        let response = reqwest::get(&url).await.unwrap();
+        let response =
+            self.client.get(&url).send().await.map_err(|e| {
+                Error::new(std::io::ErrorKind::Other, format!("Request failed: {}", e))
+            })?;
 
+        // Check the response status and parse the JSON if successful
         match response.status() {
             reqwest::StatusCode::OK => match response.json::<GlobalQuoteResponse>().await {
                 Ok(quote) => Ok(quote.global_quote),
