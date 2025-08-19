@@ -17,7 +17,7 @@ impl DayCountConvention for DayCount {
             }
             DayCount::ActActICMA => {
                 // ICMA method - requires coupon frequency
-                days / 365.0 // Simplified
+                days / 365.0 // TODO: Simplified
             }
         }
     }
@@ -76,7 +76,7 @@ impl DayCount {
 
     fn act_act_isda_year_fraction(&self, start: NaiveDate, end: NaiveDate) -> f64 {
         // Simplified ACT/ACT ISDA calculation
-        // Real implementation would handle year boundaries properly
+        // TODO: Real implementation would handle year boundaries properly
         let days = (end - start).num_days() as f64;
         let year = start.year();
         let is_leap = chrono::NaiveDate::from_ymd_opt(year, 2, 29).is_some();
