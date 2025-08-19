@@ -1,22 +1,49 @@
+use chrono::NaiveDate;
+use quantrs::fixed_income::{BondPricingError, DayCount, PriceResult};
+
 #[cfg(test)]
 mod tests {
-    mod corporate_bond_tests {
-        #[test]
-        fn test_corporate_bond_price() {}
+    use super::*;
+
+    #[test]
+    fn test_bond_pricing_error_display() {
+        let error = BondPricingError::InvalidYield(1.5);
+        assert_eq!(format!("{}", error), "Invalid yield to maturity: 1.5");
+
+        let settlement = NaiveDate::from_ymd_opt(2025, 8, 19).unwrap();
+        let maturity = NaiveDate::from_ymd_opt(2024, 12, 31).unwrap();
+        let error = BondPricingError::settlement_after_maturity(settlement, maturity);
+        assert!(format!("{}", error).contains("Settlement date"));
     }
 
-    mod floating_rate_bond_tests {
-        #[test]
-        fn test_floating_rate_bond_price() {}
+    #[test]
+    fn test_invalid_frequency_error() {
+        let error = BondPricingError::InvalidFrequency(3);
+        assert_eq!(
+            format!("{}", error),
+            "Invalid coupon frequency: 3. Must be 1, 2, 4, or 12"
+        );
     }
 
-    mod treasury_bond_tests {
-        #[test]
-        fn test_treasury_bond_price() {}
+    #[test]
+    fn test_day_count_enum() {
+        let day_count = DayCount::Act365F;
+        assert_eq!(day_count, DayCount::Act365F);
+
+        let day_count = DayCount::Thirty360US;
+        assert_eq!(day_count, DayCount::Thirty360US);
     }
 
-    mod zero_coupon_bond_tests {
-        #[test]
-        fn test_zero_coupon_bond_price() {}
+    #[test]
+    fn test_price_result_creation() {
+        let result = PriceResult {
+            clean: 98.5,
+            dirty: 100.2,
+            accrued: 1.7,
+        };
+
+        assert_eq!(result.clean, 98.5);
+        assert_eq!(result.dirty, 100.2);
+        assert_eq!(result.accrued, 1.7);
     }
 }
