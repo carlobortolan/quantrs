@@ -1,5 +1,5 @@
 use crate::fixed_income::{Bond, BondPricingError, DayCount, PriceResult};
-use chrono::{Datelike, NaiveDate};
+use chrono::NaiveDate;
 
 #[derive(Debug, Clone)]
 pub struct ZeroCouponBond {
@@ -34,20 +34,11 @@ impl Bond for ZeroCouponBond {
             ));
         }
 
-        // Calculate time to maturity in years
-        let days_to_maturity = (self.maturity - settlement).num_days() as f64;
-        let years_to_maturity = match day_count {
-            DayCount::Act365F => days_to_maturity / 365.0,
-            DayCount::Act360 => days_to_maturity / 360.0,
-            DayCount::Thirty360US => {
-                let years = (self.maturity.year() - settlement.year()) as f64;
-                let months =
-                    (self.maturity.month() as i32 - settlement.month() as i32) as f64 / 12.0;
-                let days = (self.maturity.day() as i32 - settlement.day() as i32) as f64 / 360.0;
-                years + months + days
-            }
-            _ => days_to_maturity / 365.0,
-        };
+        let years_to_maturity = crate::fixed_income::DayCountConvention::year_fraction(
+            &day_count,
+            settlement,
+            self.maturity,
+        );
 
         // Zero coupon bond price = Face Value / (1 + ytm)^t
         let clean_price = self.face_value / (1.0 + ytm).powf(years_to_maturity);
