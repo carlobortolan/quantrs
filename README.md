@@ -205,13 +205,9 @@ _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD 
 
 This crate requires a Rust version of 1.77.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
-## Outlook
-
-See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
-
 ## Contributing
 
-If you find any bugs or have suggestions for improvement, please open a new issue or submit a pull request.
+If you find any bugs or have suggestions for improvement, please open a new issue or PR. See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
 
 ## Disclaimer
 
