@@ -1,26 +1,35 @@
 use chrono::NaiveDate;
-use quantrs::fixed_income::{DayCount, ZeroCouponBond};
+use quantrs::fixed_income::DayCount;
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     mod zero_coupon_bond_tests {
+        use approx::assert_abs_diff_eq;
         use chrono::NaiveDate;
         use quantrs::fixed_income::{Bond, DayCount, ZeroCouponBond};
 
         #[test]
-        fn test_zero_coupon_bond_pricing() {
-            let settlement = NaiveDate::from_ymd_opt(2025, 8, 19).unwrap();
+        fn test_zero_coupon_bond_creation() {
             let maturity = NaiveDate::from_ymd_opt(2030, 12, 31).unwrap();
+            let bond = ZeroCouponBond::new(1000.0, maturity);
+
+            assert_eq!(bond.face_value, 1000.0);
+            assert_eq!(bond.maturity, maturity);
+        }
+
+        #[test]
+        fn test_zero_coupon_bond_pricing() {
+            let settlement = NaiveDate::from_ymd_opt(2025, 6, 19).unwrap();
+            let maturity = NaiveDate::from_ymd_opt(2035, 9, 19).unwrap();
             let bond = ZeroCouponBond::new(1000.0, maturity);
 
             let result = bond.price(settlement, 0.04, DayCount::Act365F);
             assert!(result.is_ok());
 
             let price_result = result.unwrap();
-            assert!(price_result.clean > 0.0);
-            assert!(price_result.clean < 1000.0); // Should be discounted
+            assert_abs_diff_eq!(price_result.clean, 668.77, epsilon = 0.1);
             assert_eq!(price_result.accrued, 0.0); // Zero coupon bonds have no accrued interest
             assert_eq!(price_result.dirty, price_result.clean);
         }
@@ -108,12 +117,262 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_zero_coupon_bond_creation() {
-        let maturity = NaiveDate::from_ymd_opt(2030, 12, 31).unwrap();
-        let bond = ZeroCouponBond::new(1000.0, maturity);
+    mod day_count_tests {
+        use approx::assert_abs_diff_eq;
+        use chrono::NaiveDate;
+        use quantrs::fixed_income::{DayCount, DayCountConvention};
 
-        assert_eq!(bond.face_value, 1000.0);
-        assert_eq!(bond.maturity, maturity);
+        #[test]
+        fn test_act365f_day_count() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap(); // 365 days
+            let day_count = DayCount::Act365F;
+
+            let days = day_count.day_count(start, end);
+            let year_fraction = day_count.year_fraction(start, end);
+
+            assert_eq!(days, 365);
+            assert_abs_diff_eq!(year_fraction, 1.0, epsilon = 0.0001); // Should be exactly 1 year
+        }
+
+        #[test]
+        fn test_act360_day_count() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 4, 1).unwrap(); // 90 days
+            let day_count = DayCount::Act360;
+
+            let days = day_count.day_count(start, end);
+            let year_fraction = day_count.year_fraction(start, end);
+
+            assert_eq!(days, 90);
+            assert_abs_diff_eq!(year_fraction, 0.25, epsilon = 0.0001); // 90/360 = 0.25
+        }
+
+        #[test]
+        fn test_thirty360us_same_month() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 15).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 1, 25).unwrap();
+            let day_count = DayCount::Thirty360US;
+
+            let days = day_count.day_count(start, end);
+            let year_fraction = day_count.year_fraction(start, end);
+
+            assert_eq!(days, 10); // 25 - 15 = 10 days
+            assert_abs_diff_eq!(year_fraction, 10.0 / 360.0, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_thirty360us_different_months() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 7, 1).unwrap(); // 6 months
+            let day_count = DayCount::Thirty360US;
+
+            let days = day_count.day_count(start, end);
+            let year_fraction = day_count.year_fraction(start, end);
+
+            assert_eq!(days, 180); // 6 months * 30 days = 180 days
+            assert_abs_diff_eq!(year_fraction, 0.5, epsilon = 0.0001); // 180/360 = 0.5
+        }
+
+        #[test]
+        fn test_thirty360us_end_of_month() {
+            // Test 30/360 US rule: if day 1 is 31st, change to 30th
+            let start = NaiveDate::from_ymd_opt(2025, 1, 31).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 2, 28).unwrap();
+            let day_count = DayCount::Thirty360US;
+
+            let days = day_count.day_count(start, end);
+
+            // Should treat Jan 31 as Jan 30, so Feb 28 - Jan 30 = 28 days in 30/360
+            assert_eq!(days, 28);
+        }
+
+        #[test]
+        fn test_thirty360us_both_end_of_month() {
+            // Test rule: if both dates are 31st and day1 >= 30, change day2 to 30
+            let start = NaiveDate::from_ymd_opt(2025, 1, 31).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 3, 31).unwrap();
+            let day_count = DayCount::Thirty360US;
+
+            let days = day_count.day_count(start, end);
+
+            // Jan 31 -> Jan 30, Mar 31 -> Mar 30, so 2 months = 60 days
+            assert_eq!(days, 60);
+        }
+
+        #[test]
+        fn test_thirty360e_end_of_month() {
+            // Test European rule: any 31st becomes 30th
+            let start = NaiveDate::from_ymd_opt(2025, 1, 31).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 3, 31).unwrap();
+            let day_count = DayCount::Thirty360E;
+
+            let days = day_count.day_count(start, end);
+
+            // Both 31st become 30th, so exactly 2 months = 60 days
+            assert_eq!(days, 60);
+        }
+
+        #[test]
+        fn test_actact_isda_leap_year() {
+            let start = NaiveDate::from_ymd_opt(2023, 12, 31).unwrap();
+            let end = NaiveDate::from_ymd_opt(2024, 3, 3).unwrap();
+            assert_eq!(DayCount::ActActISDA.day_count(start, end), 63);
+            assert_eq!(DayCount::ActActISDA.year_fraction(start, end), 63.0 / 365.0);
+
+            let start = NaiveDate::from_ymd_opt(2024, 2, 28).unwrap();
+            let end = NaiveDate::from_ymd_opt(2024, 2, 29).unwrap();
+            assert_eq!(DayCount::ActActISDA.day_count(start, end), 1);
+            assert_eq!(DayCount::ActActISDA.year_fraction(start, end), 1.0 / 366.0);
+        }
+
+        #[test]
+        fn test_actact_isda_non_leap_year() {
+            let start = NaiveDate::from_ymd_opt(2025, 12, 31).unwrap();
+            let end: NaiveDate = NaiveDate::from_ymd_opt(2026, 3, 3).unwrap();
+            assert_eq!(DayCount::ActActISDA.day_count(start, end), 62);
+            assert_eq!(DayCount::ActActISDA.year_fraction(start, end), 62.0 / 365.0);
+        }
+
+        // TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+        #[test]
+        fn test_actact_icma_leap_year() {
+            let start = NaiveDate::from_ymd_opt(2023, 12, 31).unwrap();
+            let end = NaiveDate::from_ymd_opt(2024, 3, 3).unwrap();
+            assert_eq!(DayCount::ActActICMA.day_count(start, end), 63);
+            assert_eq!(DayCount::ActActICMA.year_fraction(start, end), 63.0 / 365.0);
+
+            let start = NaiveDate::from_ymd_opt(2024, 2, 28).unwrap();
+            let end = NaiveDate::from_ymd_opt(2024, 2, 29).unwrap();
+            assert_eq!(DayCount::ActActICMA.day_count(start, end), 1);
+            assert_eq!(DayCount::ActActICMA.year_fraction(start, end), 1.0 / 365.0);
+        }
+
+        #[test]
+        fn test_actact_icma_non_leap_year() {
+            let start = NaiveDate::from_ymd_opt(2025, 12, 31).unwrap();
+            let end = NaiveDate::from_ymd_opt(2026, 3, 3).unwrap();
+            assert_eq!(DayCount::ActActICMA.day_count(start, end), 62);
+            assert_eq!(DayCount::ActActICMA.year_fraction(start, end), 62.0 / 365.0);
+        }
+
+        #[test]
+        fn test_different_day_counts_same_period() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 7, 1).unwrap(); // 6 months
+
+            let act365f = DayCount::Act365F.year_fraction(start, end);
+            let act360 = DayCount::Act360.year_fraction(start, end);
+            let thirty360us = DayCount::Thirty360US.year_fraction(start, end);
+
+            // All should be different values for the same period
+            assert!(act365f != act360);
+            assert!(act360 != thirty360us);
+            assert!(act365f != thirty360us);
+
+            // 30/360 should be exactly 0.5 for 6 months
+            assert_abs_diff_eq!(thirty360us, 0.5, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_leap_year_handling() {
+            // 2024 is a leap year
+            let start = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(); // 366 days (leap year)
+
+            let act365f = DayCount::Act365F.year_fraction(start, end);
+            let act_act_isda = DayCount::ActActISDA.year_fraction(start, end);
+
+            // Act/365F always uses 365
+            assert_abs_diff_eq!(act365f, 366.0 / 365.0, epsilon = 0.0001);
+
+            // Act/Act ISDA should handle leap year properly (closer to 1.0)
+            assert!(act_act_isda > act365f); // Should be more accurate for leap year
+        }
+
+        #[test]
+        fn test_zero_day_period() {
+            let date = NaiveDate::from_ymd_opt(2025, 6, 15).unwrap();
+            let day_count = DayCount::Act365F;
+
+            let days = day_count.day_count(date, date);
+            let year_fraction = day_count.year_fraction(date, date);
+
+            assert_eq!(days, 0);
+            assert_eq!(year_fraction, 0.0);
+        }
+
+        #[test]
+        fn test_short_period() {
+            let start = NaiveDate::from_ymd_opt(2025, 6, 15).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 6, 16).unwrap(); // 1 day
+            let day_count = DayCount::Act365F;
+
+            let days = day_count.day_count(start, end);
+            let year_fraction = day_count.year_fraction(start, end);
+
+            assert_eq!(days, 1);
+            assert_abs_diff_eq!(year_fraction, 1.0 / 365.0, epsilon = 0.000001);
+        }
+
+        #[test]
+        fn test_all_day_count_conventions() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 12, 31).unwrap();
+
+            let conventions = [
+                DayCount::Act365F,
+                DayCount::Act365,
+                DayCount::Act360,
+                DayCount::Thirty360US,
+                DayCount::Thirty360E,
+                DayCount::ActActISDA,
+                DayCount::ActActICMA,
+            ];
+
+            for convention in &conventions {
+                let days = convention.day_count(start, end);
+                let year_fraction = convention.year_fraction(start, end);
+
+                // All should produce valid results
+                assert!(
+                    days > 0,
+                    "Day count should be positive for {:?}",
+                    convention
+                );
+                assert!(
+                    year_fraction > 0.0,
+                    "Year fraction should be positive for {:?}",
+                    convention
+                );
+                assert!(
+                    year_fraction < 2.0,
+                    "Year fraction should be reasonable for {:?}",
+                    convention
+                );
+            }
+        }
+
+        #[test]
+        fn test_day_count_consistency() {
+            let start = NaiveDate::from_ymd_opt(2025, 3, 15).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 9, 15).unwrap(); // 6 months
+
+            // Test that the relationship between day_count and year_fraction is consistent
+            for convention in [DayCount::Act365F, DayCount::Act360, DayCount::Thirty360US] {
+                let days = convention.day_count(start, end) as f64;
+                let year_fraction = convention.year_fraction(start, end);
+
+                let expected_year_fraction = match convention {
+                    DayCount::Act365F => days / 365.0,
+                    DayCount::Act360 => days / 360.0,
+                    DayCount::Thirty360US => days / 360.0,
+                    _ => continue,
+                };
+
+                assert_abs_diff_eq!(year_fraction, expected_year_fraction, epsilon = 0.0001);
+            }
+        }
     }
 }

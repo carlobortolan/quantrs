@@ -1,3 +1,11 @@
+/// Implementations of various day count conventions for fixed income calculations.
+///
+/// References:
+/// - https://www.isda.org/2011/01/07/act-act-icma
+/// - https://www.isda.org/a/NIJEE/ICMA-Rule-Book-Rule-251-reproduced-by-permission-of-ICMA.pdf
+/// - https://quant.stackexchange.com/questions/71858
+/// - https://www.investopedia.com/terms/d/daycountconvention.asp
+/// - https://en.wikipedia.org/wiki/Day_count_convention
 use crate::fixed_income::{DayCount, DayCountConvention};
 use chrono::{Datelike, NaiveDate};
 
@@ -8,17 +16,15 @@ impl DayCountConvention for DayCount {
         match self {
             DayCount::Act365F => days / 365.0,
             DayCount::Act360 => days / 360.0,
-            DayCount::Act365 => days / 365.0,
+            DayCount::Act365 => {
+                let is_leap = chrono::NaiveDate::from_ymd_opt(start.year(), 2, 29).is_some();
+                let year_days = if is_leap { 366.0 } else { 365.0 };
+                days / year_days
+            }
             DayCount::Thirty360US => days / 360.0,
             DayCount::Thirty360E => days / 360.0,
-            DayCount::ActActISDA => {
-                // More complex calculation for actual/actual ISDA
-                self.act_act_isda_year_fraction(start, end)
-            }
-            DayCount::ActActICMA => {
-                // ICMA method - requires coupon frequency
-                days / 365.0 // TODO: Simplified
-            }
+            DayCount::ActActISDA => self.act_act_isda_year_fraction(start, end),
+            DayCount::ActActICMA => self.act_act_icma_year_fraction(start, end),
         }
     }
 
@@ -83,5 +89,10 @@ impl DayCount {
         let year_days = if is_leap { 366.0 } else { 365.0 };
 
         days / year_days
+    }
+
+    fn act_act_icma_year_fraction(&self, start: NaiveDate, end: NaiveDate) -> f64 {
+        // TODO: Implement proper ACT/ACT ICMA calculation based on coupon periods
+        0.0
     }
 }
