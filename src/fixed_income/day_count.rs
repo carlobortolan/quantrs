@@ -213,28 +213,18 @@ impl DayCount {
 
         // Handle month-end cases (e.g., Jan 31 -> Feb 28/29)
         // Use last day of month if exact day doesn't exist
-        let last_day_of_month = self.last_day_of_month(new_year, new_month as u32);
-        NaiveDate::from_ymd_opt(new_year, new_month as u32, last_day_of_month)
-    }
-
-    /// Get the last day of a given month/year
-    fn last_day_of_month(&self, year: i32, month: u32) -> u32 {
-        match month {
+        let last_day_of_month = match new_month {
             1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
             4 | 6 | 9 | 11 => 30,
             2 => {
-                if self.is_leap_year(year) {
+                if date.leap_year() {
                     29
                 } else {
                     28
                 }
             }
             _ => 30, // fallback
-        }
-    }
-
-    /// Check if a year is a leap year
-    fn is_leap_year(&self, year: i32) -> bool {
-        NaiveDate::from_ymd_opt(year, 2, 29).is_some()
+        };
+        NaiveDate::from_ymd_opt(new_year, new_month as u32, last_day_of_month)
     }
 }
