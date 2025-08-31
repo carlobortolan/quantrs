@@ -362,6 +362,8 @@ mod tests {
             ] {
                 let days = convention.day_count(start, end) as f64;
                 let year_fraction = convention.year_fraction(start, end);
+                let year_fraction_with_maturity =
+                    convention.year_fraction_with_maturity(start, end, 2, end);
 
                 let expected_year_fraction = match convention {
                     DayCount::Act365F => days / 365.0,
@@ -375,6 +377,7 @@ mod tests {
                 };
 
                 assert_eq!(year_fraction, expected_year_fraction);
+                assert_eq!(year_fraction_with_maturity, expected_year_fraction);
             }
         }
     }
