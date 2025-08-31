@@ -7,7 +7,7 @@ mod tests {
 
     mod zero_coupon_bond_tests {
         use chrono::NaiveDate;
-        use quantrs::fixed_income::{Bond, DayCount, ZeroCouponBond};
+        use quantrs::fixed_income::{Bond, BondPricingError, DayCount, ZeroCouponBond};
 
         #[test]
         fn test_zero_coupon_bond_creation() {
@@ -16,6 +16,37 @@ mod tests {
 
             assert_eq!(bond.face_value, 1000.0);
             assert_eq!(bond.maturity, maturity);
+        }
+
+        #[test]
+        fn test_zero_coupon_bond_validation_errors() {
+            let settlement = NaiveDate::from_ymd_opt(2025, 6, 19).unwrap();
+            let maturity = NaiveDate::from_ymd_opt(2030, 12, 31).unwrap();
+            let bond = ZeroCouponBond::new(1000.0, maturity);
+
+            // Test negative yield
+            let result = bond.price(settlement, -0.02, DayCount::Act365F);
+            assert!(result.is_err());
+            if let Err(BondPricingError::InvalidYield(ytm)) = result {
+                assert_eq!(ytm, -0.02);
+            } else {
+                panic!("Expected InvalidYield error for negative yield");
+            }
+
+            // Test settlement after maturity
+            let late_settlement = NaiveDate::from_ymd_opt(2031, 1, 1).unwrap();
+            let result = bond.price(late_settlement, 0.04, DayCount::Act365F);
+            assert!(result.is_err());
+            match result {
+                Err(BondPricingError::SettlementAfterMaturity {
+                    settlement: s,
+                    maturity: m,
+                }) => {
+                    assert_eq!(s, late_settlement);
+                    assert_eq!(m, maturity);
+                }
+                _ => panic!("Expected SettlementAfterMaturity error"),
+            }
         }
 
         #[test]
