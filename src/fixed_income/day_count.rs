@@ -7,7 +7,10 @@
 /// - https://www.investopedia.com/terms/d/daycountconvention.asp
 /// - https://en.wikipedia.org/wiki/Day_count_convention
 /// - https://support.treasurysystems.com/support/solutions/articles/103000058036-day-count-conventions
-use crate::{fixed_income::{DayCount, DayCountConvention}, log_warn};
+use crate::{
+    fixed_income::{DayCount, DayCountConvention},
+    log_warn,
+};
 use chrono::{Datelike, NaiveDate};
 
 impl DayCountConvention for DayCount {
