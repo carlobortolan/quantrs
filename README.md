@@ -21,7 +21,7 @@
 
 Quantrs is a tiny quantitative finance library for Rust.
 It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading QuantLib documentation.
-The library is still in the early stages of development, and many features are not yet implemented.
+The library is still in the early stages of development and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
 
@@ -85,6 +85,18 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 > ³ _Also referred to as 'diagonal'_
 
 </details>
+
+### Fixed Income
+
+- Bond Types
+  - [x] _Zero-Coupon Bonds_
+  - [ ] _Treasury Bonds_ (fixed-rate coupon)
+  - [ ] _Corporate Bonds_ (fixed-rate coupon with credit spreads)
+  - [ ] _Floating-Rate Bonds_ (variable coupon with caps/floors)
+- [ ] Duration (_Macaulay_, _Modified_, _Effective_)
+- [ ] Convexity
+- [ ] Yield Measures (_YTM_, _YTC_, _YTW_)
+- [x] Day Count Conventions (_ACT/365F_, _ACT/365_, _ACT/360_, _30/360 US_, _30/360 Eurobond_, _ACT/ACT ISDA_, _ACT/ACT ICMA_)
 
 ## Usage
 
