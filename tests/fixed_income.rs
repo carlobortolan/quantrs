@@ -246,11 +246,20 @@ mod tests {
             let actual_icma =
                 DayCount::ActActICMA.year_fraction_with_maturity(start, end, 2, maturity);
 
-            // Test that the result is reasonable for a ~6 month period
-            assert!(actual_icma > 0.0);
-            assert!(actual_icma < 3.0); // Should be less than 3 years
             assert!(actual_icma != (end - start).num_days() as f64 / 365.0);
             assert_eq!(actual_icma, 0.40331491712707185);
+        }
+
+        #[test]
+        fn test_actact_icma_leap_year() {
+            let start = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2024, 7, 1).unwrap();
+            let maturity = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
+            let actual_icma =
+                DayCount::ActActICMA.year_fraction_with_maturity(start, end, 2, maturity);
+
+            assert!(actual_icma != (end - start).num_days() as f64 / 365.0);
+            assert_eq!(actual_icma, 0.4065934065934066);
         }
 
         #[test]
@@ -261,8 +270,6 @@ mod tests {
             let actual_icma =
                 DayCount::ActActICMA.year_fraction_with_maturity(start, end, 2, maturity);
 
-            assert!(actual_icma > 0.0);
-            assert!(actual_icma < 2.0);
             assert!(actual_icma != (end - start).num_days() as f64 / 365.0);
             assert_eq!(actual_icma, 1.0244266602962255);
         }
