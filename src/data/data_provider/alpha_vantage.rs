@@ -21,33 +21,7 @@ impl AlphaVantageSource {
         AlphaVantageSource {
             client: reqwest::Client::new(),
             base_url: "https://www.alphavantage.co/query".to_string(),
-            api_key: String::from(apiKey),
-        }
-    }
-}
-
-impl StocksSource for AlphaVantageSource {
-    async fn get_stock_quote(&self, symbol: &str) -> Result<GlobalQuote, Error> {
-        // Construct the request URL
-        let url = format!(
-            "{}?function=GLOBAL_QUOTE&symbol={}&apikey={}",
-            self.base_url, symbol, self.api_key
-        );
-
-        let response = reqwest::get(&url).await.unwrap();
-
-        match response.status() {
-            reqwest::StatusCode::OK => match response.json::<GlobalQuoteResponse>().await {
-                Ok(quote) => Ok(quote.global_quote),
-                Err(_) => Err(Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    "Failed to parse JSON",
-                )),
-            },
-            _ => Err(Error::new(
-                std::io::ErrorKind::Other,
-                "Failed to fetch stock quote",
-            )),
+            api_key: String::from(user_key),
         }
     }
 }
