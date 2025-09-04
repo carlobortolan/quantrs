@@ -8,7 +8,7 @@
 //!
 //! - Stock Quotes
 
-pub use data_models::{GlobalQuote, GlobalQuoteResponse};
+pub use data_models::{CompanyOverview, GlobalQuote, GlobalQuoteResponse};
 pub use data_provider::{AlphaVantageSource, DataProvider};
 
 mod data_models;

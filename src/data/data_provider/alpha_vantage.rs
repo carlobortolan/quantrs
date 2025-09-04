@@ -4,8 +4,8 @@ use reqwest;
 
 use std::io::Error;
 
-use crate::data::traits::QuoteProvider;
-use crate::data::{GlobalQuote, GlobalQuoteResponse};
+use crate::data::traits::{FundamentalsProvider, QuoteProvider};
+use crate::data::{CompanyOverview, GlobalQuote, GlobalQuoteResponse};
 
 // Struct representing the Alpha Vantage data provider
 // It contains the base URL and the API key for making requests.
@@ -52,7 +52,7 @@ impl StocksSource for AlphaVantageSource {
     }
 }
 
-// Implementation of the StocksSource trait for AlphaVantageSource
+// Implementation of the QuoteProvider trait for AlphaVantageSource
 impl QuoteProvider for AlphaVantageSource {
     async fn get_stock_quote(&self, symbol: &str) -> Result<GlobalQuote, Error> {
         // Construct the request URL
@@ -61,10 +61,12 @@ impl QuoteProvider for AlphaVantageSource {
             self.base_url, symbol, self.api_key
         );
 
-        let response =
-            self.client.get(&url).send().await.map_err(|e| {
-                Error::new(std::io::ErrorKind::Other, format!("Request failed: {}", e))
-            })?;
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| Error::other(format!("Request failed: {}", e)))?;
 
         // Check the response status and parse the JSON if successful
         match response.status() {
@@ -75,10 +77,38 @@ impl QuoteProvider for AlphaVantageSource {
                     "Failed to parse JSON",
                 )),
             },
-            _ => Err(Error::new(
-                std::io::ErrorKind::Other,
-                "Failed to fetch stock quote",
-            )),
+            _ => Err(Error::other("Failed to fetch stock quote")),
+        }
+    }
+}
+
+// Implementation of the FundamentalsProvider trait for AlphaVantageSource
+impl FundamentalsProvider for AlphaVantageSource {
+    async fn get_company_overview(&self, symbol: &str) -> Result<CompanyOverview, Error> {
+        // Placeholder implementation
+
+        let url = format!(
+            "{}?function=OVERVIEW&symbol={}&apikey={}",
+            self.base_url, symbol, self.api_key
+        );
+
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| Error::other(format!("Request failed: {}", e)))?;
+
+        // Check the response status and parse the JSON if successful
+        match response.status() {
+            reqwest::StatusCode::OK => match response.json::<CompanyOverview>().await {
+                Ok(overview) => Ok(overview),
+                Err(_) => Err(Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Failed to parse JSON",
+                )),
+            },
+            _ => Err(Error::other("Failed to fetch company overview")),
         }
     }
 }
