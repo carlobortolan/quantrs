@@ -6,7 +6,8 @@ use quantrs::options::{
     OptionType::*, RainbowOption,
 };
 
-fn main() {
+#[tokio::main]
+async fn main() {
     example_from_readme();
     example_black_scholes();
     example_binomial_tree();
