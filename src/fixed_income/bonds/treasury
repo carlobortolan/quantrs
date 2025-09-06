@@ -1,0 +1,100 @@
+use crate::fixed_income::{Bond, BondPricingError, DayCount, PriceResult};
+use chrono::{Datelike, NaiveDate};
+
+#[derive(Debug, Clone)]
+pub struct TreasuryBond {
+    pub face_value: f64,
+    pub coupon_rate: f64,
+    pub maturity: NaiveDate,
+    pub frequency: u32,
+}
+
+impl TreasuryBond {
+    pub fn new(face_value: f64, coupon_rate: f64, maturity: NaiveDate, frequency: u32) -> Self {
+        Self {
+            face_value,
+            coupon_rate,
+            maturity,
+            frequency,
+        }
+    }
+}
+
+impl Bond for TreasuryBond {
+    fn price(
+        &self,
+        settlement: NaiveDate,
+        ytm: f64,
+        day_count: DayCount,
+    ) -> Result<PriceResult, BondPricingError> {
+        if ytm < 0.0 {
+            return Err(BondPricingError::invalid_yield(ytm));
+        }
+
+        if settlement >= self.maturity {
+            return Err(BondPricingError::settlement_after_maturity(
+                settlement,
+                self.maturity,
+            ));
+        }
+
+        if ![1, 2, 4, 12].contains(&self.frequency) {
+            return Err(BondPricingError::InvalidFrequency(self.frequency));
+        }
+
+        // Calculate time to maturity in years
+        let days_to_maturity = (self.maturity - settlement).num_days() as f64;
+        let years_to_maturity = match day_count {
+            DayCount::Act365F => days_to_maturity / 365.0,
+            DayCount::Act360 => days_to_maturity / 360.0,
+            DayCount::Thirty360US => {
+                // Simplified 30/360 calculation
+                let years = (self.maturity.year() - settlement.year()) as f64;
+                let months =
+                    (self.maturity.month() as i32 - settlement.month() as i32) as f64 / 12.0;
+                let days = (self.maturity.day() as i32 - settlement.day() as i32) as f64 / 360.0;
+                years + months + days
+            }
+            _ => days_to_maturity / 365.0, // Default to Act/365
+        };
+
+        // Calculate periodic coupon payment
+        let coupon_payment = self.face_value * self.coupon_rate / self.frequency as f64;
+
+        // Calculate number of coupon payments
+        let num_payments = (years_to_maturity * self.frequency as f64).ceil() as u32;
+
+        // Calculate present value of coupon payments
+        let mut pv_coupons = 0.0;
+        let periodic_rate = ytm / self.frequency as f64;
+
+        for i in 1..=num_payments {
+            let discount_factor = (1.0 + periodic_rate).powi(-(i as i32));
+            pv_coupons += coupon_payment * discount_factor;
+        }
+
+        // Calculate present value of principal
+        let pv_principal = self.face_value / (1.0 + periodic_rate).powi(num_payments as i32);
+
+        // Total clean price
+        let clean_price = pv_coupons + pv_principal;
+
+        // Calculate accrued interest
+        let accrued = self.accrued_interest(settlement, day_count);
+
+        // Dirty price = clean price + accrued interest
+        let dirty_price = clean_price + accrued;
+
+        Ok(PriceResult::new(clean_price, dirty_price, accrued))
+    }
+
+    fn accrued_interest(&self, settlement: NaiveDate, day_count: DayCount) -> f64 {
+        // Simplified accrued interest calculation
+        // In practice, this would need to find the last coupon date
+        let coupon_payment = self.face_value * self.coupon_rate / self.frequency as f64;
+
+        // For simplicity, assume we're halfway through a coupon period
+        // Real implementation would calculate exact days since last coupon
+        coupon_payment * 0.5 // Placeholder calculation
+    }
+}

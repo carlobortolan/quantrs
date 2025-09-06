@@ -1,0 +1,165 @@
+use crate::fixed_income::{Bond, BondPricingError, DayCount, PriceResult};
+use chrono::{Datelike, NaiveDate};
+
+#[derive(Debug, Clone)]
+pub struct FloatingRateBond {
+    pub face_value: f64,
+    pub base_rate: f64, // Reference rate (e.g., LIBOR, SOFR)
+    pub spread: f64,    // Credit spread over base rate
+    pub maturity: NaiveDate,
+    pub frequency: u32,     // Reset frequency (1, 2, 4, 12)
+    pub cap: Option<f64>,   // Interest rate cap
+    pub floor: Option<f64>, // Interest rate floor
+}
+
+impl FloatingRateBond {
+    pub fn new(
+        face_value: f64,
+        base_rate: f64,
+        spread: f64,
+        maturity: NaiveDate,
+        frequency: u32,
+    ) -> Self {
+        Self {
+            face_value,
+            base_rate,
+            spread,
+            maturity,
+            frequency,
+            cap: None,
+            floor: None,
+        }
+    }
+
+    pub fn with_cap(mut self, cap: f64) -> Self {
+        self.cap = Some(cap);
+        self
+    }
+
+    pub fn with_floor(mut self, floor: f64) -> Self {
+        self.floor = Some(floor);
+        self
+    }
+
+    pub fn with_cap_and_floor(mut self, cap: f64, floor: f64) -> Self {
+        self.cap = Some(cap);
+        self.floor = Some(floor);
+        self
+    }
+
+    /// Calculate the current coupon rate with cap/floor constraints
+    pub fn current_coupon_rate(&self) -> f64 {
+        let mut rate = self.base_rate + self.spread;
+
+        // Apply floor constraint
+        if let Some(floor) = self.floor {
+            rate = rate.max(floor);
+        }
+
+        // Apply cap constraint
+        if let Some(cap) = self.cap {
+            rate = rate.min(cap);
+        }
+
+        rate
+    }
+
+    /// Get the effective coupon rate for a given reference rate
+    pub fn effective_coupon_rate(&self, reference_rate: f64) -> f64 {
+        let mut rate = reference_rate + self.spread;
+
+        // Apply floor constraint
+        if let Some(floor) = self.floor {
+            rate = rate.max(floor);
+        }
+
+        // Apply cap constraint
+        if let Some(cap) = self.cap {
+            rate = rate.min(cap);
+        }
+
+        rate
+    }
+}
+
+impl Bond for FloatingRateBond {
+    fn price(
+        &self,
+        settlement: NaiveDate,
+        ytm: f64,
+        day_count: DayCount,
+    ) -> Result<PriceResult, BondPricingError> {
+        if ytm < 0.0 {
+            return Err(BondPricingError::invalid_yield(ytm));
+        }
+
+        if settlement >= self.maturity {
+            return Err(BondPricingError::settlement_after_maturity(
+                settlement,
+                self.maturity,
+            ));
+        }
+
+        if ![1, 2, 4, 12].contains(&self.frequency) {
+            return Err(BondPricingError::InvalidFrequency(self.frequency));
+        }
+
+        // Calculate time to maturity in years
+        let days_to_maturity = (self.maturity - settlement).num_days() as f64;
+        let years_to_maturity = match day_count {
+            DayCount::Act365F => days_to_maturity / 365.0,
+            DayCount::Act360 => days_to_maturity / 360.0,
+            DayCount::Thirty360US => {
+                let years = (self.maturity.year() - settlement.year()) as f64;
+                let months =
+                    (self.maturity.month() as i32 - settlement.month() as i32) as f64 / 12.0;
+                let days = (self.maturity.day() as i32 - settlement.day() as i32) as f64 / 360.0;
+                years + months + days
+            }
+            _ => days_to_maturity / 365.0,
+        };
+
+        // For floating rate bonds, pricing is more complex as future coupon rates are unknown
+        // We'll use a simplified approach assuming current rates for all future periods
+        let current_coupon_rate = self.current_coupon_rate();
+        let coupon_payment = self.face_value * current_coupon_rate / self.frequency as f64;
+
+        // Calculate number of coupon payments
+        let num_payments = (years_to_maturity * self.frequency as f64).ceil() as u32;
+
+        // For floating rate bonds, the price typically trades close to par near reset dates
+        // We'll use a simplified approach with current coupon rate
+        let mut pv_coupons = 0.0;
+        let periodic_rate = ytm / self.frequency as f64;
+
+        for i in 1..=num_payments {
+            let discount_factor = (1.0 + periodic_rate).powi(-(i as i32));
+            pv_coupons += coupon_payment * discount_factor;
+        }
+
+        // Calculate present value of principal
+        let pv_principal = self.face_value / (1.0 + periodic_rate).powi(num_payments as i32);
+
+        // Total clean price
+        let clean_price = pv_coupons + pv_principal;
+
+        // Calculate accrued interest
+        let accrued = self.accrued_interest(settlement, day_count);
+
+        // Dirty price = clean price + accrued interest
+        let dirty_price = clean_price + accrued;
+
+        Ok(PriceResult::new(clean_price, dirty_price, accrued))
+    }
+
+    fn accrued_interest(&self, _settlement: NaiveDate, _day_count: DayCount) -> f64 {
+        // Simplified accrued interest calculation for floating rate bonds
+        // In practice, this would use the actual coupon rate for the current period
+        let current_coupon_rate = self.current_coupon_rate();
+        let coupon_payment = self.face_value * current_coupon_rate / self.frequency as f64;
+
+        // For simplicity, assume we're halfway through a coupon period
+        // Real implementation would calculate exact days since last reset
+        coupon_payment * 0.5
+    }
+}

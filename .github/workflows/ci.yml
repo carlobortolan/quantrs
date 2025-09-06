@@ -126,11 +126,18 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
-      - name: Install maturin and dependencies
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('bindings/python/tests/requirements.txt') }}
+      - name: Setup venv & install dependencies
         run: |
-          pip install maturin pytest
-          pip install -r bindings/python/tests/requirements.txt
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install maturin pytest
+          .venv/bin/pip install -r bindings/python/tests/requirements.txt
       - name: Build Python bindings
-        run: maturin develop --release
+        run: .venv/bin/maturin develop --release
       - name: Run Python tests
-        run: pytest bindings/python/tests
+        run: .venv/bin/pytest bindings/python/tests
