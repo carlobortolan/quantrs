@@ -1,5 +1,4 @@
 use quantrs::data::{AlphaVantageSource, DataProvider};
-use tokio_test;
 
 mod data_tests {
     use super::*;
