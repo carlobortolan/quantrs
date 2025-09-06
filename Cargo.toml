@@ -32,6 +32,7 @@ tokio = "1.47.1"
 [dev-dependencies]
 approx = "0.5.1"
 criterion = { version = "0.7", features = ["html_reports"] }
+tokio-test = "0.4.4"
 
 [[bench]]
 name = "option_pricing_bench"
