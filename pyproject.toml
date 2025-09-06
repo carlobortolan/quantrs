@@ -9,7 +9,7 @@ authors = [
     {name = "Carlo Bortolan", email = "carlobortolan@gmail.com"},
 ]
 license = {text = "MIT OR Apache-2.0"}
-readme = "README-py.md"
+readme = "bindings/python/README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 3 - Alpha",
