@@ -1,9 +1,12 @@
 use quantrs::data::DataProvider;
+use tokio::runtime::Builder;
 
-#[tokio::main]
-async fn main() {
-    example_data_module().await;
-    example_company_overview().await;
+fn main() {
+    let rt = Builder::new_current_thread().enable_all().build().unwrap();
+    rt.block_on(async {
+        example_data_module().await;
+        example_company_overview().await;
+    });
 }
 
 async fn example_data_module() {

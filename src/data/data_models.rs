@@ -266,16 +266,26 @@ pub struct CompanyOverview {
 // MARK: - Implement Display trait for pretty printing
 impl fmt::Display for GlobalQuote {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "┌─ Stock Quote for {} ─┐", self.symbol)?;
-        writeln!(f, "│ Price:         ${:>10.2} │", self.price)?;
-        writeln!(f, "│ Change:        {:>+11.2} │", self.change)?;
-        writeln!(f, "│ Change %:      {:>11} │", self.change_percent)?;
-        writeln!(f, "│ Volume:        {:>11} │", self.volume)?;
-        writeln!(f, "│ Open:          ${:>10.2} │", self.open)?;
-        writeln!(f, "│ High:          ${:>10.2} │", self.high)?;
-        writeln!(f, "│ Low:           ${:>10.2} │", self.low)?;
-        writeln!(f, "│ Previous:      ${:>10.2} │", self.previous_close)?;
-        writeln!(f, "│ Trading Day:   {:>11} │", self.latest_trading_day)?;
-        write!(f, "└─────────────────────────┘")
+        let width = 28;
+        writeln!(
+            f,
+            "┌{:─^width$}┐",
+            format!(" Stock Quote for {} ", self.symbol),
+            width = width
+        )?;
+        writeln!(f, "│ {:<14} ${:>10.2} │", "Price:", self.price)?;
+        writeln!(f, "│ {:<14} {:>+11.2} │", "Change:", self.change)?;
+        writeln!(f, "│ {:<14} {:>11} │", "Change %:", self.change_percent)?;
+        writeln!(f, "│ {:<14} {:>11} │", "Volume:", self.volume)?;
+        writeln!(f, "│ {:<14} ${:>10.2} │", "Open:", self.open)?;
+        writeln!(f, "│ {:<14} ${:>10.2} │", "High:", self.high)?;
+        writeln!(f, "│ {:<14} ${:>10.2} │", "Low:", self.low)?;
+        writeln!(f, "│ {:<14} ${:>10.2} │", "Previous:", self.previous_close)?;
+        writeln!(
+            f,
+            "│ {:<14} {:>11} │",
+            "Trading Day:", self.latest_trading_day
+        )?;
+        write!(f, "└{:─^width$}┘", "", width = width)
     }
 }
