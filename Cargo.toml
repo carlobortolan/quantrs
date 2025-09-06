@@ -2,7 +2,7 @@
 name = "quantrs"
 version = "0.1.7"
 authors = ["Carlo Bortolan <carlobortolan@gmail.com>"]
-description = " A tiny Rust library for quantitative finance"
+description = "A tiny Rust library for quantitative finance"
 license = "MIT OR Apache-2.0"
 keywords = ["quantitative", "quant", "finance", "options", "pricing"]
 categories = ["finance", "simulation", "mathematics", "algorithms", "science"]
@@ -17,7 +17,17 @@ include = ["CHANGELOG.md", "LICENSE-MIT.md", "LICENSE-APACHE.md", "OUTLOOK.md", 
 # When changing MSRV: Also update the README
 rust-version = "1.77.0"
 
+# For Python bindings
+[lib]
+name = "quantrs"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+python = ["pyo3"]
+
 [dependencies]
+pyo3 = { version = "0.26", features = ["extension-module"], optional = true }
 chrono = "0.4.41"
 plotters = "0.3.7"
 rand = "0.9.2"
