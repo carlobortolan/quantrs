@@ -4,8 +4,6 @@ Pytest-compatible test script for quantrs Python bindings.
 
 import pytest
 import quantrs
-import sys
-from datetime import datetime
 
 
 class TestQuantrsPythonBindings:
