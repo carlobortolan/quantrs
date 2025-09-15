@@ -18,8 +18,12 @@ pub struct AlphaVantageSource {
 // Implementation of the Alpha Vantage data provider
 impl AlphaVantageSource {
     pub fn new(user_key: &str) -> Self {
+        Self::with_client(reqwest::Client::new(), user_key)
+    }
+
+    pub fn with_client(client: reqwest::Client, user_key: &str) -> Self {
         AlphaVantageSource {
-            client: reqwest::Client::new(),
+            client,
             base_url: "https://www.alphavantage.co/query".to_string(),
             api_key: String::from(user_key),
         }
