@@ -4,6 +4,7 @@
 //! - Portfolio struct to hold assets, mean returns, covariance matrix
 //! - Calculation of mean returns and covariance matrix from CSV data
 //! - Support for Simple and Log returns calculation methods
+//!
 //! Next Steps:
 //! - Implement optimization algorithms (e.g., Markowitz optimization)
 
@@ -100,11 +101,11 @@ impl Portfolio {
             .expect("Failed to compute covariance matrix");
 
         Self {
-            tickers: tickers,
-            mean_returns: mean_returns,
-            covariance_matrix: covariance_matrix,
-            risk_free_rate: risk_free_rate,
-            expected_return: expected_return,
+            tickers,
+            mean_returns,
+            covariance_matrix,
+            risk_free_rate,
+            expected_return,
             returns_calculation: returns_calc,
             weights: None,
             _returns: returns,
@@ -120,8 +121,8 @@ impl Portfolio {
 
     /// Function to calculate simple returns
     fn calculate_simple_returns(prices: &Array2<f64>) -> Array2<f64> {
-        let simple_returns = (&prices.slice(s![1.., ..]) - &prices.slice(s![..-1, ..]))
-            / &prices.slice(s![..-1, ..]);
+        let simple_returns =
+            (&prices.slice(s![1.., ..]) - &prices.slice(s![..-1, ..])) / prices.slice(s![..-1, ..]);
         simple_returns.to_owned()
     }
 }
