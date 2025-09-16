@@ -1,0 +1,37 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "quantrs"
+description = "Python bindings for a tiny library for quantitative finance (powered by Rust)"
+authors = [
+    {name = "Carlo Bortolan", email = "carlobortolan@gmail.com"},
+]
+license = {text = "MIT OR Apache-2.0"}
+readme = "bindings/python/README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/carlobortolan/quantrs"
+Repository = "https://github.com/carlobortolan/quantrs"
+Documentation = "https://docs.rs/quantrs"
+
+[tool.maturin]
+features = ["python"]  # "pyo3/extension-module"

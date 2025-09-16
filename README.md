@@ -215,7 +215,7 @@ _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD 
 
 ## Minimum supported Rust version (MSRV)
 
-This crate requires a Rust version of 1.77.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+This crate requires a Rust version of 1.82.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
 ## Contributing
 

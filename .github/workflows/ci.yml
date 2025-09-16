@@ -1,12 +1,15 @@
-name: Tests
+name: CI
+
 on:
   push:
     branches: [master]
   pull_request:
     branches: [master]
+
 env:
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-Dwarnings"
+
 jobs:
   clippy:
     runs-on: ubuntu-latest
@@ -31,6 +34,7 @@ jobs:
           components: rustfmt
       - name: Run rustfmt --check
         run: cargo fmt -- --check
+
   msrv:
     runs-on: ubuntu-latest
     steps:
@@ -44,13 +48,13 @@ jobs:
         run: mv -v Cargo.lock.MSRV Cargo.lock
       - name: Build (lib only)
         run: cargo hack check --rust-version --locked
+
   test:
     needs: [clippy, fmt, msrv]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust stable
@@ -75,3 +79,68 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Check all possible feature sets
         run: cargo hack check --feature-powerset --no-dev-deps
+
+  coverage:
+    needs: [clippy, fmt, msrv]
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [nightly]
+    timeout-minutes: ${{ matrix.toolchain == 'nightly' && 10 || 360 }}
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install pkg-config libfreetype6-dev libfontconfig1-dev
+      - name: Collect coverage
+        run: |
+          cargo llvm-cov --no-report nextest
+          cargo llvm-cov --no-report --doc
+          cargo llvm-cov report --doctests --lcov --output-path lcov.info
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./lcov.info
+          token: ${{secrets.CODECOV_TOKEN}}
+          fail_ci_if_error: false
+
+  python:
+    needs: [clippy, fmt, msrv]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libfreetype6-dev libfontconfig1-dev
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('bindings/python/tests/requirements.txt') }}
+      - name: Setup venv & install dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install maturin pytest
+          .venv/bin/pip install -r bindings/python/tests/requirements.txt
+      - name: Build Python bindings
+        run: .venv/bin/maturin develop --release
+      - name: Run Python tests
+        run: .venv/bin/pytest bindings/python/tests
