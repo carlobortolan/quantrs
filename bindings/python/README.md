@@ -23,80 +23,9 @@ Quantrs is a tiny quantitative finance library for Rust. These are the Python bi
 It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading QuantLib documentation.
 The library is still in the early stages of development and many features are not yet implemented.
 
-Please check out the documentation for the original Rust crate [here][docs-url].
+Please check out the documentation for the original Rust crate [here][docs-url] and at [github.com/carlobortolan/quantrs](https://github.com/carlobortolan/quantrs).
 
-## Features
-
-### Options Pricing (not yet in bindings)
-
-Quantrs supports options pricing with various models for both vanilla and exotic options as well as options trading strategies for both basic options spreads and non-directional strategies.
-
-<details>
-<summary><i>Click to see supported models</i></summary>
-
-|                             | Black-Scholes   | Black-76 | Lattice      | ³Monte-Carlo | Finite Diff   | Heston |
-| --------------------------- | --------------- | -------- | ------------ | ------------ | ------------- | ------ |
-| European                    | ✅              | ✅       | ✅           | ✅           | ⏳            | ⏳     |
-| American                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)  | ⏳            | ❌     |
-| Bermudan                    | ❌              | ❌       | ✅           | ❌ (L. Sq.)  | ❌ (complex)  | ❌     |
-| ¹Basket                     | ⏳ (∀component) | ❌       | ⏳ (approx.) | ⏳           | ❌            | ❌     |
-| ¹Rainbow                    | ✅ (∀component) | ❌       | ✅           | ✅           | ❌            | ❌     |
-| ²Barrier                    | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ⏳            | ⏳     |
-| ²Double Barrier             | ❌ (mod. BSM)   | ❌       | ⏳           | ⏳           | ❌ (complex)  | ⏳     |
-| ²Asian (fixed strike)       | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Asian (floating strike)    | ❌ (mod. BSM)   | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Lookback (fixed strike)    | ❌              | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Lookback (floating strike) | ✅              | ❌       | ❌           | ✅           | ⏳            | ⏳     |
-| ²Binary Cash-or-Nothing     | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
-| ²Binary Asset-or-Nothing    | ✅              | ❌       | ✅           | ✅           | ❌ (mod. PDE) | ⏳     |
-| Greeks (Δ,ν,Θ,ρ,Γ)          | ✅              | ✅       | ⏳           | ❌           | ❌            | ❌     |
-| Implied Volatility          | ✅              | ⏳       | ⏳           | ❌           | ❌            | ❌     |
-
-> ¹ _"Exotic" options with standard exercise style; only differ in their payoff value_\
-> ² _Non-vanilla path-dependent "exotic" options_\
-> ³ _MC simulates underlying price paths based on geometric Brownian motion for Black-Scholes models and both arithmetic or geometric average price paths for Asian and Lookback options_\
-> ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
-
-<!--Bachelier and Modified Bachelier-->
-
-</details>
-
-<details>
-<summary><i>Click to see supported strategies</i></summary>
-
-| Strategy Name            | Type         | Description                                                                                       |
-| ------------------------ | ------------ | ------------------------------------------------------------------------------------------------- |
-| Covered Call             | Income       | Long stock + short call                                                                           |
-| Protective Put           | Hedging      | Long stock + long put                                                                             |
-| Guts                     | Volatility   | Long ITM call + long ITM put                                                                      |
-| Straddle                 | Volatility   | Long ATM call + long ATM put                                                                      |
-| Strangle                 | Volatility   | Long OTM call + long OTM put                                                                      |
-| Butterfly Spread         | ¹Spread      | Long ITM call, short two ATM calls, long OTM call (or all puts)                                   |
-| Iron Butterfly           | ¹Spread      | Short straddle + long wings                                                                       |
-| Christmas Tree Butterfly | ¹Spread      | Long 1 ATM call, short 3 OTM calls, long 2 high-strike OTM calls (or all puts)                    |
-| Condor Spread            | ¹Spread      | Long low-strike ITM call, short ITM call, short OTM call, long high-strike OTM call (or all puts) |
-| Iron Condor              | ¹Spread      | Short strangle + long wings                                                                       |
-| Calendar Spread          | ²Time Spread | Long far-expiry ATM call + short near-expiry ATM call (or all puts)                               |
-| Diagonal Spread          | ³Time Spread | Short near-expiry OTM call + long far-expiry further OTM call (or all puts)                       |
-| Back Spread              | Directional  | Long 2 OTM calls + short 1 ATM call (or all puts)                                                 |
-
-> ¹ _Also referred to as 'vertical'_\
-> ² _Also referred to as 'horizontal'_\
-> ³ _Also referred to as 'diagonal'_
-
-</details>
-
-### Fixed Income (already in bindings)
-
-- Bond Types
-  - [x] _Zero-Coupon Bonds_
-  - [ ] _Treasury Bonds_ (fixed-rate coupon)
-  - [ ] _Corporate Bonds_ (fixed-rate coupon with credit spreads)
-  - [ ] _Floating-Rate Bonds_ (variable coupon with caps/floors)
-- [ ] Duration (_Macaulay_, _Modified_, _Effective_)
-- [ ] Convexity
-- [ ] Yield Measures (_YTM_, _YTC_, _YTW_)
-- [x] Accrued Interest (_ACT/365F_, _ACT/365_, _ACT/360_, _30/360 US_, _30/360 Eurobond_, _ACT/ACT ISDA_, _ACT/ACT ICMA_)
+Currently, the bindings only cover the FI module.
 
 ## Installation
 
@@ -171,6 +100,18 @@ _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD 
 ## Contributing
 
 If you find any bugs or have suggestions for improvement, please open a new issue or PR. See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
+
+You can generate and test the Python bindings with:
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+pip install maturin
+# Build and install your package in editable mode
+maturin develop --features python
+# Run tests
+pytest bindings/python/tests
+```
 
 ## Disclaimer
 
