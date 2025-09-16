@@ -41,10 +41,19 @@ mod macros {
 pub mod data;
 pub mod fixed_income;
 pub mod options;
+<<<<<<< HEAD
 pub mod portfolio;
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 459f544 (feat(bindings): add python bindings for fixed_income (#79))
 
 pub use fixed_income::*;
 pub use options::*;
 
 #[cfg(feature = "python")]
 pub mod python;
+<<<<<<< HEAD
+=======
+>>>>>>> af72ef0 (feat(bindings): add python bindings for fixed_income (#79))
+>>>>>>> 459f544 (feat(bindings): add python bindings for fixed_income (#79))
