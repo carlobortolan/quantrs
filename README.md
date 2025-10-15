@@ -7,6 +7,7 @@
 [![codecov-quantrs][codecov-badge]][codecov-url]
 ![Crates.io MSRV][crates-msrv-badge]
 ![Crates.io downloads][crates-download-badge]
+[![PyPI version][pypi-version]][pypi-url]
 
 [actions-test-badge]: https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml/badge.svg
 [crates-badge]: https://img.shields.io/crates/v/quantrs.svg
@@ -18,12 +19,18 @@
 [codecov-url]: https://codecov.io/gh/carlobortolan/quantrs
 [crates-msrv-badge]: https://img.shields.io/crates/msrv/quantrs
 [crates-download-badge]: https://img.shields.io/crates/d/quantrs
+[pypi-version]: https://img.shields.io/pypi/v/quantrs.svg
+[pypi-url]: https://pypi.org/project/quantrs
+<!-- [![Python versions](https://img.shields.io/pypi/pyversions/quantrs.svg)](https://pypi.org/project/quantrs/) -->
+<!-- [![PyPI downloads](https://img.shields.io/pypi/dm/quantrs.svg)](https://pypi.org/project/quantrs/) -->
 
 Quantrs is a tiny quantitative finance library for Rust.
 It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading QuantLib documentation.
 The library is still in the early stages of development and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
+
+Python bindings are also available; see the [Python README](bindings/python#README.md) or the [PyPI page][pypi-url].
 
 ## Features
 
@@ -215,7 +222,7 @@ _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD 
 
 ## Minimum supported Rust version (MSRV)
 
-This crate requires a Rust version of 1.77.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+This crate requires a Rust version of 1.82.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
 ## Contributing
 
