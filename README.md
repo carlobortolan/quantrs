@@ -162,7 +162,7 @@ use quantrs::options::*;
 let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
 // Create a vector of fixed-strike Asian calls options with different strike prices
-let options = vec![
+let options = [
     AsianOption::fixed(instrument.clone(), 85.0, 1.0, Call),
     AsianOption::fixed(instrument.clone(), 95.0, 1.0, Call),
     AsianOption::fixed(instrument.clone(), 102.0, 1.0, Call),
