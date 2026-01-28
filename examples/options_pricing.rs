@@ -476,7 +476,7 @@ fn example_strategy() {
 
     ////////////
     /* PLOTS */
-    let options = vec![EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call)];
+    let options = [EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call)];
     let _ = model.plot_strategy_breakdown(
         "Covered Call",
         model.covered_call(&instrument, &options[0]),
@@ -486,7 +486,7 @@ fn example_strategy() {
     );
     // => Covered Call: examples/images/covered_call.png
 
-    let options = vec![EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put)];
+    let options = [EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put)];
     let _ = model.plot_strategy_breakdown(
         "Protective Put",
         model.protective_put(&instrument, &options[0]),
@@ -496,7 +496,7 @@ fn example_strategy() {
     );
     // => Protective Put: examples/images/protective_put.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
     ];
@@ -509,7 +509,7 @@ fn example_strategy() {
     );
     // => Protective Put: examples/images/collar.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
@@ -523,7 +523,7 @@ fn example_strategy() {
     );
     // => Protective Put: examples/images/fence.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),
     ];
@@ -537,7 +537,7 @@ fn example_strategy() {
     );
     // => Guts: examples/images/guts_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
     ];
@@ -550,7 +550,7 @@ fn example_strategy() {
     );
     // => Straddle: examples/images/straddle_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
     ];
@@ -563,7 +563,7 @@ fn example_strategy() {
     );
     // => Strangle: examples/images/strangle_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
     ];
@@ -576,7 +576,7 @@ fn example_strategy() {
     );
     // => Strangle: examples/images/risk_reversal.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
@@ -590,7 +590,7 @@ fn example_strategy() {
     );
     // => Butterfly: examples/images/butterfly_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
@@ -605,7 +605,7 @@ fn example_strategy() {
     );
     // => Iron Butterfly: examples/images/iron_butterfly_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call),
@@ -629,7 +629,7 @@ fn example_strategy() {
     );
     // => Christmas Tree Butterfly: examples/images/christmas_tree_butterfly_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 30.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
@@ -644,7 +644,7 @@ fn example_strategy() {
     );
     // => Condor: examples/images/condor_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 30.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 40.0, 1.0, Put),
         EuropeanOption::new(instrument.clone(), 60.0, 1.0, Call),
@@ -658,7 +658,7 @@ fn example_strategy() {
         &options,
     ); // => Iron Condor: examples/images/iron_condor_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
@@ -671,7 +671,7 @@ fn example_strategy() {
         &options,
     ); // => Back Spread: examples/images/back_spread_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 50.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
         EuropeanOption::new(instrument.clone(), 55.0, 1.0, Call),
@@ -684,7 +684,7 @@ fn example_strategy() {
         &options,
     );
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, Call),
         EuropeanOption::new(instrument.clone(), 50.0, 2.0 / 12.0, Call),
     ];
@@ -696,7 +696,7 @@ fn example_strategy() {
         &options,
     ); // => Calendar Spread: examples/images/calendar_spread_strategy.png
 
-    let options = vec![
+    let options = [
         EuropeanOption::new(Instrument::new().with_spot(48.0), 49.0, 1.0 / 12.0, Call),
         EuropeanOption::new(Instrument::new().with_spot(48.0), 49.0, 1.0 / 12.0, Call),
         EuropeanOption::new(Instrument::new().with_spot(48.0), 50.0, 2.0 / 12.0, Call),
@@ -715,7 +715,7 @@ fn example_plots() {
     let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
     // Create a vector of fixed-strike Asian calls options with different strike prices
-    let options = vec![
+    let options = [
         AsianOption::fixed(instrument.clone(), 85.0, 1.0, Call),
         AsianOption::fixed(instrument.clone(), 95.0, 1.0, Call),
         AsianOption::fixed(instrument.clone(), 102.0, 1.0, Call),
