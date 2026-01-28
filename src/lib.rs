@@ -41,6 +41,7 @@ mod macros {
 pub mod data;
 pub mod fixed_income;
 pub mod options;
+pub mod portfolio;
 
 pub use fixed_income::*;
 pub use options::*;
