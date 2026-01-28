@@ -2296,7 +2296,7 @@ mod option_strategies_tests {
     #[test]
     fn test_strategy_breakdown() {
         let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
-        let options = vec![
+        let options = [
             EuropeanOption::new(instrument.clone(), 85.0, 1.0, OptionType::Call),
             EuropeanOption::new(instrument.clone(), 95.0, 1.0, OptionType::Call),
             EuropeanOption::new(instrument.clone(), 102.0, 1.0, OptionType::Call),
@@ -2317,7 +2317,7 @@ mod option_strategies_tests {
     #[test]
     fn test_strategy_plot() {
         let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
-        let options = vec![
+        let options = [
             EuropeanOption::new(instrument.clone(), 85.0, 1.0, OptionType::Call),
             EuropeanOption::new(instrument.clone(), 95.0, 1.0, OptionType::Call),
             EuropeanOption::new(instrument.clone(), 102.0, 1.0, OptionType::Call),
