@@ -2,7 +2,7 @@ use quantrs::portfolio::{Portfolio, ReturnsCalculation};
 
 #[warn(unused_variables)]
 fn main() {
-    let data_path = "/Users/moneymaker/Downloads/ETFprices.csv";
+    let data_path = "examples/data/asset_prices.csv";
     let risk_free_rate = 0.01; // 1%
     let expected_return = 0.1; // 10%
     let returns_calc = ReturnsCalculation::Log;

@@ -9,7 +9,7 @@
 //! - Implement optimization algorithms (e.g., Markowitz optimization)
 
 use csv::ReaderBuilder;
-use ndarray::{s, Array2, Axis};
+use ndarray::{s, Array2, Axis, Zip};
 use ndarray_stats::CorrelationExt;
 use std::fmt;
 
@@ -114,16 +114,42 @@ impl Portfolio {
 
     /// Function to calculate log returns
     fn calculate_log_returns(prices: &Array2<f64>) -> Array2<f64> {
-        let log_prices = prices.mapv(|x| x.ln());
-        let log_returns = &log_prices.slice(s![1.., ..]) - &log_prices.slice(s![..-1, ..]);
-        log_returns.to_owned()
+        let (n, m) = prices.dim();
+        assert!(n >= 2, "Need at least 2 rows to compute returns");
+
+        let prev = prices.slice(s![..-1, ..]);
+        let next = prices.slice(s![1.., ..]);
+
+        let mut out = Array2::<f64>::zeros((n - 1, m));
+
+        Zip::from(&mut out)
+            .and(&next)
+            .and(&prev)
+            .for_each(|o, &nxt, &prv| {
+                *o = nxt.ln() - prv.ln();
+            });
+
+        out
     }
 
     /// Function to calculate simple returns
     fn calculate_simple_returns(prices: &Array2<f64>) -> Array2<f64> {
-        let simple_returns =
-            (&prices.slice(s![1.., ..]) - &prices.slice(s![..-1, ..])) / prices.slice(s![..-1, ..]);
-        simple_returns.to_owned()
+        let (n, m) = prices.dim();
+        assert!(n >= 2, "Need at least 2 rows to compute returns");
+
+        let prev = prices.slice(s![..-1, ..]); // P_t
+        let next = prices.slice(s![1.., ..]); // P_{t+1}
+
+        let mut out = Array2::<f64>::zeros((n - 1, m));
+
+        Zip::from(&mut out)
+            .and(&next)
+            .and(&prev)
+            .for_each(|o, &nxt, &prv| {
+                *o = (nxt - prv) / prv;
+            });
+
+        out
     }
 }
 
