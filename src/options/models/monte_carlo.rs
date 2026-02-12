@@ -277,9 +277,7 @@ impl MonteCarloModel {
             };
 
             // Now call payoff after the mutable borrow is done
-            sum += (-(self.risk_free_rate - option_clone.instrument().continuous_dividend_yield)
-                * option_clone.time_to_maturity())
-            .exp()
+            sum += (-self.risk_free_rate * option_clone.time_to_maturity()).exp()
                 * option_clone.payoff(Some(avg_price));
         }
 

@@ -409,10 +409,15 @@ impl OptionPricing for BlackScholesModel {
         let normal = Normal::new(0.0, 1.0).unwrap();
         for _ in 0..max_iterations {
             let price = self.price_with_volatility(option, sigma, &normal);
-            let vega = self.vega(option);
+            let bump = 1e-5;
+            let price_up = self.price_with_volatility(option, sigma + bump, &normal);
+            let vega = (price_up - price) / bump;
             let diff = market_price - price;
             if diff.abs() < tolerance {
                 return sigma;
+            }
+            if vega.abs() < 1e-12 {
+                break;
             }
             sigma += diff / vega;
         }

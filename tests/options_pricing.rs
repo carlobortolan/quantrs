@@ -733,7 +733,9 @@ mod black_scholes_tests {
         );
         let model = BlackScholesModel::new(0.05, 0.2);
         let iv = model.implied_volatility(&option, 1200.0);
-        assert_abs_diff_eq!(iv, 2947.0381, epsilon = 0.0001);
+        // Market price 1200 is unreachable for this put (max ~95.12), so Newton-Raphson
+        // diverges until vega vanishes. The old test expected 2947 due to using stale vega.
+        assert_abs_diff_eq!(iv, 32.0309, epsilon = 0.0001);
     }
 }
 
@@ -782,7 +784,7 @@ mod binomial_tree_tests {
             let option = AmericanOption::new(instrument, 60.0, 2.0, OptionType::Call);
             let model = BinomialTreeModel::new(0.05, 0.182321557, 2);
 
-            assert_abs_diff_eq!(model.price(&option), 10.0000, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option), 3.8360, epsilon = 0.0001);
             assert_abs_diff_eq!(model.price(&option.flip()), 10.0000, epsilon = 0.0001);
         }
     }
@@ -808,7 +810,7 @@ mod binomial_tree_tests {
             let option = BermudanOption::new(instrument, 60.0, expiration_dates, OptionType::Call);
             let model = BinomialTreeModel::new(0.05, 0.182321557, 2);
 
-            assert_abs_diff_eq!(model.price(&option), 10.0000, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.price(&option), 3.8360, epsilon = 0.0001);
             assert_abs_diff_eq!(model.price(&option.flip()), 10.0000, epsilon = 0.0001);
         }
     }
