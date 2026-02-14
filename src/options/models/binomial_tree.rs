@@ -159,7 +159,7 @@ impl OptionPricing for BinomialTreeModel {
             || matches!(option.style(), OptionStyle::Bermudan)
                 && option.expiration_dates().unwrap().contains(&0.0)
         {
-            option_values[0].max(option.strike() - option.instrument().spot()) // TODO: Change to max(0.0, self.payoff(Some(self.spot)))
+            option_values[0].max(option.payoff(Some(option.instrument().spot())))
         } else {
             option_values[0] // Return the root node value
         }
