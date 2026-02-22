@@ -111,7 +111,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.7"
+quantrs = "0.1.8"
 ```
 
 Now if you want to e.g., calculate the arbitrage-free price of a binary cash-or-nothing call using the Black-Scholes model, you can:

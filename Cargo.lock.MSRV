@@ -1448,7 +1448,7 @@ dependencies = [
 
 [[package]]
 name = "quantrs"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "approx",
  "chrono",
