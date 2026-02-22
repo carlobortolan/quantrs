@@ -29,7 +29,7 @@ fn calculate_year_fraction(start: &str, end: &str, convention: &str) -> PyResult
 // DAYCOUNT BINDINGS
 // =============================================================================
 
-#[pyclass(name = "DayCount")]
+#[pyclass(name = "DayCount", from_py_object)]
 #[derive(Clone)]
 pub struct PyDayCount {
     inner: DayCount,
