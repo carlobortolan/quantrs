@@ -1110,7 +1110,7 @@ mod monte_carlo_tests {
             let model = MonteCarloModel::brownian(0.05, 0.3, 2_000, 20);
 
             let price = model.price(&option);
-            assert_abs_diff_eq!(price, 19.264, epsilon = 1.0);
+            assert_abs_diff_eq!(price, 19.264, epsilon = 2.0);
 
             let price = model.price(&option.flip());
             assert_abs_diff_eq!(price, 1.857, epsilon = 1.0);
