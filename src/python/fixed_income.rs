@@ -14,20 +14,22 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyZeroCouponBond>()?;
 
     // Module-level convenience function
-    #[pyfn(m)]
-    fn calculate_year_fraction(start: &str, end: &str, convention: &str) -> PyResult<f64> {
-        let day_count = PyDayCount::new(convention)?;
-        day_count.year_fraction(start, end)
-    }
+    m.add_function(wrap_pyfunction!(calculate_year_fraction, m)?)?;
 
     Ok(())
+}
+
+#[pyfunction]
+fn calculate_year_fraction(start: &str, end: &str, convention: &str) -> PyResult<f64> {
+    let day_count = PyDayCount::new(convention)?;
+    day_count.year_fraction(start, end)
 }
 
 // =============================================================================
 // DAYCOUNT BINDINGS
 // =============================================================================
 
-#[pyclass(name = "DayCount")]
+#[pyclass(name = "DayCount", from_py_object)]
 #[derive(Clone)]
 pub struct PyDayCount {
     inner: DayCount,

@@ -111,7 +111,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.7"
+quantrs = "0.1.8"
 ```
 
 Now if you want to e.g., calculate the arbitrage-free price of a binary cash-or-nothing call using the Black-Scholes model, you can:
@@ -162,7 +162,7 @@ use quantrs::options::*;
 let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
 // Create a vector of fixed-strike Asian calls options with different strike prices
-let options = vec![
+let options = [
     AsianOption::fixed(instrument.clone(), 85.0, 1.0, Call),
     AsianOption::fixed(instrument.clone(), 95.0, 1.0, Call),
     AsianOption::fixed(instrument.clone(), 102.0, 1.0, Call),
@@ -222,7 +222,7 @@ _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD 
 
 ## Minimum supported Rust version (MSRV)
 
-This crate requires a Rust version of 1.82.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+This crate requires a Rust version of 1.83.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
 ## Contributing
 

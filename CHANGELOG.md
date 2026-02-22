@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-02-22
+
+### Added
+
+- Python bindings and examples for the Fixed Income (FI) module including `DayCount` and `ZeroCouponBond` (#79)
+- Integration to fetch stock data and company overviews from Alpha Vantage (#65)
+- Basic FI structure, data types and custom pricing errors (#74)
+- Zero-coupon bond pricing implementation (#75)
+- Trait structure setup for data sources (#63)
+- PyPI badges added to the README (#84)
+
+### Changed
+
+- Bumped MSRV to `1.83.0`
+- Updated dependencies: `reqwest` (0.13.1), `criterion` (0.8.1), `pyo3` (0.27.2), `tokio` (1.48.0), `bytes` (1.11.1) and `rand` (0.9.2)
+- Merged the Outlook section into the Contributing section in the README (#76)
+- Refactored options initialization in examples and tests to replace `vec![]` with `[]`
+
+### Fixed
+
+- Corrected pricing bugs in Newton-Raphson IV (using numerical vega), binomial tree (root node payoff) and Monte Carlo Asian pricing (discount factor) (#108)
+- Resolved string formatting linting issues (#64)
+
 ## [0.1.7] - 2025-05-11
 
 ### Added
@@ -44,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolved issues with fontconfig in CI pipeline
 - Fixed margin spacing in plot visualization
 
-[Unreleased]: https://github.com/carlobortolan/quantrs/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/carlobortolan/quantrs/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/carlobortolan/quantrs/releases/tag/v0.1.8
 [0.1.7]: https://github.com/carlobortolan/quantrs/releases/tag/v0.1.7
 [0.1.6]: https://github.com/carlobortolan/quantrs/releases/tag/v0.1.6
