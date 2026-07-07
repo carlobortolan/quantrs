@@ -38,9 +38,9 @@
 //! ```
 
 use crate::options::{
-    types::BinaryType::{AssetOrNothing, CashOrNothing},
     Instrument, Option, OptionGreeks, OptionPricing, OptionStrategy, OptionStyle, OptionType,
     Permutation, RainbowType,
+    types::BinaryType::{AssetOrNothing, CashOrNothing},
 };
 use rand_distr::num_traits::Pow;
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};

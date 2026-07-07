@@ -22,7 +22,7 @@
 //! println!("Strike price: {}", option.strike());
 //! println!("Option style: {:?}", option.style());
 //! ```
-use crate::options::{types::Permutation, Instrument, Option, OptionStyle, OptionType};
+use crate::options::{Instrument, Option, OptionStyle, OptionType, types::Permutation};
 
 /// A struct representing an Asian option.
 #[derive(Clone, Debug)]

@@ -1800,14 +1800,18 @@ mod instrument_tests {
         ]);
 
         instrument.sorted = false;
-        assert!(std::panic::catch_unwind(|| {
-            _ = instrument.best_performer();
-        })
-        .is_err(),);
-        assert!(std::panic::catch_unwind(|| {
-            _ = instrument.worst_performer();
-        })
-        .is_err(),);
+        assert!(
+            std::panic::catch_unwind(|| {
+                _ = instrument.best_performer();
+            })
+            .is_err(),
+        );
+        assert!(
+            std::panic::catch_unwind(|| {
+                _ = instrument.worst_performer();
+            })
+            .is_err(),
+        );
     }
 
     #[test]
