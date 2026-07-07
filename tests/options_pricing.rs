@@ -2339,4 +2339,112 @@ mod option_strategies_tests {
 
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn test_option_strategies_warnings() {
+        let model = BlackScholesModel::new(0.0025, 0.15);
+        let instrument = Instrument::new().with_spot(50.0);
+
+        // ==============================================
+        // Butterfly Warnings
+        // ==============================================
+
+        // "Strikes are not equidistant => constructing a broken wing / skip strike butterfly!"
+        let lower = EuropeanOption::new(instrument.clone(), 40.0, 1.0, OptionType::Call);
+        let body = EuropeanOption::new(instrument.clone(), 50.0, 1.0, OptionType::Call);
+        let upper = EuropeanOption::new(instrument.clone(), 70.0, 1.0, OptionType::Call); // 10 delta vs 20 delta
+        let _ = model.butterfly(&lower, &body, &upper)(50.0);
+
+        // ==============================================
+        // Calendar Spread Warnings
+        // ==============================================
+
+        // "Strikes are not equal. Consider choosing equal strikes!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call);
+        let back_month =
+            EuropeanOption::new(instrument.clone(), 55.0, 2.0 / 12.0, OptionType::Call);
+        let _ = model.calendar_spread(&front_month, &back_month)(50.0);
+
+        // "Options are not ATM. Consider choosing ATM options!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 1.0 / 12.0, OptionType::Call);
+        let back_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 2.0 / 12.0, OptionType::Call);
+        let _ = model.calendar_spread(&front_month, &back_month)(50.0);
+
+        // "Time to maturity delta is more than 1 month. Consider choosing a shorter expiration date!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 50.0, 1.0 / 12.0, OptionType::Call);
+        let back_month =
+            EuropeanOption::new(instrument.clone(), 50.0, 3.0 / 12.0, OptionType::Call); // Diff = 2/12 > 0.0833
+        let _ = model.calendar_spread(&front_month, &back_month)(50.0);
+
+        // ==============================================
+        // Diagonal Spread Warnings
+        // ==============================================
+
+        // "Front month short and back month long strikes are not equal. Consider choosing equal strikes!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 65.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 70.0, 1.5 / 12.0, OptionType::Call);
+        let _ = model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0);
+
+        // "Options are not OTM. Consider choosing OTM options!" (Spot = 50, Strike = 40 is ITM)
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 40.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 40.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 45.0, 1.5 / 12.0, OptionType::Call);
+        let _ = model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0);
+
+        // "Front month expires in more than 1 month. Consider choosing a shorter expiration date!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 2.0 / 12.0, OptionType::Call); // 2/12 > 0.0833
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 60.0, 2.0 / 12.0, OptionType::Call);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 70.0, 3.0 / 12.0, OptionType::Call);
+        let _ = model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0);
+
+        // "Time to maturity delta between front-month and back-month short is more than 1 day..."
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.6 / 12.0, OptionType::Call); // Diff > 0.0027
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 70.0, 1.5 / 12.0, OptionType::Call);
+        let _ = model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0);
+
+        // "Back-month long expires more than 1 month after front-month. Consider a shorter expiration!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 70.0, 2.0 / 12.0, OptionType::Call); // Diff = 1.5/12 > 0.086
+        let _ = model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0);
+
+        // "Back-month long expires less than 1 month after front-month. Consider a longer expiration!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 70.0, 0.8 / 12.0, OptionType::Call); // Diff = 0.3/12 < 0.0805
+        let _ = model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0);
+
+        // "Back-month long is not further OTM than back-month short. Consider choosing further OTM options!"
+        let front_month =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_short =
+            EuropeanOption::new(instrument.clone(), 60.0, 0.5 / 12.0, OptionType::Call);
+        let back_month_long =
+            EuropeanOption::new(instrument.clone(), 55.0, 1.5 / 12.0, OptionType::Call); // 55 < 60
+        let _ = model.diagonal_spread(&front_month, &back_month_short, &back_month_long)(50.0);
+    }
 }
