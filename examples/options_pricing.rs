@@ -452,7 +452,12 @@ fn example_strategy() {
     let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call);
     println!(
         "[Condor: {:?}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
-        model.condor(&itm_call_long, &itm_call_short, &otm_call_short, &otm_call_long)(50.0),
+        model.condor(
+            &itm_call_long,
+            &itm_call_short,
+            &otm_call_short,
+            &otm_call_long
+        )(50.0),
         model.price(&itm_call_long),
         model.price(&itm_call_short),
         model.price(&otm_call_short),
@@ -465,7 +470,12 @@ fn example_strategy() {
     let otm_call_long = EuropeanOption::new(instrument.clone(), 70.0, 1.0, Call);
     println!(
         "[Iron Condor: {:?}], given itm_call_long: {}, itm_call_short: {}, otm_call_short: {}, otm_call_long: {}",
-        model.iron_condor(&otm_put_long, &otm_put_short, &otm_call_short, &otm_call_long)(50.0),
+        model.iron_condor(
+            &otm_put_long,
+            &otm_put_short,
+            &otm_call_short,
+            &otm_call_long
+        )(50.0),
         model.price(&otm_put_long),
         model.price(&otm_put_short),
         model.price(&otm_call_short),

@@ -51,7 +51,7 @@ impl PyDayCount {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Unknown day count convention: {}",
                     convention
-                )))
+                )));
             }
         };
         Ok(PyDayCount { inner })
