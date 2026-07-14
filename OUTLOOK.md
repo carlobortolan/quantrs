@@ -138,15 +138,19 @@ This document outlines the planned features and improvements for the `quantrs` l
 
 ### Data Retrieval
 
-- [ ] Integrate with financial data providers:
+- [x] Integrate with financial data providers:
   - [x] Yahoo Finance
   - [x] Alpha Vantage
-  - [ ] Polygon.io
+  - [x] Massive (formerly Polygon.io)
 
 ### Fixed Income & Interest Rate Models
 
 - [ ] Support for fixed income instruments:
-  - [x] Bond pricing
+  - [ ] Bond pricing
+    - [x] Zero-coupon bonds
+    - [x] Corporate bonds
+    - [ ] Treasury bonds
+    - [ ] Floating rate bonds
   - [ ] Duration
   - [ ] Convexity
   - [ ] Yield curve construction
