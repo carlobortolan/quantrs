@@ -1,5 +1,5 @@
-use crate::options::types::*;
 use crate::options::Instrument;
+use crate::options::types::*;
 use std::any::Any;
 
 use super::OptionPricing;

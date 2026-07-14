@@ -7,6 +7,7 @@
 [![codecov-quantrs][codecov-badge]][codecov-url]
 ![Crates.io MSRV][crates-msrv-badge]
 ![Crates.io downloads][crates-download-badge]
+[![PyPI version][pypi-version]][pypi-url]
 
 [actions-test-badge]: https://github.com/carlobortolan/quantrs/actions/workflows/ci.yml/badge.svg
 [crates-badge]: https://img.shields.io/crates/v/quantrs.svg
@@ -18,12 +19,18 @@
 [codecov-url]: https://codecov.io/gh/carlobortolan/quantrs
 [crates-msrv-badge]: https://img.shields.io/crates/msrv/quantrs
 [crates-download-badge]: https://img.shields.io/crates/d/quantrs
+[pypi-version]: https://img.shields.io/pypi/v/quantrs.svg
+[pypi-url]: https://pypi.org/project/quantrs
+<!-- [![Python versions](https://img.shields.io/pypi/pyversions/quantrs.svg)](https://pypi.org/project/quantrs/) -->
+<!-- [![PyPI downloads](https://img.shields.io/pypi/dm/quantrs.svg)](https://pypi.org/project/quantrs/) -->
 
 Quantrs is a tiny quantitative finance library for Rust.
 It is designed to be as intuitive and easy to use as possible so that you can work with derivatives without the need to write complex code or have a PhD in reading QuantLib documentation.
-The library is still in the early stages of development, and many features are not yet implemented.
+The library is still in the early stages of development and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
+
+Python bindings are also available; see the [Python README](bindings/python#README.md) or the [PyPI page][pypi-url].
 
 ## Features
 
@@ -86,13 +93,25 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 
 </details>
 
+### Fixed Income
+
+- Bond Types
+  - [x] _Zero-Coupon Bonds_
+  - [ ] _Treasury Bonds_ (fixed-rate coupon)
+  - [ ] _Corporate Bonds_ (fixed-rate coupon with credit spreads)
+  - [ ] _Floating-Rate Bonds_ (variable coupon with caps/floors)
+- [ ] Duration (_Macaulay_, _Modified_, _Effective_)
+- [ ] Convexity
+- [ ] Yield Measures (_YTM_, _YTC_, _YTW_)
+- [x] Day Count Conventions (_ACT/365F_, _ACT/365_, _ACT/360_, _30/360 US_, _30/360 Eurobond_, _ACT/ACT ISDA_, _ACT/ACT ICMA_)
+
 ## Usage
 
 Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-quantrs = "0.1.7"
+quantrs = "0.1.8"
 ```
 
 Now if you want to e.g., calculate the arbitrage-free price of a binary cash-or-nothing call using the Black-Scholes model, you can:
@@ -143,7 +162,7 @@ use quantrs::options::*;
 let instrument = Instrument::new().with_spot(100.0).with_cont_yield(0.02);
 
 // Create a vector of fixed-strike Asian calls options with different strike prices
-let options = vec![
+let options = [
     AsianOption::fixed(instrument.clone(), 85.0, 1.0, Call),
     AsianOption::fixed(instrument.clone(), 95.0, 1.0, Call),
     AsianOption::fixed(instrument.clone(), 102.0, 1.0, Call),
@@ -203,15 +222,11 @@ _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD 
 
 ## Minimum supported Rust version (MSRV)
 
-This crate requires a Rust version of 1.77.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
-
-## Outlook
-
-See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
+This crate requires a Rust version of 1.86.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
 
 ## Contributing
 
-If you find any bugs or have suggestions for improvement, please open a new issue or submit a pull request.
+If you find any bugs or have suggestions for improvement, please open a new issue or PR. See [OUTLOOK.md](OUTLOOK.md) for a list of planned features and improvements.
 
 ## Disclaimer
 
