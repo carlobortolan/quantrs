@@ -17,10 +17,10 @@
 //! - [Floating Rate Bonds](bonds/struct.FloatingRateBond.html)
 //! - [Zero-Coupon Bonds](bonds/struct.ZeroCouponBond.html)
 
-pub use self::bond_pricing::*;
-pub use self::bonds::*;
-pub use self::cashflow::*;
 pub use self::types::*;
+pub use bond_pricing::*;
+pub use bonds::*;
+pub use cashflow::*;
 pub use traits::*;
 
 mod bond_pricing;

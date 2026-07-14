@@ -37,12 +37,13 @@ statrs = "0.18.0"
 reqwest = { version = "0.13.1", features = ["json"] }
 serde = "1.0.219"
 serde-aux = "4.7.0"
-tokio = "1.52.3"
+tokio = { version = "1.52.3", features = ["macros", "rt"] }
 
 [dev-dependencies]
 approx = "0.5.1"
 criterion = { version = "0.8.2", features = ["html_reports"] }
 tokio-test = "0.4.4"
+wiremock = "=0.5.22"
 
 [[bench]]
 name = "option_pricing_bench"

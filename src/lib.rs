@@ -10,23 +10,6 @@
 //! - **2.7x faster** than `Q-Fin`
 //!
 //! _You can find the benchmarks at [quantrs.pages.dev/report](https://quantrs.pages.dev/report/)_.
-//!
-//! ## Options Pricing
-//!
-//! For now quantrs only supports options pricing. The following features are available:
-//!
-//! - Option types: European, American, Asian, Rainbow, Binary Cash-or-Nothing, Binary Asset-or-Nothing
-//! - Option pricing: Black-Scholes, Binomial Tree, Monte Carlo Simulation
-//! - Greeks: Delta, Gamma, Theta, Vega, Rho
-//! - Implied volatility
-//!
-//! ```rust
-//! use quantrs::options::*;
-//!
-//! let option = BinaryOption::cash_or_nothing(Instrument::new().with_spot(100.0), 85.0, 0.78, OptionType::Call);
-//! let model = BlackScholesModel::new(0.05, 0.2);
-//! let price = model.price(&option);
-//! let greeks = Greeks::calculate(&model, &option);
 //! ```
 
 #![allow(unused_variables)]
@@ -42,6 +25,7 @@ pub mod data;
 pub mod fixed_income;
 pub mod options;
 
+pub use data::*;
 pub use fixed_income::*;
 pub use options::*;
 
