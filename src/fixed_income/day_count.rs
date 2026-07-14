@@ -27,7 +27,9 @@ impl DayCountConvention for DayCount {
             DayCount::Thirty360E => self.day_count(start, end) as f64 / 360.0,
             DayCount::ActActISDA => self.act_act_isda_year_fraction(start, end),
             DayCount::ActActICMA => {
-                log_warn!("Act/Act ICMA year fraction called without maturity and frequency; defaulting to semi-annual frequency and end date as maturity. Use year_fraction_with_maturity for accurate results.");
+                log_warn!(
+                    "Act/Act ICMA year fraction called without maturity and frequency; defaulting to semi-annual frequency and end date as maturity. Use year_fraction_with_maturity for accurate results."
+                );
                 self.act_act_icma_year_fraction(start, end, 2, end)
             }
         }

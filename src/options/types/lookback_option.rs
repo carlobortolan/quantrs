@@ -1,4 +1,4 @@
-use crate::options::{types::Permutation, Instrument, Option, OptionStyle, OptionType};
+use crate::options::{Instrument, Option, OptionStyle, OptionType, types::Permutation};
 
 #[derive(Clone, Debug)]
 pub struct LookbackOption {
