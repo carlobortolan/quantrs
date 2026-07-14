@@ -176,11 +176,7 @@ let ytm = 0.06;
 let day_count = DayCount::Thirty360US;
 
 match bond.price(settlement, ytm, day_count) {
-    Ok(price) => {
-        println!("Clean Price: {:.2}", price.clean);
-        println!("Dirty Price: {:.2}", price.dirty);
-        println!("Accrued Interest: {:.2}", price.accrued);
-    }
+    Ok(price) => println!("{}", price),
     Err(e) => eprintln!("Error pricing bond: {}", e),
 }
 ```
@@ -188,9 +184,7 @@ match bond.price(settlement, ytm, day_count) {
 This will output:
 
 ```text
-Clean Price: 958.82
-Dirty Price: 971.32
-Accrued Interest: 12.50
+Clean: $959.10 | Dirty: &971.60 | Accrued Int: $12.50
 ```
 
 ### Market Data
