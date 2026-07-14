@@ -8,8 +8,6 @@ pub enum DayCount {
     /// Actual/365 Fixed - 365 days per year
     Act365F,
     /// Actual/365 - actual days, 365 days per year (no leap year adjustment)
-    Act365,
-    /// Actual/360 - actual days, 360 days per year
     Act360,
     /// 30/360 US (Bond Basis) - 30 days per month, 360 days per year
     Thirty360US,

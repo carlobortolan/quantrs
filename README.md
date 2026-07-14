@@ -21,6 +21,7 @@
 [crates-download-badge]: https://img.shields.io/crates/d/quantrs
 [pypi-version]: https://img.shields.io/pypi/v/quantrs.svg
 [pypi-url]: https://pypi.org/project/quantrs
+
 <!-- [![Python versions](https://img.shields.io/pypi/pyversions/quantrs.svg)](https://pypi.org/project/quantrs/) -->
 <!-- [![PyPI downloads](https://img.shields.io/pypi/dm/quantrs.svg)](https://pypi.org/project/quantrs/) -->
 
@@ -29,8 +30,6 @@ It is designed to be as intuitive and easy to use as possible so that you can wo
 The library is still in the early stages of development and many features are not yet implemented.
 
 Please check out the documentation [here][docs-url].
-
-Python bindings are also available; see the [Python README](bindings/python#README.md) or the [PyPI page][pypi-url].
 
 ## Features
 
@@ -64,8 +63,6 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 > ³ _MC simulates underlying price paths based on geometric Brownian motion for Black-Scholes models and both arithmetic or geometric average price paths for Asian and Lookback options_\
 > ✅ = Supported, ⏳ = Planned / In progress, ❌ = Not supported / Not applicable
 
-<!--Bachelier and Modified Bachelier-->
-
 </details>
 
 <details>
@@ -98,12 +95,12 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 - Bond Types
   - [x] _Zero-Coupon Bonds_
   - [ ] _Treasury Bonds_ (fixed-rate coupon)
-  - [ ] _Corporate Bonds_ (fixed-rate coupon with credit spreads)
+  - [x] _Corporate Bonds_ (fixed-rate coupon with credit spreads)
   - [ ] _Floating-Rate Bonds_ (variable coupon with caps/floors)
 - [ ] Duration (_Macaulay_, _Modified_, _Effective_)
 - [ ] Convexity
 - [ ] Yield Measures (_YTM_, _YTC_, _YTW_)
-- [x] Day Count Conventions (_ACT/365F_, _ACT/365_, _ACT/360_, _30/360 US_, _30/360 Eurobond_, _ACT/ACT ISDA_, _ACT/ACT ICMA_)
+- [x] Accrual Conventions (_ACT/365F_, _ACT/360_, _30/360 US_, _30/360 Eurobond_, _ACT/ACT ISDA_, _ACT/ACT ICMA_)
 
 ## Usage
 
@@ -113,6 +110,8 @@ Add this to your `Cargo.toml`:
 [dependencies]
 quantrs = "0.1.8"
 ```
+
+### Options Pricing
 
 Now if you want to e.g., calculate the arbitrage-free price of a binary cash-or-nothing call using the Black-Scholes model, you can:
 
@@ -144,6 +143,46 @@ This will output:
 ```text
 Price: 0.8006934914644723
 Greeks { delta: 0.013645840354947947, gamma: -0.0008813766475726433, theta: 0.17537248302290848, vega: -1.3749475702133236, rho: 0.4398346243436515 }
+```
+
+### Fixed Income
+
+```rust
+use quantrs::fixed_income::*;
+use chrono::NaiveDate;
+
+// Define the bond timeline
+let issue_date = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
+let maturity = NaiveDate::from_ymd_opt(2030, 1, 15).unwrap();
+let settlement = NaiveDate::from_ymd_opt(2025, 4, 15).unwrap();
+
+// Create a new Corporate Bond with:
+// - Face value = 1,000
+// - Coupon rate = 5%
+// - Payment frequency = 2 (Semi-Annual)
+// - Credit rating = BBB
+let bond = CorporateBond::new(1000.0, 0.05, issue_date, maturity, 2, "BBB".to_string());
+
+// Price the bond at a 6% Yield to Maturity (YTM) using the US 30/360 day-count convention
+let ytm = 0.06;
+let day_count = DayCount::Thirty360US;
+
+match bond.price(settlement, ytm, day_count) {
+    Ok(price) => {
+        println!("Clean Price: {:.2}", price.clean);
+        println!("Dirty Price: {:.2}", price.dirty);
+        println!("Accrued Interest: {:.2}", price.accrued);
+    }
+    Err(e) => eprintln!("Error pricing bond: {}", e),
+}
+```
+
+This will output:
+
+```text
+Clean Price: 958.82
+Dirty Price: 971.32
+Accrued Interest: 12.50
 ```
 
 ### Plotting
@@ -188,11 +227,11 @@ model.plot_strategy_breakdown(
 
 </details>
 
-![condor_strategy](./examples/images/strategy.png)
+<!-- ![condor_strategy](./examples/images/strategy.png) -->
 
-<!--<div align="center">
+<div align="center">
   <img src="https://github.com/user-attachments/assets/0298807f-43ed-4458-9c7d-43b0f70defea" alt="condor_strategy" width="600"/>
-</div>-->
+</div>
 
 See the [documentation][docs-url] for more information and examples.
 
@@ -223,6 +262,8 @@ _Published benchmarks have been measured on a selfhosted VM with 32 GB RAM, AMD 
 ## Minimum supported Rust version (MSRV)
 
 This crate requires a Rust version of 1.86.0 or higher. Increases in MSRV will be considered a semver non-breaking API change and require a version increase (PATCH until 1.0.0, MINOR after 1.0.0).
+
+Basic Python bindings for the `fixed_income` module are also available; see the [Python README](bindings/python#README.md) or the [PyPI page][pypi-url].
 
 ## Contributing
 
