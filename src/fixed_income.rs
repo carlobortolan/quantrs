@@ -20,7 +20,6 @@
 pub use self::bond_pricing::*;
 pub use self::bonds::*;
 pub use self::cashflow::*;
-pub use self::day_count::*;
 pub use self::types::*;
 pub use traits::*;
 

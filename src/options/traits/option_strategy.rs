@@ -8,7 +8,7 @@
 //! - [Options Strategies](https://www.optionsplaybook.com/option-strategies/)
 
 use plotters::{
-    coord::{types::RangedCoordf64, Shift},
+    coord::{Shift, types::RangedCoordf64},
     prelude::*,
 };
 
@@ -622,7 +622,9 @@ pub trait OptionStrategy: OptionPricing {
             let lower_to_body = (body.strike() - lower.strike()).abs();
             let body_to_upper = (upper.strike() - body.strike()).abs();
             if lower_to_body != body_to_upper {
-                log_warn!("Strikes are not equidistant => constructing a broken wing / skip strike butterfly!");
+                log_warn!(
+                    "Strikes are not equidistant => constructing a broken wing / skip strike butterfly!"
+                );
             }
 
             let price = self.price(lower) - 2.0 * self.price(body) + self.price(upper);
@@ -650,8 +652,12 @@ pub trait OptionStrategy: OptionPricing {
             check_is_call!(atm_call);
             check_is_call!(otm_call);
 
-            assert!(otm_put.strike() < atm_put.strike() && atm_put.strike() == atm_call.strike() && atm_call.strike() < otm_call.strike(),
-                    "Iron Butterfly must have ordered strikes: lower_put < atm_put == atm_call < upper_call");
+            assert!(
+                otm_put.strike() < atm_put.strike()
+                    && atm_put.strike() == atm_call.strike()
+                    && atm_call.strike() < otm_call.strike(),
+                "Iron Butterfly must have ordered strikes: lower_put < atm_put == atm_call < upper_call"
+            );
 
             let price = self.price(otm_put) - self.price(atm_put) - self.price(atm_call)
                 + self.price(otm_call);
@@ -688,13 +694,13 @@ pub trait OptionStrategy: OptionPricing {
                 check_is_call!(upper1);
                 check_is_call!(upper2);
                 assert!(
-                lower.strike() < middle1.strike()
-                    && middle1.strike() == middle2.strike()
-                    && middle2.strike() == middle3.strike()
-                    && middle3.strike() < upper1.strike()
-                    && upper1.strike() == upper2.strike(),
-                "Christmas Tree Butterfly using calls must have ordered strikes: lower < (middle1 == middle2 == middle3) < (upper1 == upper2)"
-            );
+                    lower.strike() < middle1.strike()
+                        && middle1.strike() == middle2.strike()
+                        && middle2.strike() == middle3.strike()
+                        && middle3.strike() < upper1.strike()
+                        && upper1.strike() == upper2.strike(),
+                    "Christmas Tree Butterfly using calls must have ordered strikes: lower < (middle1 == middle2 == middle3) < (upper1 == upper2)"
+                );
             } else {
                 check_is_put!(middle1);
                 check_is_put!(middle2);
@@ -702,13 +708,13 @@ pub trait OptionStrategy: OptionPricing {
                 check_is_put!(upper1);
                 check_is_put!(upper2);
                 assert!(
-                lower.strike() > middle1.strike()
-                    && middle1.strike() == middle2.strike()
-                    && middle2.strike() == middle3.strike()
-                    && middle3.strike() > upper1.strike()
-                    && upper1.strike() == upper2.strike(),
-                "Christmas Tree Butterfly using puts must have ordered strikes: lower > (middle1 == middle2 == middle3) > (upper1 == upper2)"
-            );
+                    lower.strike() > middle1.strike()
+                        && middle1.strike() == middle2.strike()
+                        && middle2.strike() == middle3.strike()
+                        && middle3.strike() > upper1.strike()
+                        && upper1.strike() == upper2.strike(),
+                    "Christmas Tree Butterfly using puts must have ordered strikes: lower > (middle1 == middle2 == middle3) > (upper1 == upper2)"
+                );
             }
 
             let price = self.price(lower)
@@ -749,15 +755,23 @@ pub trait OptionStrategy: OptionPricing {
                 check_is_call!(otm_short);
                 check_is_call!(otm_long);
 
-                assert!(itm_long.strike() <= itm_short.strike() && itm_short.strike() <= otm_short.strike() && otm_short.strike() <= otm_long.strike(),
-            "Condor Spread w/ Call must have ordered strikes: ITM (long) <= ITM (short) <= OTM (short) <= OTM (long)");
+                assert!(
+                    itm_long.strike() <= itm_short.strike()
+                        && itm_short.strike() <= otm_short.strike()
+                        && otm_short.strike() <= otm_long.strike(),
+                    "Condor Spread w/ Call must have ordered strikes: ITM (long) <= ITM (short) <= OTM (short) <= OTM (long)"
+                );
             } else {
                 check_is_put!(itm_short);
                 check_is_put!(otm_short);
                 check_is_put!(otm_long);
 
-                assert!(itm_long.strike() >= itm_short.strike() && itm_short.strike() >= otm_short.strike() && otm_short.strike() >= otm_long.strike(),
-            "Condor Spread w/ Puts must have ordered strikes: OTM (long) <= OTM (short) <= ITM (short) <= ITM (long)");
+                assert!(
+                    itm_long.strike() >= itm_short.strike()
+                        && itm_short.strike() >= otm_short.strike()
+                        && otm_short.strike() >= otm_long.strike(),
+                    "Condor Spread w/ Puts must have ordered strikes: OTM (long) <= OTM (short) <= ITM (short) <= ITM (long)"
+                );
             }
 
             let price = self.price(itm_long) - self.price(itm_short) - self.price(otm_short)
@@ -796,8 +810,12 @@ pub trait OptionStrategy: OptionPricing {
                 "Puts and calls must be OTM!"
             );
 
-            assert!(otm_put_long.strike() <= otm_put_short.strike() && otm_put_short.strike() <= otm_call_short.strike() && otm_call_short.strike() <= otm_call_long.strike(),
-            "Iron Condor must have ordered strikes: OTM Put (long) <= OTM Put (short) <= OTM Call (short) <= OTM Call (long)");
+            assert!(
+                otm_put_long.strike() <= otm_put_short.strike()
+                    && otm_put_short.strike() <= otm_call_short.strike()
+                    && otm_call_short.strike() <= otm_call_long.strike(),
+                "Iron Condor must have ordered strikes: OTM Put (long) <= OTM Put (short) <= OTM Call (short) <= OTM Call (long)"
+            );
 
             let price =
                 self.price(otm_put_long) - self.price(otm_put_short) - self.price(otm_call_short)
@@ -903,7 +921,9 @@ pub trait OptionStrategy: OptionPricing {
             }
 
             if back_month.time_to_maturity() - front_month.time_to_maturity() > 0.083333334 {
-                log_warn!("Time to maturity delta is more than 1 month. Consider choosing a shorter expiration date!");
+                log_warn!(
+                    "Time to maturity delta is more than 1 month. Consider choosing a shorter expiration date!"
+                );
             }
 
             let price = self.price(back_month) - self.price(front_month);
@@ -922,7 +942,9 @@ pub trait OptionStrategy: OptionPricing {
     ) -> impl Fn(f64) -> (f64, f64) + 'a {
         move |spot_price| {
             if front_month.strike() != back_month_short.strike() {
-                log_warn!("Front month short and back month long strikes are not equal. Consider choosing equal strikes!");
+                log_warn!(
+                    "Front month short and back month long strikes are not equal. Consider choosing equal strikes!"
+                );
             }
 
             if !front_month.otm() || !back_month_long.otm() || !back_month_short.otm() {
@@ -930,28 +952,38 @@ pub trait OptionStrategy: OptionPricing {
             }
 
             if front_month.time_to_maturity() > 0.083333334 {
-                log_warn!("Front month expires in more than 1 month. Consider choosing a shorter expiration date!");
+                log_warn!(
+                    "Front month expires in more than 1 month. Consider choosing a shorter expiration date!"
+                );
             }
 
             if (front_month.time_to_maturity() - back_month_short.time_to_maturity()).abs() > 0.0027
             {
-                log_warn!("Time to maturity delta between front-month and back-month short is more than 1 day. Consider choosing a shorter expiration date!");
+                log_warn!(
+                    "Time to maturity delta between front-month and back-month short is more than 1 day. Consider choosing a shorter expiration date!"
+                );
             }
 
             // Ensure back-month long expires ~1 month after the front-month
             let time_delta = back_month_long.time_to_maturity() - front_month.time_to_maturity();
             if time_delta > 0.086073059 {
-                log_warn!("Back-month long expires more than 1 month after front-month. Consider a shorter expiration!");
+                log_warn!(
+                    "Back-month long expires more than 1 month after front-month. Consider a shorter expiration!"
+                );
             }
             if time_delta < 0.080593607 {
-                log_warn!("Back-month long expires less than 1 month after front-month. Consider a longer expiration!");
+                log_warn!(
+                    "Back-month long expires less than 1 month after front-month. Consider a longer expiration!"
+                );
             }
 
             // Check if back-month long is further OTM than back-month short.
             if back_month_long.is_call() && back_month_long.strike() < back_month_short.strike()
                 || back_month_long.is_put() && back_month_long.strike() > back_month_short.strike()
             {
-                log_warn!("Back-month long is not further OTM than back-month short. Consider choosing further OTM options!");
+                log_warn!(
+                    "Back-month long is not further OTM than back-month short. Consider choosing further OTM options!"
+                );
             }
 
             if front_month.is_call() {

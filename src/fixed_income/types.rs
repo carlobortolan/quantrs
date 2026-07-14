@@ -7,16 +7,16 @@
 pub enum DayCount {
     /// Actual/365 Fixed - 365 days per year
     Act365F,
-    /// 30/360 US (Bond Basis) - 30 days per month, 360 days per year
-    Thirty360US,
-    /// Actual/Actual ISDA - actual days, actual year length
-    ActActISDA,
-    /// Actual/360 - actual days, 360 days per year
-    Act360,
-    /// 30/360 European - European version of 30/360
-    Thirty360E,
     /// Actual/365 - actual days, 365 days per year (no leap year adjustment)
     Act365,
+    /// Actual/360 - actual days, 360 days per year
+    Act360,
+    /// 30/360 US (Bond Basis) - 30 days per month, 360 days per year
+    Thirty360US,
+    /// 30/360 European - European version of 30/360
+    Thirty360E,
+    /// Actual/Actual ISDA - actual days, actual year length
+    ActActISDA,
     /// Actual/Actual ICMA - used for bonds
     ActActICMA,
 }
