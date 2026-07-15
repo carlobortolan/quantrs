@@ -17,7 +17,6 @@ class TestQuantrsPythonBindings:
             "30/360US",
             "30/360E",
             "ACT/ACT ISDA",
-            "ACT/ACT ICMA",
         ]
 
         for conv in conventions:
@@ -102,6 +101,13 @@ class TestQuantrsPythonBindings:
         assert result.dirty > result.clean
         assert result.accrued > 0
 
+    def test_act_act_icma_requires_coupon_data(self):
+        """ACT/ACT ICMA requires coupon period information."""
+        dc = quantrs.DayCount("ACT/ACT ICMA")
+
+        with pytest.raises(ValueError):
+            dc.year_fraction("2025-01-01", "2025-07-01")
+            
     def test_credit_spread(self):
         """Test corporate bond credit spreads."""
         ratings = {
