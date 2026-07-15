@@ -1,3 +1,36 @@
+/// A Corporate Bond implementation that supports regular and irregular (stub) coupon periods.
+///
+/// This implementation models corporate bonds by explicitly generating cash flow schedules from
+/// maturity backwards.
+///
+/// # Example
+///
+/// ```rust
+/// use quantrs::fixed_income::{Bond, CorporateBond, DayCount};
+/// use chrono::NaiveDate;
+///
+/// fn main() {
+///     let issue_date = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
+///     let maturity = NaiveDate::from_ymd_opt(2030, 1, 15).unwrap();
+///     let settlement = NaiveDate::from_ymd_opt(2025, 4, 15).unwrap();
+///     
+///     // 5% coupon, semi-annual payments, BBB rated
+///     let bond = CorporateBond::new(1000.0, 0.05, issue_date, maturity, 2, "BBB".to_string());
+///     
+///     // Yield to maturity of 6%
+///     let ytm = 0.06;
+///     let day_count = DayCount::Thirty360US;
+///     
+///     match bond.price(settlement, ytm, day_count) {
+///         Ok(price_result) => {
+///             println!("Clean Price: {:.2}", price_result.clean);
+///             println!("Dirty Price: {:.2}", price_result.dirty);
+///             println!("Accrued: {:.2}", price_result.accrued);
+///         }
+///         Err(e) => eprintln!("Pricing failed: {}", e),
+///     }
+/// }
+/// ```
 use crate::fixed_income::{Bond, BondPricingError, DayCount, DayCountConvention, PriceResult};
 use chrono::{Datelike, NaiveDate};
 
