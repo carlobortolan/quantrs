@@ -256,6 +256,17 @@ mod tests {
         }
 
         #[test]
+        fn test_thirty_360_us_last_day_of_february() {
+            let start = NaiveDate::from_ymd_opt(2024, 2, 29).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 2, 28).unwrap();
+
+            let result = DayCount::Thirty360US.day_count(start, end);
+
+            // Both dates are treated as day 30 under 30/360 US rules
+            assert_eq!(result, 360);
+        }
+
+        #[test]
         fn test_thirty360e_end_of_month() {
             let start = NaiveDate::from_ymd_opt(2025, 1, 31).unwrap();
 
@@ -798,6 +809,24 @@ mod tests {
                 ),
                 0.0
             );
+        }
+
+        #[test]
+        fn test_price_non_icma_reference_period_fallback() {
+            let issue_date = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
+            let maturity = NaiveDate::from_ymd_opt(2030, 1, 15).unwrap();
+            let settlement = NaiveDate::from_ymd_opt(2025, 4, 15).unwrap();
+
+            let bond = CorporateBond::new(1000.0, 0.05, issue_date, maturity, 2, "BBB".to_string());
+
+            let result = bond.price(settlement, 0.06, DayCount::Act365F);
+
+            assert!(result.is_ok());
+
+            let price = result.unwrap();
+
+            assert!(price.clean > 0.0);
+            assert!(price.dirty > 0.0);
         }
     }
 }
