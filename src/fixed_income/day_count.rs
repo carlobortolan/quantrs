@@ -30,7 +30,6 @@ impl DayCountConvention for DayCount {
             DayCount::ActActISDA => self.act_act_isda_year_fraction(start, end),
             DayCount::ActActICMA => {
                 // Act/Act ICMA cannot be calculated correctly without reference periods.
-                // We return NaN to loudly fail rather than silently switching models.
                 f64::NAN
             }
         }
