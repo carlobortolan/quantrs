@@ -1,10 +1,11 @@
-use crate::fixed_income::{Bond, BondPricingError, DayCount, PriceResult};
+use crate::fixed_income::{Bond, BondPricingError, DayCount, DayCountConvention, PriceResult};
 use chrono::{Datelike, NaiveDate};
 
 #[derive(Debug, Clone)]
 pub struct CorporateBond {
     pub face_value: f64,
     pub coupon_rate: f64,
+    pub issue_date: NaiveDate,
     pub maturity: NaiveDate,
     pub frequency: u32,
     pub credit_rating: String,
@@ -14,6 +15,7 @@ impl CorporateBond {
     pub fn new(
         face_value: f64,
         coupon_rate: f64,
+        issue_date: NaiveDate,
         maturity: NaiveDate,
         frequency: u32,
         credit_rating: String,
@@ -21,24 +23,97 @@ impl CorporateBond {
         Self {
             face_value,
             coupon_rate,
+            issue_date,
             maturity,
             frequency,
             credit_rating,
         }
     }
 
+    /// Informational only: In market standard yield-to-price calculations,
+    /// the spread is implicitly priced into the YTM provided to the `price()` function.
     pub fn credit_spread(&self) -> f64 {
-        // Simple credit spread based on rating
-        // TODO: Replace (maybe)
         match self.credit_rating.as_str() {
-            "AAA" => 0.005, // 50 bps
-            "AA" => 0.010,  // 100 bps
-            "A" => 0.015,   // 150 bps
-            "BBB" => 0.025, // 250 bps
-            "BB" => 0.050,  // 500 bps
-            "B" => 0.100,   // 1000 bps
-            _ => 0.030,     // Default spread
+            "AAA" => 0.005,
+            "AA" => 0.010,
+            "A" => 0.015,
+            "BBB" => 0.025,
+            "BB" => 0.050,
+            "B" => 0.100,
+            _ => 0.030,
         }
+    }
+
+    fn is_end_of_month(date: NaiveDate) -> bool {
+        let next_day = date.succ_opt().unwrap_or(date);
+        next_day.day() == 1
+    }
+
+    fn step_months_backward(date: NaiveDate, months: u32, eom_rule: bool) -> NaiveDate {
+        let mut year = date.year();
+        let mut month = date.month() as i32 - months as i32;
+
+        while month <= 0 {
+            year -= 1;
+            month += 12;
+        }
+
+        let mut day = date.day();
+        loop {
+            if let Some(d) = NaiveDate::from_ymd_opt(year, month as u32, day) {
+                if eom_rule && Self::is_end_of_month(date) {
+                    let mut eom_day = 31;
+                    loop {
+                        if let Some(eom_d) = NaiveDate::from_ymd_opt(year, month as u32, eom_day) {
+                            return eom_d;
+                        }
+                        eom_day -= 1;
+                    }
+                }
+                return d;
+            }
+            day -= 1;
+        }
+    }
+
+    /// Generates only ACTUAL payment dates.
+    /// Does not include issue_date, establishing a proper 'short stub' first coupon.
+    fn get_coupon_schedule(&self) -> Vec<NaiveDate> {
+        let mut dates = vec![];
+        if self.frequency == 0 {
+            return dates;
+        }
+
+        let months_back = 12 / self.frequency;
+        let mut current = self.maturity;
+        let eom_rule = Self::is_end_of_month(self.maturity);
+
+        dates.push(current);
+
+        while current > self.issue_date {
+            let prev = Self::step_months_backward(current, months_back, eom_rule);
+            if prev > self.issue_date {
+                dates.push(prev);
+                current = prev;
+            } else {
+                // prev is <= issue_date, meaning 'current' is the first coupon date
+                break;
+            }
+        }
+
+        dates.reverse();
+        dates
+    }
+
+    /// Returns the theoretical regular period (start and end) for a given cash flow date.
+    fn get_reference_period(&self, cf_date: NaiveDate) -> (NaiveDate, NaiveDate) {
+        if self.frequency == 0 {
+            return (cf_date, cf_date);
+        }
+        let months_back = 12 / self.frequency;
+        let ref_start =
+            Self::step_months_backward(cf_date, months_back, Self::is_end_of_month(self.maturity));
+        (ref_start, cf_date)
     }
 }
 
@@ -49,72 +124,159 @@ impl Bond for CorporateBond {
         ytm: f64,
         day_count: DayCount,
     ) -> Result<PriceResult, BondPricingError> {
-        if ytm < 0.0 {
+        // Validation Guards
+        if ![1, 2, 4, 12].contains(&self.frequency) {
+            return Err(BondPricingError::InvalidFrequency(self.frequency));
+        }
+        if ytm <= -1.0 {
             return Err(BondPricingError::invalid_yield(ytm));
         }
-
-        if settlement >= self.maturity {
+        if settlement > self.maturity {
             return Err(BondPricingError::settlement_after_maturity(
                 settlement,
                 self.maturity,
             ));
         }
-
-        if ![1, 2, 4, 12].contains(&self.frequency) {
-            return Err(BondPricingError::InvalidFrequency(self.frequency));
+        if settlement < self.issue_date {
+            // Replace with your proper error enum variant if it exists
+            return Err(BondPricingError::invalid_yield(0.0));
         }
 
-        // Add credit spread to yield
-        let adjusted_ytm = ytm + self.credit_spread();
+        // Maturity day settlement: standard convention is redemption value
+        if settlement == self.maturity {
+            return Ok(PriceResult::new(self.face_value, self.face_value, 0.0));
+        }
 
-        // Calculate time to maturity in years
-        let days_to_maturity = (self.maturity - settlement).num_days() as f64;
-        let years_to_maturity = match day_count {
-            DayCount::Act365F => days_to_maturity / 365.0,
-            DayCount::Act360 => days_to_maturity / 360.0,
-            DayCount::Thirty360US => {
-                let years = (self.maturity.year() - settlement.year()) as f64;
-                let months =
-                    (self.maturity.month() as i32 - settlement.month() as i32) as f64 / 12.0;
-                let days = (self.maturity.day() as i32 - settlement.day() as i32) as f64 / 360.0;
-                years + months + days
+        let schedule = self.get_coupon_schedule();
+
+        // Find the next coupon index
+        let mut next_idx = 0;
+        for (i, &date) in schedule.iter().enumerate() {
+            if date > settlement {
+                next_idx = i;
+                break;
             }
-            _ => days_to_maturity / 365.0,
+        }
+
+        let prev_coupon = if next_idx == 0 {
+            self.issue_date
+        } else {
+            schedule[next_idx - 1]
+        };
+        let next_coupon = schedule[next_idx];
+
+        let (ref_start, ref_end) = self.get_reference_period(next_coupon);
+        let periodic_rate = ytm / self.frequency as f64;
+        let mut dirty_price = 0.0;
+
+        // 1. Calculate discount fractional exponent (w)
+        let w = match day_count {
+            DayCount::ActActICMA => {
+                day_count.year_fraction_icma(
+                    settlement,
+                    next_coupon,
+                    ref_start,
+                    ref_end,
+                    self.frequency,
+                ) * self.frequency as f64
+            }
+            _ => {
+                let days_to_next = day_count.day_count(settlement, next_coupon) as f64;
+                let days_in_period = day_count.day_count(ref_start, ref_end) as f64;
+                days_to_next / days_in_period
+            }
         };
 
-        // Calculate periodic coupon payment
-        let coupon_payment = self.face_value * self.coupon_rate / self.frequency as f64;
+        let payments_remaining = schedule.len() - next_idx;
+        let base_coupon_payment = self.face_value * self.coupon_rate / self.frequency as f64;
 
-        // Calculate number of coupon payments
-        let num_payments = (years_to_maturity * self.frequency as f64).ceil() as u32;
+        // 2. Discount Cash Flows
+        for i in 0..payments_remaining {
+            let cf_date = schedule[next_idx + i];
+            let cf_prev_date = if next_idx + i == 0 {
+                self.issue_date
+            } else {
+                schedule[next_idx + i - 1]
+            };
 
-        // Calculate present value of coupon payments
-        let mut pv_coupons = 0.0;
-        let periodic_rate = adjusted_ytm / self.frequency as f64;
+            // Regular periods pay 1.0 * base.
+            // Stubs are scaled based on the actual vs theoretical days.
+            let coupon_fraction = if cf_prev_date == self.issue_date {
+                let (cf_ref_start, cf_ref_end) = self.get_reference_period(cf_date);
+                match day_count {
+                    DayCount::ActActICMA => {
+                        day_count.year_fraction_icma(
+                            cf_prev_date,
+                            cf_date,
+                            cf_ref_start,
+                            cf_ref_end,
+                            self.frequency,
+                        ) * self.frequency as f64
+                    }
+                    _ => {
+                        let d = day_count.day_count(cf_prev_date, cf_date) as f64;
+                        let ref_d = day_count.day_count(cf_ref_start, cf_ref_end) as f64;
+                        d / ref_d
+                    }
+                }
+            } else {
+                1.0 // Regular periods are unscaled
+            };
 
-        for i in 1..=num_payments {
-            let discount_factor = (1.0 + periodic_rate).powi(-(i as i32));
-            pv_coupons += coupon_payment * discount_factor;
+            let actual_coupon_payment = base_coupon_payment * coupon_fraction;
+            let discount_factor = (1.0 + periodic_rate).powf(-(w + i as f64));
+
+            dirty_price += actual_coupon_payment * discount_factor;
         }
 
-        // Calculate present value of principal
-        let pv_principal = self.face_value / (1.0 + periodic_rate).powi(num_payments as i32);
+        // 3. Discount Principal
+        let principal_discount_factor =
+            (1.0 + periodic_rate).powf(-(w + (payments_remaining - 1) as f64));
+        dirty_price += self.face_value * principal_discount_factor;
 
-        // Total clean price
-        let clean_price = pv_coupons + pv_principal;
-
-        // Calculate accrued interest
+        // 4. Calculate Accrued Interest & Clean Price
         let accrued = self.accrued_interest(settlement, day_count);
-
-        // Dirty price = clean price + accrued interest
-        let dirty_price = clean_price + accrued;
+        let clean_price = dirty_price - accrued;
 
         Ok(PriceResult::new(clean_price, dirty_price, accrued))
     }
 
     fn accrued_interest(&self, settlement: NaiveDate, day_count: DayCount) -> f64 {
-        // TODO: Implement proper accrued interest based on day count convention
-        let coupon_payment = self.face_value * self.coupon_rate / self.frequency as f64;
-        coupon_payment * 0.5 // Placeholder
+        if ![1, 2, 4, 12].contains(&self.frequency) {
+            return 0.0;
+        }
+        if settlement >= self.maturity || settlement <= self.issue_date {
+            return 0.0;
+        }
+
+        let schedule = self.get_coupon_schedule();
+        let mut next_idx = 0;
+        for (i, &date) in schedule.iter().enumerate() {
+            if date > settlement {
+                next_idx = i;
+                break;
+            }
+        }
+
+        let prev_coupon = if next_idx == 0 {
+            self.issue_date
+        } else {
+            schedule[next_idx - 1]
+        };
+        let next_coupon = schedule[next_idx];
+        let (ref_start, ref_end) = self.get_reference_period(next_coupon);
+
+        let year_fraction = match day_count {
+            DayCount::ActActICMA => day_count.year_fraction_icma(
+                prev_coupon,
+                settlement,
+                ref_start,
+                ref_end,
+                self.frequency,
+            ),
+            _ => day_count.year_fraction(prev_coupon, settlement),
+        };
+
+        self.face_value * self.coupon_rate * year_fraction
     }
 }
