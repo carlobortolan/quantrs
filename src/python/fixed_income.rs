@@ -87,6 +87,12 @@ impl PyDayCount {
     }
 
     pub fn year_fraction(&self, start: &str, end: &str) -> PyResult<f64> {
+        if matches!(self.inner, DayCount::ActActICMA) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                "ACT/ACT ICMA requires coupon period dates and frequency",
+            ));
+        }
+
         let start_date = NaiveDate::parse_from_str(start, "%Y-%m-%d").map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid start date: {}", e))
         })?;
