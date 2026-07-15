@@ -1,13 +1,15 @@
 use chrono::NaiveDate;
-use quantrs::fixed_income::{BondPricingError, DayCount, PriceResult};
+use quantrs::fixed_income::{
+    Bond, BondPricingError, CorporateBond, DayCount, DayCountConvention, PriceResult,
+    ZeroCouponBond, generate_schedule,
+};
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     mod zero_coupon_bond_tests {
-        use chrono::NaiveDate;
-        use quantrs::fixed_income::{Bond, BondPricingError, DayCount, ZeroCouponBond};
+        use super::*;
 
         #[test]
         fn test_creation() {
@@ -81,12 +83,26 @@ mod tests {
 
             assert_eq!(bond.accrued_interest(settlement, DayCount::Act365F), 0.0);
         }
+
+        #[test]
+        fn test_actact_icma_falls_back_to_isda() {
+            let settlement = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let maturity = NaiveDate::from_ymd_opt(2030, 1, 1).unwrap();
+
+            let bond = ZeroCouponBond::new(1000.0, maturity);
+
+            let icma_price = bond.price(settlement, 0.05, DayCount::ActActICMA).unwrap();
+
+            let isda_year_fraction = DayCount::ActActISDA.year_fraction(settlement, maturity);
+
+            let expected = 1000.0 / (1.05_f64).powf(isda_year_fraction);
+
+            assert!((icma_price.clean - expected).abs() < 1e-10);
+        }
     }
 
     mod cashflow_tests {
         use super::*;
-
-        use quantrs::fixed_income::generate_schedule;
 
         #[test]
         fn test_generate_schedule_basic() {
@@ -161,8 +177,7 @@ mod tests {
     }
 
     mod day_count_tests {
-        use chrono::NaiveDate;
-        use quantrs::fixed_income::{DayCount, DayCountConvention};
+        use super::*;
 
         #[test]
         fn test_act365f_day_count() {
@@ -462,11 +477,40 @@ mod tests {
                 assert!((fraction - expected).abs() < 1e-12);
             }
         }
+
+        #[test]
+        fn test_year_fraction_icma_start_after_end_returns_zero() {
+            let start = NaiveDate::from_ymd_opt(2025, 6, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+
+            let result = DayCount::ActActICMA.year_fraction_icma(start, end, start, end, 2);
+
+            assert_eq!(result, 0.0);
+        }
+
+        #[test]
+        fn test_year_fraction_icma_zero_frequency_returns_zero() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 7, 1).unwrap();
+
+            let result = DayCount::ActActICMA.year_fraction_icma(start, end, start, end, 0);
+
+            assert_eq!(result, 0.0);
+        }
+
+        #[test]
+        fn test_year_fraction_icma_non_icma_fallback() {
+            let start = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
+            let end = NaiveDate::from_ymd_opt(2025, 7, 1).unwrap();
+
+            let result = DayCount::Act365F.year_fraction_icma(start, end, start, end, 2);
+
+            assert_eq!(result, DayCount::Act365F.year_fraction(start, end));
+        }
     }
 
     mod corporate_bond_tests {
-        use chrono::NaiveDate;
-        use quantrs::fixed_income::{Bond, CorporateBond, DayCount};
+        use super::*;
 
         #[test]
         fn test_creation() {
@@ -626,6 +670,134 @@ mod tests {
             assert_eq!(price.clean, 1000.0);
             assert_eq!(price.dirty, 1000.0);
             assert_eq!(price.accrued, 0.0);
+        }
+
+        #[test]
+        fn test_credit_spread_lower_ratings() {
+            let maturity = NaiveDate::from_ymd_opt(2030, 1, 1).unwrap();
+            let issue = NaiveDate::from_ymd_opt(2020, 1, 1).unwrap();
+
+            let bb = CorporateBond::new(1000.0, 0.05, issue, maturity, 2, "BB".to_string());
+
+            let b = CorporateBond::new(1000.0, 0.05, issue, maturity, 2, "B".to_string());
+
+            let unknown = CorporateBond::new(1000.0, 0.05, issue, maturity, 2, "CCC".to_string());
+
+            assert_eq!(bb.credit_spread(), 0.05);
+            assert_eq!(b.credit_spread(), 0.10);
+            assert_eq!(unknown.credit_spread(), 0.03);
+        }
+
+        #[test]
+        fn test_zero_frequency_schedule_empty() {
+            let bond = CorporateBond::new(
+                1000.0,
+                0.05,
+                NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+                NaiveDate::from_ymd_opt(2030, 1, 1).unwrap(),
+                0,
+                "BBB".to_string(),
+            );
+
+            let result = bond.price(
+                NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+                0.05,
+                DayCount::Act365F,
+            );
+
+            assert!(matches!(result, Err(BondPricingError::InvalidFrequency(0))));
+        }
+
+        #[test]
+        fn test_invalid_yield_below_minus_100_percent() {
+            let bond = CorporateBond::new(
+                1000.0,
+                0.05,
+                NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+                NaiveDate::from_ymd_opt(2030, 1, 1).unwrap(),
+                2,
+                "BBB".to_string(),
+            );
+
+            let result = bond.price(
+                NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+                -1.01,
+                DayCount::Act365F,
+            );
+
+            assert!(matches!(result, Err(BondPricingError::InvalidYield(_))));
+        }
+
+        #[test]
+        fn test_settlement_after_maturity() {
+            let maturity = NaiveDate::from_ymd_opt(2030, 1, 1).unwrap();
+
+            let bond = CorporateBond::new(
+                1000.0,
+                0.05,
+                NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+                maturity,
+                2,
+                "BBB".to_string(),
+            );
+
+            let result = bond.price(
+                NaiveDate::from_ymd_opt(2031, 1, 1).unwrap(),
+                0.05,
+                DayCount::Act365F,
+            );
+
+            assert!(matches!(
+                result,
+                Err(BondPricingError::SettlementAfterMaturity { .. })
+            ));
+        }
+
+        #[test]
+        fn test_accrued_interest_invalid_frequency() {
+            let bond = CorporateBond::new(
+                1000.0,
+                0.05,
+                NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+                NaiveDate::from_ymd_opt(2030, 1, 1).unwrap(),
+                3,
+                "BBB".to_string(),
+            );
+
+            let accrued = bond.accrued_interest(
+                NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+                DayCount::Act365F,
+            );
+
+            assert_eq!(accrued, 0.0);
+        }
+
+        #[test]
+        fn test_accrued_interest_boundary_dates() {
+            let bond = CorporateBond::new(
+                1000.0,
+                0.05,
+                NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+                NaiveDate::from_ymd_opt(2030, 1, 1).unwrap(),
+                2,
+                "BBB".to_string(),
+            );
+
+            assert_eq!(
+                bond.accrued_interest(
+                    NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+                    DayCount::Act365F,
+                ),
+                0.0
+            );
+
+            assert_eq!(
+                bond.accrued_interest(
+                    NaiveDate::from_ymd_opt(2030, 1, 1).unwrap(),
+                    DayCount::Act365F,
+                ),
+                0.0
+            );
         }
     }
 }
