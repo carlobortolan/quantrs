@@ -9,7 +9,6 @@
 /// use quantrs::fixed_income::{Bond, CorporateBond, DayCount};
 /// use chrono::NaiveDate;
 ///
-/// fn main() {
 ///     let issue_date = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
 ///     let maturity = NaiveDate::from_ymd_opt(2030, 1, 15).unwrap();
 ///     let settlement = NaiveDate::from_ymd_opt(2025, 4, 15).unwrap();
@@ -28,7 +27,6 @@
 ///             println!("Accrued: {:.2}", price_result.accrued);
 ///         }
 ///         Err(e) => eprintln!("Pricing failed: {}", e),
-///     }
 /// }
 /// ```
 use crate::fixed_income::{Bond, BondPricingError, DayCount, DayCountConvention, PriceResult};

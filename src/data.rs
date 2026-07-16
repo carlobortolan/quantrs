@@ -12,10 +12,10 @@
 //! - Stock Quotes
 //! - Company Fundamentals
 
+pub use self::types::*;
 pub use data_models::*;
 pub use data_provider::*;
 pub use traits::*;
-pub use types::*;
 
 mod data_models;
 mod data_provider;
