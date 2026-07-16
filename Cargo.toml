@@ -37,7 +37,8 @@ statrs = "0.18.0"
 reqwest = { version = "0.13.1", features = ["json"] }
 serde = "1.0.219"
 serde-aux = "4.7.0"
-tokio = "1.52.3"
+tokio = { version = "1.52.3", features = ["macros", "rt"] }
+wiremock = "0.6"
 
 [dev-dependencies]
 approx = "0.5.1"

@@ -1,7 +1,7 @@
-//! Module that describes the traits for the different data providers.
+//! Module that describes the traits for different data providers.
 
-pub use stocks_source::{FundamentalsProvider, QuoteProvider};
+pub use stock_source::{FundamentalsProvider, QuoteProvider};
 
-mod options_source;
-mod rates_source;
-mod stocks_source;
+mod option_source;
+mod rate_source;
+mod stock_source;

@@ -102,6 +102,13 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 - [ ] Yield Measures (_YTM_, _YTC_, _YTW_)
 - [x] Accrual Conventions (_ACT/365F_, _ACT/360_, _30/360 US_, _30/360 Eurobond_, _ACT/ACT ISDA_, _ACT/ACT ICMA_)
 
+### Market Data
+
+- Generic trait-based adapter architecture for market data.
+- Supported Providers:
+  - [x] _Alpha Vantage_ (Quotes & Fundamentals)
+  - [ ] _Yahoo Finance_
+
 ## Usage
 
 Add this to your `Cargo.toml`:
@@ -183,6 +190,45 @@ This will output:
 Clean Price: 958.82
 Dirty Price: 971.32
 Accrued Interest: 12.50
+```
+
+### Market Data
+
+Quantrs provides a generic, trait-based adapter pattern to fetch real-world market data cleanly.
+
+```rust
+use quantrs::data::DataProvider;
+
+#[tokio::main]
+async fn main() {
+    // Initialize the Alpha Vantage provider with your API key
+    let provider = DataProvider::alpha_vantage("demo");
+
+    // Fetch a real-time global quote
+    match provider.get_stock_quote("IBM").await {
+        Ok(quote) => println!("Quote: {}", quote),
+        Err(e) => eprintln!("Error fetching quote: {}", e),
+    }
+
+    // Fetch deep company fundamentals
+    match provider.get_company_overview("IBM").await {
+        Ok(company) => {
+            println!("Company: {}", company.name);
+            println!("P/E Ratio: {}", company.pe_ratio.map(|v| v.to_string()).unwrap_or("N/A".to_string()));
+            println!("Dividend Yield: {:.2}%", company.dividend_yield.unwrap_or(0.0) * 100.0);
+        }
+        Err(e) => eprintln!("Error fetching overview: {}", e),
+    }
+}
+```
+
+This will output:
+
+```text
+Quote: IBM | $290.23 (+0.93%) | Vol: 5024243 | O: $290.50 | H: $297.50 | L: $289.10 | Prev: $287.56
+Company: International Business Machines
+P/E Ratio: 25.45
+Dividend Yield: 2.28%
 ```
 
 ### Plotting

@@ -11,7 +11,7 @@
 //! This module also provides implementations of the Greeks for each option pricing model.
 //! See the [Greeks](trait.Greeks.html) trait for more information.
 
-pub use self::types::*;
+pub use types::*;
 pub use greeks::*;
 pub use instrument::*;
 pub use models::*;

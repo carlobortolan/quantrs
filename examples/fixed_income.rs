@@ -1,3 +1,5 @@
+// Run:  cargo run --release --example fixed_income
+
 use quantrs::fixed_income::{Bond, DayCount, ZeroCouponBond};
 
 fn main() {
