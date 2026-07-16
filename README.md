@@ -104,10 +104,11 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 
 ### Market Data
 
-- Generic trait-based adapter architecture for market data.
+- Generic trait-based adapter architecture for market data (quotes & fundamentals).
 - Supported Providers:
-  - [x] _Alpha Vantage_ (Quotes & Fundamentals)
-  - [ ] _Yahoo Finance_
+  - [x] _Alpha Vantage_
+  - [x] _Yahoo Finance_
+  - [ ] _Polygon.io_
 
 ## Usage
 
