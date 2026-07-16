@@ -23,6 +23,8 @@ use crate::data::{DataError, Fundamentals, Quote};
 pub struct YahooFinanceSource {
     client: Client,
     base_url: String,
+    crumb_url: String,
+    cookie_url: String,
     crumb: Arc<Mutex<Option<String>>>,
 }
 
@@ -43,15 +45,19 @@ impl YahooFinanceSource {
 
         Self {
             client,
-            base_url: "https://query1.finance.yahoo.com".to_string(),
+            base_url: "https://query1.finance.yahoo.com".into(),
+            crumb_url: "https://query1.finance.yahoo.com".into(),
+            cookie_url: "https://fc.yahoo.com".into(),
             crumb: Arc::new(Mutex::new(None)),
         }
     }
 
-    pub fn with_client(client: Client) -> Self {
+    pub fn with_base_url(client: Client, base_url: &str) -> Self {
         Self {
             client,
-            base_url: "https://query1.finance.yahoo.com".to_string(),
+            base_url: base_url.into(),
+            crumb_url: base_url.into(),
+            cookie_url: base_url.into(),
             crumb: Arc::new(Mutex::new(None)),
         }
     }
@@ -66,12 +72,12 @@ impl YahooFinanceSource {
         }
 
         // 1. Hit the Yahoo cookie endpoint to establish a session
-        let _ = self.client.get("https://fc.yahoo.com").send().await;
+        let _ = self.client.get(&self.cookie_url).send().await;
 
         // 2. Fetch the crumb using that session
         let res = self
             .client
-            .get("https://query1.finance.yahoo.com/v1/test/getcrumb")
+            .get(format!("{}/v1/test/getcrumb", self.crumb_url))
             .send()
             .await?;
 

@@ -1,8 +1,23 @@
+use quantrs::DataProvider;
+use quantrs::YahooFinanceSource;
 use quantrs::data::{AlphaVantageSource, DataError, FundamentalsProvider, QuoteProvider};
 
 use reqwest::Client;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
+
+#[test]
+fn test_data_provider_constructors() {
+    match DataProvider::alpha_vantage("demo") {
+        DataProvider::AlphaVantage(_) => {}
+        _ => panic!("expected AlphaVantage provider"),
+    }
+
+    match DataProvider::yahoo_finance() {
+        DataProvider::YahooFinance(_) => {}
+        _ => panic!("expected YahooFinance provider"),
+    }
+}
 
 #[tokio::test]
 async fn test_alpha_vantage_stock_quote() {
@@ -181,6 +196,108 @@ async fn test_alpha_vantage_note_message() {
         }
         _ => panic!("Expected Provider error"),
     }
+}
+
+#[tokio::test]
+async fn test_data_provider_dispatches_yahoo_stock_quote() {
+    let server = MockServer::start().await;
+
+    // crumb endpoint
+    Mock::given(method("GET"))
+        .and(path("/v1/test/getcrumb"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("crumb123"))
+        .mount(&server)
+        .await;
+
+    // quote endpoint
+    Mock::given(method("GET"))
+        .and(path("/v7/finance/quote"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            r#"
+            {
+                "quoteResponse": {
+                    "result": [
+                        {
+                            "symbol": "AAPL",
+                            "regularMarketPrice": 200.0,
+                            "regularMarketOpen": 198.0,
+                            "regularMarketDayHigh": 202.0,
+                            "regularMarketDayLow": 197.5,
+                            "regularMarketVolume": 123456,
+                            "regularMarketPreviousClose": 199.0,
+                            "regularMarketChange": 1.0,
+                            "regularMarketChangePercent": 0.5
+                        }
+                    ]
+                }
+            }
+            "#,
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let provider = DataProvider::YahooFinance(YahooFinanceSource::with_base_url(
+        Client::new(),
+        &server.uri(),
+    ));
+
+    let quote = provider.get_stock_quote("AAPL").await.unwrap();
+
+    assert_eq!(quote.symbol, "AAPL");
+    assert_eq!(quote.price, 200.0);
+}
+
+#[tokio::test]
+async fn test_data_provider_dispatches_yahoo_fundamentals() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/test/getcrumb"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("crumb123"))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/v10/finance/quoteSummary/AAPL"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            r#"
+            {
+                "quoteSummary": {
+                    "result": [
+                        {
+                            "quoteType": {
+                                "symbol": "AAPL",
+                                "longName": "Apple Inc.",
+                                "quoteType": "EQUITY",
+                                "exchange": "NASDAQ"
+                            },
+                            "summaryProfile": {
+                                "sector": "Technology",
+                                "industry": "Consumer Electronics",
+                                "country": "United States",
+                                "website": "https://apple.com",
+                                "longBusinessSummary": "Makes iPhones"
+                            }
+                        }
+                    ]
+                }
+            }
+            "#,
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let provider = DataProvider::YahooFinance(YahooFinanceSource::with_base_url(
+        Client::new(),
+        &server.uri(),
+    ));
+
+    let fundamentals = provider.get_company_overview("AAPL").await.unwrap();
+
+    assert_eq!(fundamentals.symbol, "AAPL");
+    assert_eq!(fundamentals.name, "Apple Inc.");
 }
 
 #[test]
