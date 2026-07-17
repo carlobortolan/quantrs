@@ -108,7 +108,7 @@ Quantrs supports options pricing with various models for both vanilla and exotic
 - Supported Providers:
   - [x] _Alpha Vantage_
   - [x] _Yahoo Finance_
-  - [ ] _Polygon.io_
+  - [x] _Massive (formerly Polygon.io)_
 
 ## Usage
 
@@ -202,8 +202,8 @@ use quantrs::data::DataProvider;
 
 #[tokio::main]
 async fn main() {
-    // Initialize the Alpha Vantage provider with your API key
-    let provider = DataProvider::alpha_vantage("demo");
+    // Initilize a data provider
+    let provider = DataProvider::alpha_vantage("demo"); // or: yahoo_finance() or: massive("YOUR_API_KEY");
 
     // Fetch a real-time global quote
     match provider.get_stock_quote("IBM").await {
