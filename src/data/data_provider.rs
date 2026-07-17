@@ -19,14 +19,17 @@ use super::traits::{FundamentalsProvider, QuoteProvider};
 use crate::data::{DataError, Fundamentals, Quote};
 
 mod alpha_vantage;
+mod massive;
 mod yahoo_finance;
 
 pub use alpha_vantage::AlphaVantageSource;
+pub use massive::MassiveSource;
 pub use yahoo_finance::YahooFinanceSource;
 
 pub enum DataProvider {
     AlphaVantage(AlphaVantageSource),
     YahooFinance(YahooFinanceSource),
+    Massive(MassiveSource),
 }
 
 impl DataProvider {
@@ -38,10 +41,15 @@ impl DataProvider {
         Self::YahooFinance(YahooFinanceSource::new())
     }
 
+    pub fn massive(api_key: &str) -> Self {
+        Self::Massive(MassiveSource::new(api_key))
+    }
+
     pub async fn get_stock_quote(&self, symbol: &str) -> Result<Quote, DataError> {
         match self {
             Self::AlphaVantage(source) => source.get_stock_quote(symbol).await,
             Self::YahooFinance(source) => source.get_stock_quote(symbol).await,
+            Self::Massive(source) => source.get_stock_quote(symbol).await,
         }
     }
 
@@ -49,6 +57,7 @@ impl DataProvider {
         match self {
             Self::AlphaVantage(source) => source.get_company_overview(symbol).await,
             Self::YahooFinance(source) => source.get_company_overview(symbol).await,
+            Self::Massive(source) => source.get_company_overview(symbol).await,
         }
     }
 }
