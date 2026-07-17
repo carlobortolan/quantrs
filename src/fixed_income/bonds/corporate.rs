@@ -9,21 +9,20 @@
 /// use quantrs::fixed_income::{Bond, CorporateBond, DayCount};
 /// use chrono::NaiveDate;
 ///
-///     let issue_date = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
-///     let maturity = NaiveDate::from_ymd_opt(2030, 1, 15).unwrap();
-///     let settlement = NaiveDate::from_ymd_opt(2025, 4, 15).unwrap();
-///     
-///     // 5% coupon, semi-annual payments, BBB rated
-///     let bond = CorporateBond::new(1000.0, 0.05, issue_date, maturity, 2, "BBB".to_string());
-///     
-///     // Yield to maturity of 6%
-///     let ytm = 0.06;
-///     let day_count = DayCount::Thirty360US;
-///     
-///     match bond.price(settlement, ytm, day_count) {
-///         Ok(price) => println!("Price: {}", price),
-///         Err(e) => eprintln!("Error pricing bond: {}", e),
-///     }
+/// let issue_date = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
+/// let maturity = NaiveDate::from_ymd_opt(2030, 1, 15).unwrap();
+/// let settlement = NaiveDate::from_ymd_opt(2025, 4, 15).unwrap();
+/// 
+/// // 5% coupon, semi-annual payments, BBB rated
+/// let bond = CorporateBond::new(1000.0, 0.05, issue_date, maturity, 2, "BBB".to_string());
+/// 
+/// // Yield to maturity of 6%
+/// let ytm = 0.06;
+/// let day_count = DayCount::Thirty360US;
+/// 
+/// match bond.price(settlement, ytm, day_count) {
+///     Ok(price) => println!("Price: {}", price),
+///     Err(e) => eprintln!("Error pricing bond: {}", e),
 /// }
 /// ```
 use crate::fixed_income::{Bond, BondPricingError, DayCount, DayCountConvention, PriceResult};
