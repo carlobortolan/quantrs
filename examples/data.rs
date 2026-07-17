@@ -4,11 +4,14 @@ use quantrs::data::DataProvider;
 use std::time::Duration;
 use tokio::runtime::Builder;
 
+const YOUR_ALPHA_VANTAGE_API_KEY: &str = "demo"; // Replace with your actual Alpha Vantage API key (demo key only works for IBM)
+const YOUR_MASSIVE_API_KEY: &str = "YOUR_API_KEY"; // Replace with your actual Massive API key
+
 async fn alpha_vantage_demo() {
     println!("=== ALPHA VANTAGE ===");
 
     // Initialize the Alpha Vantage provider with your API key
-    let provider = DataProvider::alpha_vantage("demo");
+    let provider = DataProvider::alpha_vantage(YOUR_ALPHA_VANTAGE_API_KEY);
 
     // Fetch a real-time global quote
     match provider.get_stock_quote("IBM").await {
@@ -66,7 +69,7 @@ async fn massive_demo() {
 
     // Initialize the Massive provider
     // NOTE: .com
-    let massive_provider = DataProvider::massive("YOUR_API_KEY");
+    let massive_provider = DataProvider::massive(YOUR_MASSIVE_API_KEY);
 
     // Fetch a real-time global quote
     match massive_provider.get_stock_quote("IBM").await {

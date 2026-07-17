@@ -21,6 +21,14 @@ impl MassiveSource {
         }
     }
 
+    pub fn with_base_url(client: Client, api_key: &str, base_url: &str) -> Self {
+        Self {
+            client,
+            base_url: base_url.to_string(),
+            api_key: api_key.to_string(),
+        }
+    }
+
     async fn get_json<T>(&self, url: String) -> Result<T, DataError>
     where
         T: DeserializeOwned,

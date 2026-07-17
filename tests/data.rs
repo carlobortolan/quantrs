@@ -1,6 +1,7 @@
-use quantrs::DataProvider;
-use quantrs::YahooFinanceSource;
-use quantrs::data::{AlphaVantageSource, DataError, FundamentalsProvider, QuoteProvider};
+use quantrs::data::{
+    AlphaVantageSource, DataError, DataProvider, FundamentalsProvider, MassiveSource,
+    QuoteProvider, YahooFinanceSource,
+};
 
 use reqwest::Client;
 use wiremock::matchers::{method, path};
@@ -298,6 +299,154 @@ async fn test_data_provider_dispatches_yahoo_fundamentals() {
 
     assert_eq!(fundamentals.symbol, "AAPL");
     assert_eq!(fundamentals.name, "Apple Inc.");
+}
+
+#[tokio::test]
+async fn test_massive_stock_quote() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v2/aggs/ticker/AAPL/prev"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            r#"
+            {
+                "ticker":"AAPL",
+                "results":[
+                    {
+                        "o":195.0,
+                        "h":200.0,
+                        "l":194.0,
+                        "c":198.5,
+                        "v":1234567
+                    }
+                ]
+            }
+            "#,
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let provider = MassiveSource::with_base_url(Client::new(), "test-key", &server.uri());
+
+    let quote = provider.get_stock_quote("AAPL").await.unwrap();
+
+    assert_eq!(quote.symbol, "AAPL");
+    assert_eq!(quote.price, 198.5);
+    assert_eq!(quote.open, 195.0);
+    assert_eq!(quote.high, 200.0);
+    assert_eq!(quote.low, 194.0);
+    assert_eq!(quote.volume, 1_234_567);
+    assert_eq!(quote.previous_close, 198.5);
+}
+
+#[tokio::test]
+async fn test_massive_company_overview() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v3/reference/tickers/AAPL"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            r#"
+            {
+                "results": {
+                    "ticker":"AAPL",
+                    "name":"Apple Inc.",
+                    "primary_exchange":"NASDAQ",
+                    "market_cap":3500000000000,
+                    "description":"Consumer electronics company",
+                    "homepage_url":"https://apple.com",
+                    "share_class_shares_outstanding":15000000000,
+                    "address":{
+                        "city":"Cupertino",
+                        "state":"CA"
+                    }
+                }
+            }
+            "#,
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let provider = MassiveSource::with_base_url(Client::new(), "test-key", &server.uri());
+
+    let fundamentals = provider.get_company_overview("AAPL").await.unwrap();
+
+    assert_eq!(fundamentals.symbol, "AAPL");
+    assert_eq!(fundamentals.name, "Apple Inc.");
+    assert_eq!(fundamentals.exchange, "NASDAQ");
+    assert_eq!(
+        fundamentals.market_capitalization,
+        Some(3_500_000_000_000.0)
+    );
+    assert_eq!(fundamentals.shares_outstanding, Some(15_000_000_000));
+    assert_eq!(fundamentals.address, "Cupertino, CA");
+    assert_eq!(fundamentals.official_site, "https://apple.com");
+}
+
+#[tokio::test]
+async fn test_massive_empty_results() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            r#"
+            {
+                "ticker":"AAPL",
+                "results":[]
+            }
+            "#,
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+
+    let provider = MassiveSource::with_base_url(Client::new(), "test-key", &server.uri());
+
+    let result = provider.get_stock_quote("AAPL").await;
+
+    assert!(result.is_err());
+
+    let msg = result.unwrap_err().to_string();
+
+    assert!(msg.contains("No previous day data"));
+}
+
+#[tokio::test]
+async fn test_massive_http_error() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(500))
+        .mount(&server)
+        .await;
+
+    let provider = MassiveSource::with_base_url(Client::new(), "test-key", &server.uri());
+
+    let result = provider.get_stock_quote("AAPL").await;
+
+    assert!(result.is_err());
+
+    let msg = result.unwrap_err().to_string();
+
+    assert!(msg.contains("HTTP Status"));
+}
+
+#[tokio::test]
+async fn test_massive_invalid_json() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("not json"))
+        .mount(&server)
+        .await;
+
+    let provider = MassiveSource::with_base_url(Client::new(), "test-key", &server.uri());
+
+    let result = provider.get_stock_quote("AAPL").await;
+
+    assert!(result.is_err());
 }
 
 #[test]
