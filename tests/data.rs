@@ -8,7 +8,6 @@ use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[cfg(test)]
-
 mod data_provider_tests {
     use super::*;
 
