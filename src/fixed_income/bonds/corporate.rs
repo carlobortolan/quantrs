@@ -21,12 +21,9 @@
 ///     let day_count = DayCount::Thirty360US;
 ///     
 ///     match bond.price(settlement, ytm, day_count) {
-///         Ok(price_result) => {
-///             println!("Clean Price: {:.2}", price_result.clean);
-///             println!("Dirty Price: {:.2}", price_result.dirty);
-///             println!("Accrued: {:.2}", price_result.accrued);
-///         }
-///         Err(e) => eprintln!("Pricing failed: {}", e),
+///         Ok(price) => println!("Price: {}", price),
+///         Err(e) => eprintln!("Error pricing bond: {}", e),
+///     }
 /// }
 /// ```
 use crate::fixed_income::{Bond, BondPricingError, DayCount, DayCountConvention, PriceResult};

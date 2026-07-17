@@ -1,24 +1,27 @@
 // Run:  cargo run --release --example fixed_income
 
-use quantrs::fixed_income::{Bond, DayCount, ZeroCouponBond};
+use chrono::NaiveDate;
+use quantrs::fixed_income::*;
 
 fn main() {
-    let face_value = 1000.0;
-    let maturity = chrono::NaiveDate::from_ymd_opt(2030, 1, 1).unwrap_or_default();
-    let settlement = chrono::NaiveDate::from_ymd_opt(2025, 1, 1).unwrap_or_default();
-    let ytm = 0.05; // 5% yield to maturity
-    let day_count = DayCount::ActActICMA;
+    // Define the bond timeline
+    let issue_date = NaiveDate::from_ymd_opt(2020, 1, 15).unwrap();
+    let maturity = NaiveDate::from_ymd_opt(2030, 1, 15).unwrap();
+    let settlement = NaiveDate::from_ymd_opt(2025, 4, 15).unwrap();
 
-    let zero_coupon_bond = ZeroCouponBond::new(face_value, maturity);
+    // Create a new Corporate Bond with:
+    // - Face value = 1,000
+    // - Coupon rate = 5%
+    // - Payment frequency = 2 (Semi-Annual)
+    // - Credit rating = BBB
+    let bond = CorporateBond::new(1000.0, 0.05, issue_date, maturity, 2, "BBB".to_string());
 
-    match zero_coupon_bond.price(settlement, ytm, day_count) {
-        Ok(price_result) => {
-            println!("Clean Price: {:.2}", price_result.clean);
-            println!("Dirty Price: {:.2}", price_result.dirty);
-            println!("Accrued Interest: {:.2}", price_result.accrued);
-        }
-        Err(e) => {
-            eprintln!("Error pricing bond: {}", e);
-        }
+    // Price the bond at a 6% Yield to Maturity (YTM) using the US 30/360 day-count convention
+    let ytm = 0.06;
+    let day_count = DayCount::Thirty360US;
+
+    match bond.price(settlement, ytm, day_count) {
+        Ok(price) => println!("{}", price),
+        Err(e) => eprintln!("Error pricing bond: {}", e),
     }
 }
