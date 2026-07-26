@@ -519,11 +519,13 @@ impl OptionGreeks for BlackScholesModel {
         let adjusted_spot = option
             .instrument()
             .calculate_adjusted_spot(option.time_to_maturity());
+        let div_discount =
+            (-option.instrument().continuous_dividend_yield * option.time_to_maturity()).exp();
         let normal = Normal::new(0.0, 1.0).unwrap();
 
         match option.style() {
             OptionStyle::European => {
-                normal.pdf(d1)
+                div_discount * normal.pdf(d1)
                     / (adjusted_spot * self.volatility * option.time_to_maturity().sqrt())
             }
             OptionStyle::Binary(CashOrNothing) => {
@@ -566,12 +568,14 @@ impl OptionGreeks for BlackScholesModel {
         let adjusted_spot = option
             .instrument()
             .calculate_adjusted_spot(option.time_to_maturity());
+        let div_discount =
+            (-option.instrument().continuous_dividend_yield * option.time_to_maturity()).exp();
         let normal = Normal::new(0.0, 1.0).unwrap();
 
         match option.style() {
             OptionStyle::European => match option.option_type() {
                 OptionType::Call => {
-                    adjusted_spot * normal.pdf(d1) * self.volatility
+                    div_discount * adjusted_spot * normal.pdf(d1) * self.volatility
                         / (2.0 * option.time_to_maturity().sqrt())
                         + self.risk_free_rate
                             * option.strike()
@@ -579,13 +583,11 @@ impl OptionGreeks for BlackScholesModel {
                             * normal.cdf(d2)
                         - option.instrument().continuous_dividend_yield
                             * adjusted_spot
-                            * (-option.instrument().continuous_dividend_yield
-                                * option.time_to_maturity())
-                            .exp()
+                            * div_discount
                             * normal.cdf(d1)
                 }
                 OptionType::Put => {
-                    adjusted_spot * normal.pdf(d1) * self.volatility
+                    div_discount * adjusted_spot * normal.pdf(d1) * self.volatility
                         / (2.0 * option.time_to_maturity().sqrt())
                         - self.risk_free_rate
                             * option.strike()
@@ -593,9 +595,7 @@ impl OptionGreeks for BlackScholesModel {
                             * normal.cdf(-d2)
                         + option.instrument().continuous_dividend_yield
                             * adjusted_spot
-                            * (-option.instrument().continuous_dividend_yield
-                                * option.time_to_maturity())
-                            .exp()
+                            * div_discount
                             * normal.cdf(-d1)
                 }
             },
@@ -632,9 +632,7 @@ impl OptionGreeks for BlackScholesModel {
             OptionStyle::Binary(AssetOrNothing) => match option.option_type() {
                 OptionType::Call => {
                     option.instrument().spot()
-                        * (-option.instrument().continuous_dividend_yield
-                            * option.time_to_maturity())
-                        .exp()
+                        * div_discount
                         * (normal.pdf(d1) * 1.0
                             / (2.0
                                 * option.time_to_maturity()
@@ -649,9 +647,7 @@ impl OptionGreeks for BlackScholesModel {
                 }
                 OptionType::Put => {
                     option.instrument().spot()
-                        * (-option.instrument().continuous_dividend_yield
-                            * option.time_to_maturity())
-                        .exp()
+                        * div_discount
                         * (-normal.pdf(d1) * 1.0
                             / (2.0
                                 * option.time_to_maturity()
@@ -662,7 +658,7 @@ impl OptionGreeks for BlackScholesModel {
                                     - option.instrument().continuous_dividend_yield
                                     + 0.5 * self.volatility.powi(2))
                                     * option.time_to_maturity())
-                            + option.instrument().continuous_dividend_yield * -normal.cdf(d1))
+                            + option.instrument().continuous_dividend_yield * normal.cdf(-d1))
                 }
             },
             _ => panic!("Unsupported option style for theta calculation"),
