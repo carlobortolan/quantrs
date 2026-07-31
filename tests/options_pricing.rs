@@ -1,4 +1,4 @@
-use approx::assert_abs_diff_eq;
+use approx::{RelativeEq, assert_abs_diff_eq};
 use quantrs::options::{
     AmericanOption, AsianOption, BermudanOption, BinaryOption, BinomialTreeModel, Black76Model,
     BlackScholesModel, EuropeanOption, Greeks, Instrument, LookbackOption, MonteCarloModel, Option,
@@ -1866,13 +1866,9 @@ mod greek_fd_tests {
         (f(x + h) - f(x - h)) / (2.0 * h)
     }
 
-    // Mixed relative/absolute: the absolute part covers Greeks that legitimately
-    // cancel to ~0 (asset-or-nothing gamma at d2 = 0), where a relative comparison
-    // would only measure finite-difference noise.
     fn assert_matches(analytic: f64, numeric: f64, what: &str) {
-        let allowed = 1e-6 * analytic.abs().max(numeric.abs()) + 1e-7;
         assert!(
-            (analytic - numeric).abs() <= allowed,
+            analytic.relative_eq(&numeric, 1e-7, 1e-6),
             "{what}: analytic {analytic}, finite difference {numeric}"
         );
     }
