@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Applied the continuous dividend discount `exp(-qT)` to Black-Scholes European gamma and theta, and corrected the dividend carry term of asset-or-nothing put theta (#128)
+
 ## [0.1.8] - 2026-02-22
 
 ### Added

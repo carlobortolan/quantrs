@@ -1,4 +1,4 @@
-use approx::assert_abs_diff_eq;
+use approx::{RelativeEq, assert_abs_diff_eq};
 use quantrs::options::{
     AmericanOption, AsianOption, BermudanOption, BinaryOption, BinomialTreeModel, Black76Model,
     BlackScholesModel, EuropeanOption, Greeks, Instrument, LookbackOption, MonteCarloModel, Option,
@@ -207,6 +207,38 @@ mod black_scholes_tests {
             assert_abs_diff_eq!(rho, -8.6131, epsilon = 0.0001);
             let theta = model.theta(&option);
             assert_abs_diff_eq!(theta, 3.2350, epsilon = 0.0001);
+        }
+
+        #[test]
+        fn test_div_greeks() {
+            let instrument = Instrument::new()
+                .with_spot(80.0)
+                .with_continuous_dividend_yield(0.03);
+            let option = EuropeanOption::new(instrument, 110.0, 3.0, OptionType::Call);
+            let model = BlackScholesModel::new(0.05, 0.25);
+
+            // Sanity check for input values
+            let price = model.price(&option);
+            assert_abs_diff_eq!(price, 6.0313, epsilon = 0.0001);
+
+            let delta = model.delta(&option);
+            assert_abs_diff_eq!(delta, 0.3216, epsilon = 0.0001);
+            let gamma = model.gamma(&option);
+            assert_abs_diff_eq!(gamma, 0.0098, epsilon = 0.0001);
+            let vega = model.vega(&option);
+            assert_abs_diff_eq!(vega, 46.9956, epsilon = 0.0001);
+            let rho = model.rho(&option);
+            assert_abs_diff_eq!(rho, 59.0791, epsilon = 0.0001);
+            let theta = model.theta(&option);
+            assert_abs_diff_eq!(theta, 2.1711, epsilon = 0.0001);
+
+            let put = option.flip();
+            assert_abs_diff_eq!(model.price(&put), 27.5947, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.delta(&put), -0.5924, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.gamma(&put), 0.0098, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.vega(&put), 46.9956, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.rho(&put), -224.9546, epsilon = 0.0001);
+            assert_abs_diff_eq!(model.theta(&put), -0.3694, epsilon = 0.0001);
         }
     }
 
@@ -507,6 +539,34 @@ mod black_scholes_tests {
                 assert_abs_diff_eq!(rho, -91.0851, epsilon = 0.0001);
                 let theta = model.theta(&option);
                 assert_abs_diff_eq!(theta, -16.0619, epsilon = 0.0001);
+            }
+
+            #[test]
+            fn test_div_greeks() {
+                let option = BinaryOption::asset_or_nothing(
+                    Instrument::new()
+                        .with_spot(80.0)
+                        .with_continuous_dividend_yield(0.03),
+                    110.0,
+                    3.0,
+                    OptionType::Put,
+                );
+                let model = BlackScholesModel::new(0.05, 0.25);
+
+                // Sanity check for input values
+                let price = model.price(&option);
+                assert_abs_diff_eq!(price, 47.3901, epsilon = 0.0001);
+
+                let delta = model.delta(&option);
+                assert_abs_diff_eq!(delta, -0.1909, epsilon = 0.0001);
+                let gamma = model.gamma(&option);
+                assert_abs_diff_eq!(gamma, -0.0184, epsilon = 0.0001);
+                let vega = model.vega(&option);
+                assert_abs_diff_eq!(vega, -88.2775, epsilon = 0.0001);
+                let rho = model.rho(&option);
+                assert_abs_diff_eq!(rho, -187.9825, epsilon = 0.0001);
+                let theta = model.theta(&option);
+                assert_abs_diff_eq!(theta, 6.3532, epsilon = 0.0001);
             }
         }
     }
@@ -1736,7 +1796,7 @@ mod greeks_tests {
 
         assert_abs_diff_eq!(greeks.delta, 0.6118, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.vega, 37.7593, epsilon = 0.0001);
-        assert_abs_diff_eq!(greeks.theta, 5.7696, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.theta, 5.7317, epsilon = 0.0001);
         assert_abs_diff_eq!(greeks.rho, 51.3500, epsilon = 0.0001);
 
         let _result = std::panic::catch_unwind(|| {
@@ -1774,8 +1834,115 @@ mod greeks_tests {
             _ = greeks.parmicharma;
         });
 
-        assert_abs_diff_eq!(greeks.gamma, 0.0191, epsilon = 0.0001);
+        assert_abs_diff_eq!(greeks.gamma, 0.0189, epsilon = 0.0001);
     }
+}
+
+// Differential Greek Tests
+//
+// Each analytic Greek is compared against a central finite difference of the model's
+// own price(). Every case carries a non-zero continuous dividend yield, which is what
+// makes the exp(-qT) factors observable: at q = 0 they are all 1, so a missing one is
+// invisible.
+mod greek_fd_tests {
+    use super::*;
+
+    // spot, strike, ttm, rate, volatility, continuous dividend yield
+    const CASES: [(f64, f64, f64, f64, f64, f64); 5] = [
+        (100.0, 100.0, 1.00, 0.05, 0.20, 0.03),
+        (80.0, 110.0, 3.00, 0.05, 0.25, 0.03),
+        (120.0, 90.0, 0.50, 0.03, 0.35, 0.07),
+        (95.0, 100.0, 2.50, 0.02, 0.15, 0.06),
+        (105.0, 100.0, 0.25, 0.05, 0.30, 0.02),
+    ];
+
+    fn instrument(spot: f64, dividend_yield: f64) -> Instrument {
+        Instrument::new()
+            .with_spot(spot)
+            .with_continuous_dividend_yield(dividend_yield)
+    }
+
+    fn central(f: impl Fn(f64) -> f64, x: f64, h: f64) -> f64 {
+        (f(x + h) - f(x - h)) / (2.0 * h)
+    }
+
+    fn assert_matches(analytic: f64, numeric: f64, what: &str) {
+        assert!(
+            analytic.relative_eq(&numeric, 1e-7, 1e-6),
+            "{what}: analytic {analytic}, finite difference {numeric}"
+        );
+    }
+
+    // `theta_sign` is +1 where theta is dP/dT and -1 where it is -dP/dT. European and
+    // binary options currently disagree on that convention.
+    macro_rules! greek_fd_test {
+        ($name:ident, $build:path, $theta_sign:expr) => {
+            #[test]
+            fn $name() {
+                let theta_sign: f64 = $theta_sign;
+                for (spot, strike, ttm, rate, vol, div) in CASES {
+                    for option_type in [OptionType::Call, OptionType::Put] {
+                        let price = |spot: f64, ttm: f64, rate: f64, vol: f64| {
+                            BlackScholesModel::new(rate, vol)
+                                .price(&$build(instrument(spot, div), strike, ttm, option_type))
+                        };
+                        let delta = |spot: f64| {
+                            BlackScholesModel::new(rate, vol)
+                                .delta(&$build(instrument(spot, div), strike, ttm, option_type))
+                        };
+
+                        let model = BlackScholesModel::new(rate, vol);
+                        let option = $build(instrument(spot, div), strike, ttm, option_type);
+                        let case = format!(
+                            "{:?} spot={spot} strike={strike} ttm={ttm} rate={rate} vol={vol} q={div}",
+                            option_type
+                        );
+
+                        assert_matches(
+                            model.delta(&option),
+                            central(|s| price(s, ttm, rate, vol), spot, spot * 1e-5),
+                            &format!("delta {case}"),
+                        );
+                        // gamma is checked against d(delta)/dS rather than d2(price)/dS2:
+                        // delta is itself pinned to the price above, and a first
+                        // difference is far better conditioned than a second one.
+                        assert_matches(
+                            model.gamma(&option),
+                            central(delta, spot, spot * 1e-4),
+                            &format!("gamma {case}"),
+                        );
+                        assert_matches(
+                            model.vega(&option),
+                            central(|v| price(spot, ttm, rate, v), vol, 1e-5),
+                            &format!("vega {case}"),
+                        );
+                        assert_matches(
+                            model.rho(&option),
+                            central(|r| price(spot, ttm, r, vol), rate, 1e-5),
+                            &format!("rho {case}"),
+                        );
+                        assert_matches(
+                            model.theta(&option),
+                            theta_sign * central(|t| price(spot, t, rate, vol), ttm, ttm * 1e-5),
+                            &format!("theta {case}"),
+                        );
+                    }
+                }
+            }
+        };
+    }
+
+    greek_fd_test!(test_european_greeks_vs_fd, EuropeanOption::new, 1.0);
+    greek_fd_test!(
+        test_cash_or_nothing_greeks_vs_fd,
+        BinaryOption::cash_or_nothing,
+        -1.0
+    );
+    greek_fd_test!(
+        test_asset_or_nothing_greeks_vs_fd,
+        BinaryOption::asset_or_nothing,
+        -1.0
+    );
 }
 
 // Instrument Tests
